@@ -1,0 +1,7 @@
+{
+  "authority": "https://cinchy.net/cinchysso",
+  "cinchyRootUrl": "https://cinchy.net",
+  "clientId": "project-management",
+  "redirectUri": "https://dx.cinchy.net/dx/project-management",
+  "version": "1.0.0"
+}

@@ -1,0 +1,7 @@
+{
+  "authority": "https://cinchy.net/cinchysso",
+  "cinchyRootUrl": "https://cinchy.net/Cinchy",
+  "clientId": "project-management-local",
+  "redirectUri": "https://localhost:4500",
+  "version": "1.0.0"
+}

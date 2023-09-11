@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "cinchy-kanban": {
+    "project-management": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/cinchy-kanban",
+            "outputPath": "dist/project-management",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -30,17 +30,27 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/codebase-gantt/webix/webix.css",
+              "src/codebase-gantt/gantt.css",
+              "src/codebase-kanban/kanban.css"
             ],
-            "scripts": []
+            "scripts": [
+              "./node_modules/iframe-resizer/js/iframeResizer.js",
+              "./node_modules/iframe-resizer/js/iframeResizer.contentWindow.js",
+              "src/codebase-gantt/webix/webix.js",
+              "src/common/data.js",
+              "src/codebase-gantt/gantt.js",
+              "src/codebase-kanban/kanban.js"
+            ]
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumWarning": "2mb",
+                  "maximumError": "3mb"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -56,7 +66,13 @@
               "vendorChunk": true,
               "extractLicenses": false,
               "sourceMap": true,
-              "namedChunks": true
+              "namedChunks": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.development.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -65,10 +81,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "cinchy-kanban:build:production"
+              "browserTarget": "project-management:build:production"
             },
             "development": {
-              "browserTarget": "cinchy-kanban:build:development"
+              "browserTarget": "project-management:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -76,7 +92,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "cinchy-kanban:build"
+            "browserTarget": "project-management:build"
           }
         },
         "test": {
@@ -93,9 +109,19 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/codebase-gantt/webix/webix.css",
+              "src/codebase-gantt/gantt.css",
+              "src/codebase-kanban/kanban.css"
             ],
-            "scripts": []
+            "scripts": [
+              "./node_modules/iframe-resizer/js/iframeResizer.js",
+              "./node_modules/iframe-resizer/js/iframeResizer.contentWindow.js",
+              "src/codebase-gantt/webix/webix.js",
+              "src/common/data.js",
+              "src/codebase-gantt/gantt.js",
+              "src/codebase-kanban/kanban.js"
+            ]
           }
         }
       }
