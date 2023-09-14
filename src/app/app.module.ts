@@ -9,6 +9,13 @@ import {ConfigService} from "./config.service";
 import {lastValueFrom} from "rxjs";
 import { GanttViewComponent } from './components/gantt-view/gantt-view.component';
 import { KanbanViewComponent } from './components/kanban-view/kanban-view.component';
+import { FiltersComponent } from './components/filters/filters.component';
+import {FormsModule} from "@angular/forms";
+import {AutoCompleteModule} from "primeng/autocomplete";
+import {MultiSelectModule} from "primeng/multiselect";
+import {ButtonModule} from "primeng/button";
+import {InputTextModule} from "primeng/inputtext";
+import {ProgressSpinnerModule} from "primeng/progressspinner";
 
 export function appLoadFactory(config: ConfigService) {
   return () => lastValueFrom(config.loadConfig());
@@ -22,14 +29,21 @@ export function getBaseUrl() {
   declarations: [
     AppComponent,
     GanttViewComponent,
-    KanbanViewComponent
+    KanbanViewComponent,
+    FiltersComponent
   ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    AppRoutingModule,
-    CinchyModule.forRoot(),
-  ],
+    imports: [
+        BrowserModule,
+        BrowserAnimationsModule,
+        AppRoutingModule,
+        AutoCompleteModule,
+        CinchyModule.forRoot(),
+        FormsModule,
+        MultiSelectModule,
+        ButtonModule,
+        InputTextModule,
+        ProgressSpinnerModule,
+    ],
   providers: [
     {
       provide: APP_INITIALIZER,

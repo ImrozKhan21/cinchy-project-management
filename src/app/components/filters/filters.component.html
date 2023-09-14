@@ -1,0 +1,53 @@
+<div class="filters-wrapper">
+  <div class="card flex justify-content-center form-wrapper">
+    <!--
+        <label class="form-label">Owner</label>
+    -->
+
+    <p-multiSelect [(ngModel)]="selectedUserAdvanced"
+                   [options]="users"
+                   display="chip"
+                   placeholder="Owner"
+                   optionLabel="owner"
+                   [filter]="true"
+                   [virtualScroll]="true"
+                   [virtualScrollItemSize]="40">
+    </p-multiSelect>
+  </div>
+
+  <div class="card flex justify-content-center form-wrapper">
+    <!--
+        <label class="form-label">Status</label>
+    -->
+
+    <p-multiSelect [(ngModel)]="selectedStatusesAdvanced"
+                   [options]="statuses"
+                   display="chip"
+                   placeholder="Status"
+                   optionLabel="name"
+                   [filter]="true">
+    </p-multiSelect>
+  </div>
+
+  <div class="card flex justify-content-center form-wrapper">
+    <!--
+        <label class="form-label">Owner</label>
+    -->
+
+    <p-multiSelect [(ngModel)]="selectedProjectsAdvanced"
+                   [options]="projects"
+                   display="chip"
+                   placeholder="Project"
+                   optionLabel="project_name"
+                   [filter]="true"
+                   [virtualScroll]="true"
+                   [virtualScrollItemSize]="40">
+    </p-multiSelect>
+  </div>
+
+  <button pButton (click)="apply()">Apply</button>
+
+  <input placeholder="Search.." type="text" pInputText [(ngModel)]="searchValue" (ngModelChange)="valueChanged()"/>
+</div>
+
+

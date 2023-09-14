@@ -31,6 +31,8 @@
             ],
             "styles": [
               "src/styles.scss",
+              "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
+              "node_modules/primeng/resources/primeng.min.css",
               "src/codebase-gantt/webix/webix.css",
               "src/codebase-gantt/gantt.css",
               "src/codebase-kanban/kanban.css"
@@ -110,6 +112,8 @@
             ],
             "styles": [
               "src/styles.scss",
+              "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
+              "node_modules/primeng/resources/primeng.min.css",
               "src/codebase-gantt/webix/webix.css",
               "src/codebase-gantt/gantt.css",
               "src/codebase-kanban/kanban.css"

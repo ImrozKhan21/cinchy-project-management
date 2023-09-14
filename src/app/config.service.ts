@@ -25,12 +25,21 @@ export class ConfigService {
     if (isPlatformBrowser(this.platformId)) {
       let modelId = this.getQueryStringValue('modelId', window.location.search);
       let viewType = this.getQueryStringValue('viewType', window.location.search);
+      let owner = this.getQueryStringValue('owner', window.location.search);
+      let status = this.getQueryStringValue('status', window.location.search);
+      let project = this.getQueryStringValue('project', window.location.search);
       if (!modelId) {
         modelId = this.getQueryStringValue('modelId', document.referrer);
         viewType = this.getQueryStringValue('viewType', document.referrer);
+        owner = this.getQueryStringValue('owner', document.referrer);
+        status = this.getQueryStringValue('status', document.referrer);
+        project = this.getQueryStringValue('project', document.referrer);
       }
       modelId && sessionStorage.setItem('modelId', modelId);
       viewType && sessionStorage.setItem('viewType', viewType);
+      owner && sessionStorage.setItem('owner', owner);
+      status && sessionStorage.setItem('status', status);
+      project && sessionStorage.setItem('project', status);
 
       if (!sessionStorage.getItem('modelId') || modelId) {
         modelId && modelId != "null" ? sessionStorage.setItem('modelId', modelId) : sessionStorage.setItem('modelId', '');
@@ -39,6 +48,19 @@ export class ConfigService {
       if (!sessionStorage.getItem('viewType') || viewType) {
         viewType && viewType != "null" ? sessionStorage.setItem('viewType', viewType) : sessionStorage.setItem('viewType', '');
       }
+
+      if (!sessionStorage.getItem('status') || status) {
+        status && status != "null" ? sessionStorage.setItem('status', status) : sessionStorage.setItem('status', '');
+      }
+
+      if (!sessionStorage.getItem('owner') || owner) {
+        owner && owner != "null" ? sessionStorage.setItem('owner', owner) : sessionStorage.setItem('owner', '');
+      }
+
+      if (!sessionStorage.getItem('project') || project) {
+        owner && owner != "null" ? sessionStorage.setItem('project', project) : sessionStorage.setItem('project', '');
+      }
+
       console.log('session', sessionStorage.getItem('modelId'));
     }
   }

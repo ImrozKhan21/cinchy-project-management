@@ -1,13 +1,16 @@
 import {Injectable} from '@angular/core';
-import {IProjectDetails} from "../models/common.model";
+import {IProjectDetails, IStatus, IUser} from "../models/common.model";
 import {projectDetails} from "../data";
+import {AppStateService} from "./app-state.service";
+import {ApiCallsService} from "./api-calls.service";
+import {take} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
 })
 export class UtilService {
 
-  constructor() {
+  constructor(private appStateService: AppStateService, private apiCallsService: ApiCallsService) {
   }
 
   transformToKanbanData(projectDetails: IProjectDetails[]) {
@@ -19,6 +22,7 @@ export class UtilService {
       comments: [{text: "Comment 1"},
         {text: "Comment 2"}]
     };
+    //	{ id:2, status:"work", user_id: 5, text:"Performance tests", tags:[1] },
     const cinchyData = {
       "project_name": "Project A",
       "status": "Not Started",
@@ -31,20 +35,47 @@ export class UtilService {
       header: "Backlog",
       body: {view: "kanbanlist", status: "new"}
     };
-    const uniqueStatus = [...new Set(projectDetails.map(item => item.status))];
-    const mappedStatuses = uniqueStatus.map((status: string) => {
+//    const uniqueStatus = [...new Set(projectDetails.map(item => item.status))];
+    const mappedStatuses = this.appStateService.allStatuses.map((status: IStatus) => {
       return {
-        header: status,
-        body: {view: "kanbanlist", status}
+        header: status.name,
+        body: {view: "kanbanlist", status: status.name}
       }
     });
-    const mappedTasks = projectDetails.map((taskItem: IProjectDetails, index) => {
-      return {...taskItem, id: index}
+    const userSet = this.transformToKanbanUsers();
+    /*   const  mappedTasks = this.appStateService.projects.map((taskItem: any, i: number) => {
+         return {...taskItem, id: taskItem.project_id, user_id: taskItem.owner_id}
+       });*/
+    const childMappedTasks = projectDetails.map((taskItem, i: number) => {
+      return {...taskItem, id: taskItem.project_id, user_id: taskItem.owner_id}
     });
-    return {mappedTasks, mappedStatuses};
+    const allMappedTasks = [...childMappedTasks];
+    return {mappedTasks: allMappedTasks, mappedStatuses, userSet, allTasks: allMappedTasks};
   }
 
-  transformToGanttData(projectDetails: IProjectDetails[]) {
+  transformToKanbanUsers() {
+    const users_set = [
+      {id: 1, value: "Rick Lopes", image: "../common/imgs/1.jpg"},
+      {id: 2, value: "Martin Farrell", image: "../common/imgs/2.jpg"},
+      {id: 3, value: "Douglass Moore", image: "../common/imgs/3.jpg"},
+      {id: 4, value: "Eric Doe", image: "../common/imgs/4.jpg"},
+      {id: 5, value: "Sophi Elliman", image: "../common/imgs/5.jpg"},
+      {id: 6, value: "Anna O'Neal"},
+      {id: 7, value: "Marcus Storm", image: "../common/imgs/7.jpg"},
+      {id: 8, value: "Nick Branson", image: "../common/imgs/8.jpg"},
+      {id: 9, value: "CC", image: "../common/imgs/9.jpg"}
+    ];
+
+    return this.appStateService.users.map((user, index) => {
+      return {
+        image: user.owner_photo,
+        id: user.owner_id,
+        value: user.owner
+      }
+    });
+  }
+
+  transformToGanttData(projectDetails: IProjectDetails[], projects: any) {
     const sample = {
       "progress": 0,
       "parent": "0",
@@ -57,19 +88,30 @@ export class UtilService {
       "id": "BjDgWWHBYgQZ80eV" // WE NEED
     };
     const mappedResources = this.transformToResources(projectDetails);
-    const mappedTasks = projectDetails.map((taskItem, i: number) => {
+    const mappedTasks = projects.map((taskItem: any, i: number) => {
       return {
         ...taskItem,
         start_date: new Date(taskItem.start_date),
         end_date: new Date(taskItem.end_date),
-        id: i + 1,
-        type: 'task',
-        progress: 10,
-        parent: "0",
+        id: taskItem.project_id,
+        type: 'project',
+        parent: 0,
       };
     });
-    const mappedAssigned = this.transformToAssigned(mappedResources, mappedTasks);
-    return {mappedResources, mappedTasks, mappedAssigned}
+    const childMappedTasks = projectDetails.map((taskItem, i: number) => {
+      return {
+        ...taskItem,
+        start_date: new Date(taskItem.start_date),
+        end_date: new Date(taskItem.end_date),
+        id: taskItem.project_id,
+        type: 'task',
+        progress: 10,
+        parent: taskItem.parent_id,
+      };
+    });
+    const allMappedTasks = [...mappedTasks, ...childMappedTasks];
+    const mappedAssigned = this.transformToAssigned(mappedResources, allMappedTasks);
+    return {mappedResources, allMappedTasks, mappedAssigned, allTasks: allMappedTasks}
   }
 
   transformToAssigned(mappedResources: any, mappedTasks: any) {
@@ -79,20 +121,18 @@ export class UtilService {
       "value": 4,
       "id": "1"
     }
-    const allAssigned: any[] = []
-    mappedResources.forEach((resource: any) => {
-      const allTasksForResource = mappedTasks.filter((task: any) => task.owner === resource.name);
-      const assigned = allTasksForResource.map((task: any) => {
+    return mappedTasks.flatMap((task: any) => {
+      const resource = mappedResources.find((res: any) => res.name === task.owner);
+      if (resource) {
         return {
-          "task": task.id,
-          "resource": resource.id,
-          "value": 4,
-          "id": `${task.id}-${resource.id}`
-        }
-      });
-      allAssigned.push(assigned);
+          task: task.id,
+          resource: resource.id,
+          value: '1',
+          id: `${task.id}-${resource.id}`
+        };
+      }
+      return [];  // No assignments for this task if no matching resource is found
     });
-    return allAssigned.flat();
   }
 
   transformToResources(projectDetails: IProjectDetails[]) {
@@ -109,15 +149,14 @@ export class UtilService {
       }
       return acc;
     }, {});
-console.log('111 uniqrRes', uniqueResource);
-    return Object.keys(uniqueResource).map((name, index) => {
+    return this.appStateService.users.map((user, index) => {
       return {
-        "category_id": "1",
-        "avatar": uniqueResource[name]['owner_photo'],
-        "id": index + 1,
-        name
+        category_id: "1",
+        avatar: user.owner_photo,
+        id: user.owner_id,
+        name: user.owner
       }
-    })
+    });
   }
 
 
@@ -177,6 +216,95 @@ console.log('111 uniqrRes', uniqueResource);
       );
     }
     return true;
+  }
+
+  onKanbanBeforeDrag(dragContext: any) {
+    //  webix.message("Drag has been started");
+    return true
+  }
+
+  onKanbanBeforeDragIn(dragContext: any, e: any, list: any) {
+
+    // item id
+    /*    const item = this.getItem(dragContext.start);
+
+        // if we move an item from one list to another
+        if(dragContext.from != dragContext.to){
+          const statusFrom = dragContext.from.config.status;
+          const statusTo = dragContext.to.config.status;
+          const statusIndex = {"new": 0, "work": 1, "test": 2, "done": 3};
+          const diff = Math.abs(statusIndex[statusFrom] - statusIndex[statusTo]);
+          if(diff>1){
+            return false;
+          }
+        }*/
+    return true;
+  }
+
+  onKanbanAfterDrop(kanbanView: any, dragContext: any, e: any, list: any) {
+    // Get the ID of the dropped item
+    const itemId = dragContext.source;
+    // Get the actual data of the dropped item
+    const itemData = kanbanView.getItem(itemId);
+    this.updateActivityWithNewValues(itemData);
+
+  }
+
+  updateActivityWithNewValues(itemData: any) {
+    const {status, id, user_id, owner_id} = itemData;
+    const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.name === status) as IStatus;
+    const model: string = sessionStorage.getItem('modelId') as string;
+    const peopleIdToUse = user_id ? user_id : owner_id;
+    const updatedValues = {
+      activityId: id,
+      statusId: newStatus.id,
+      userId: parseInt(peopleIdToUse),
+      startDate: itemData.start_date,
+      endDate: itemData.end_date,
+      activityText: itemData.text
+    }
+    this.apiCallsService.updateActivity(model, updatedValues).pipe(take(1)).subscribe();
+  }
+
+  updateAssignmentInGantt(resources: any, id: any) {
+    const userId = resources.resource;
+    const activityId = parseInt(id.split('-'));
+    const model: string = sessionStorage.getItem('modelId') as string;
+    this.apiCallsService.updateAssignment(model, {userId, activityId}).pipe(take(1)).subscribe();
+  }
+
+  getUpdatedTasks(allTasks: any, selectedUsers: IUser[], selectedStatuses: IStatus[], selectedProjects: IProjectDetails[], searchValue: string) {
+    let updatedTasks = allTasks.slice();
+
+    if (selectedUsers?.length) {
+      updatedTasks = allTasks?.filter((task: any) => {
+        return (selectedUsers.find((ownerFilter: IUser) => ownerFilter.owner === task.owner));
+      });
+    }
+
+    if (selectedStatuses?.length) {
+      updatedTasks = updatedTasks?.filter((task: any) => {
+        return selectedStatuses.find((status: IStatus) => status.name === task.status);
+      });
+    }
+
+    if (selectedProjects?.length) {
+      updatedTasks = updatedTasks?.filter((task: any) => {
+        return selectedProjects.find((project: IProjectDetails) => project.project_name === task.project_name);
+      });
+    }
+
+    //task.owner.includes(searchValue)
+    if (searchValue) {
+      updatedTasks = updatedTasks?.filter((task: any) => {
+        return task.owner?.toLowerCase().includes(searchValue.toLowerCase())
+          || task.project_name?.toLowerCase().includes(searchValue.toLowerCase())
+          || task.status?.toLowerCase().includes(searchValue.toLowerCase())
+          || task.text?.toLowerCase().includes(searchValue.toLowerCase());
+      });
+    }
+
+    return updatedTasks;
   }
 
 }

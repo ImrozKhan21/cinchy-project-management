@@ -3,9 +3,10 @@ import {CinchyService} from "@cinchy-co/angular-sdk";
 import {isPlatformBrowser} from "@angular/common";
 import {WindowRefService} from "./services/window-ref.service";
 import {ApiCallsService} from "./services/api-calls.service";
-import {lastValueFrom} from 'rxjs';
+import {forkJoin, lastValueFrom} from 'rxjs';
 import {IProjectDetails} from "./models/common.model";
 import {AppStateService} from "./services/app-state.service";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-root',
@@ -21,7 +22,7 @@ export class AppComponent {
 
   constructor(private cinchyService: CinchyService, @Inject(PLATFORM_ID) private platformId: any,
               private windowRefService: WindowRefService, private apiCallsService: ApiCallsService,
-              private appStateService: AppStateService) {
+              private appStateService: AppStateService, private router: Router) {
   }
 
   async ngOnInit() {
@@ -47,13 +48,33 @@ export class AppComponent {
   async setDetails() {
     await lastValueFrom(this.apiCallsService.getEnvDetails());
     this.isLoggedIn = true;
+    const modelId: any = sessionStorage.getItem('modelId');
+    const viewType: any = sessionStorage.getItem('viewType');
+    const owner: any = sessionStorage.getItem('owner');
+    const status: any = sessionStorage.getItem('status');
+    const queryParams: any = {modelId, viewType, owner, status};
+    this.router.navigate([`/`], {queryParams});
+    this.getViewDetailsAndSetStates();
+
+  }
+
+  getViewDetailsAndSetStates() {
     if (isPlatformBrowser(this.platformId)) {
       this.viewType = sessionStorage.getItem('viewType');
-      console.log('111 VT', this.viewType)
       const model: string = sessionStorage.getItem('modelId') as string;
-      this.appStateService.projectDetails = await lastValueFrom(this.apiCallsService.getProjectDetails(model));
+      const allObs = [this.apiCallsService.getAllProjects(model),
+        this.apiCallsService.getAllStatuses(model), this.apiCallsService.getAllActivityUsers(model), this.apiCallsService.getProjectDetails(model)];
+
+      forkJoin(allObs).subscribe((value: any) => {
+        const [projects, statuses, owners, projectDetails] = value;
+        this.appStateService.projects = projects;
+        this.appStateService.allStatuses = statuses;
+        this.appStateService.users = owners;
+        this.appStateService.projectDetails = projectDetails;
+        this.projectDetails = this.appStateService.projectDetails;
+      });
     }
-    this.projectDetails = this.appStateService.projectDetails;
+
   }
 
   setHeight() {

@@ -1,11 +1,10 @@
-import {projectDetails} from "../data";
+import {projectDetails, utilServiceInstance} from "../data";
 
 declare let webix: any;
 declare let gantt: any;
 declare let categories: any;
 
 export class GanttBackendService extends gantt.services.Backend {
-
   tasks() {
     return webix.promise.resolve(projectDetails.mappedTasks);
   }
@@ -28,12 +27,11 @@ export class GanttBackendService extends gantt.services.Backend {
   }
 
   addTask(taskDetails: any) {
-    console.log('111 task added', taskDetails)
     return webix.promise.resolve({id: webix.uid()});
   }
 
-  updateTask(taskId: any, taskDetails: any) {
-    console.log('111 update', taskId, taskDetails);
+  updateTask(taskId: any, taskDetails: any, e:any) {
+    utilServiceInstance.updateActivityWithNewValues(taskDetails);
     return webix.promise.resolve();
   }
 
@@ -56,7 +54,8 @@ export class GanttBackendService extends gantt.services.Backend {
   addAssignment(obj: any) {
     return Promise.resolve({ id: obj.id });
   }
-  updateAssignment(id: any, obj: any) {
+  updateAssignment(id: any, resources: any) {
+    utilServiceInstance.updateAssignmentInGantt(resources, id);
     return Promise.resolve({});
   }
   removeAssignment(id: any) {
