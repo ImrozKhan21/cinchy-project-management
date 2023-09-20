@@ -1,80 +1,72 @@
-import {Component, ElementRef, AfterViewInit, OnInit, Inject, PLATFORM_ID} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, Inject, OnInit, PLATFORM_ID} from '@angular/core';
 import {GanttBackendService} from "../../webix-services/gantt-backend.service";
 import {AppStateService} from "../../services/app-state.service";
-import {projectDetails, setProjectDetails, setUtilServiceInstance, utilServiceInstance} from "../../data";
+import ganttGlobalDataSingleton from "../../ganttGlobalDataSingleton";
 import {UtilService} from "../../services/util.service";
 import {IProjectDetails, IStatus, IUser} from "../../models/common.model";
 import {ActivatedRoute, Router} from "@angular/router";
-import {ReplaySubject, takeUntil} from "rxjs";
+import {Observable} from "rxjs";
 
 declare let webix: any;
 declare let gantt: any;
 
 @Component({
   selector: 'app-gantt-view',
-  template: `
-    <div id="gantt-parent" style="width: 100%; height: 100vh;"></div>
-    <div id="gantt-toolbar"></div>
-    <div id="gantt-chart" style="width: 100%; height: 100%;"></div>
-  `,  // Webix will replace this div with the Gantt chart
+  templateUrl: './gantt-view.component.html',
   styleUrls: ['./gantt-view.component.scss']
 })
 export class GanttViewComponent implements OnInit, AfterViewInit {
   ganttData: any;
   ganttView: any;
   currentViewType: string;
+  showSpinner$: Observable<boolean>;
 
-  constructor(private element: ElementRef,@Inject(PLATFORM_ID) private platformId: any, private activatedRoute: ActivatedRoute,
+
+  constructor(private element: ElementRef, @Inject(PLATFORM_ID) private platformId: any, private activatedRoute: ActivatedRoute,
               private appStateService: AppStateService, private router: Router,
               private utilService: UtilService) {
   }
 
   ngOnInit() {
-    setUtilServiceInstance(this.utilService);
+    this.showSpinner$ = this.appStateService.getSpinnerState();
+    ganttGlobalDataSingleton.setUtilServiceInstance(this.utilService);
     this.ganttData = this.utilService.transformToGanttData(this.appStateService.projectDetails, this.appStateService.projects);
-    setProjectDetails(this.ganttData);
+    ganttGlobalDataSingleton.setProjectDetails(this.ganttData);
   }
 
   ngAfterViewInit(): void {
-    this.appStateService.getGlobalFilter().subscribe(({selectedUsers, selectedStatuses, selectedProjects, searchValue}) => {
-      this.setDetailsAndRender(selectedUsers, selectedStatuses, selectedProjects, searchValue);
+    this.appStateService.getGlobalFilter().subscribe((filterValues) => {
+      this.setDetailsAndRender(filterValues);
     });
   }
 
-  setDetailsAndRender(selectedUsers: IUser[], selectedStatuses: IStatus[], selectedProjects: IProjectDetails[], searchValue: string) {
-    const {allTasks} = projectDetails;
-    let updatedTasks = this.utilService.getUpdatedTasks(allTasks, selectedUsers, selectedStatuses, selectedProjects, searchValue);
-    setProjectDetails({...projectDetails, mappedTasks: updatedTasks});
+  setDetailsAndRender(filterValues: any) {
+    const {allTasks} = ganttGlobalDataSingleton.projectDetails;
+    let updatedTasks = this.utilService.getUpdatedTasks(allTasks, filterValues);
+    ganttGlobalDataSingleton.setProjectDetails({...ganttGlobalDataSingleton.projectDetails, mappedTasks: updatedTasks});
     this.ganttView?.destructor();
     this.initGantt();
   }
 
   initGantt(): void {
-    class CustomBars extends gantt.views["chart/bars"] {
-      BarTemplate(task: any) {
-        console.log("Processing task:", task);  // Debug log
-
-        const assignment = projectDetails.mappedAssigned.find((a: any) => a.task_id === task?.id);
-        const resource = projectDetails.mappedResources.find((r: any) => r.id === assignment?.resource_id);
-        return `${task?.text} (${resource?.name})`;
-      }
-
-      BarCSS(task: any, last: any) {
-        // default classname
-        let css = super.BarCSS(task, last);
-        // add a subtype classname
-        if (task.subtype && task.type == "task") css += " " + task.subtype;
-        return css;
-      }
-    }
-
     if (webix.env.mobile) webix.ui.fullScreen();
     webix.CustomScroll.init();
+
+    const zoom = {
+      view: "richselect",
+      label: "View By:",
+      value: "month",
+      width: 300,
+      options: ["day", "week", "month", "quarter", "year"],
+      on: {
+        onChange: GanttViewComponent.resetScales,
+      },
+    };
     this.ganttView = webix.ui({
       container: document.getElementById('gantt-parent'),
 
       rows: [
-        {
+      /*  {
           container: document.getElementById('gantt-toolbar'),
 
           view: "toolbar",
@@ -92,11 +84,11 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
               width: 350,
               value: this.currentViewType,
               options: [
-                { value: "Task view", id: "tasks" },
-                { value: "Resource view", id: "resources" },
+                {value: "Task view", id: "tasks"},
+                {value: "Resource view", id: "resources"},
               ],
               on: {
-                onChange: (v:any) => {
+                onChange: (v: any) => {
                   const gantView = $$("gantt") as any;
                   gantView.getState().display = v;
                   this.currentViewType = v;
@@ -105,6 +97,13 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
             },
             {},
           ],
+        },*/
+        {
+          view: "toolbar",
+          id: "toolbar",
+          container: document.getElementById('gantt-scales'),
+          paddingX: 10,
+          elements: [zoom, {}],
         },
         {
           container: document.getElementById('gantt-chart'),
@@ -113,17 +112,70 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
           resources: true,
           display: this.currentViewType === 'resources' ? 'resources' : "tasks",
           resourcesDiagram: false,
+          scales: [ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.quarterScale, ganttGlobalDataSingleton.monthScale],
+          scaleCellWidth: 400,
           on: {
             onBeforeDrag: this.utilService.beforeDrag,
             onBeforeDrop: this.utilService.afterDrag,
           },
           override: new Map<any, any>([
-            [gantt.views["chart/bars"], CustomBars],
             [gantt.services.Backend, GanttBackendService]
           ])
         }
       ]
     });
-
   }
+
+  static getScales(minScale: any) {
+    const scales = [];
+    switch (minScale) {
+      case "year":
+        scales.push(ganttGlobalDataSingleton.yearScale);
+        break;
+      case "quarter":
+        scales.push(ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.quarterScale);
+        break;
+      case "month":
+        scales.push(ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.quarterScale, ganttGlobalDataSingleton.monthScale);
+        break;
+      case "week":
+        scales.push(ganttGlobalDataSingleton.quarterScale, ganttGlobalDataSingleton.monthScale, ganttGlobalDataSingleton.weekScale);
+        break;
+      case "day":
+        scales.push(ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.monthScale, ganttGlobalDataSingleton.dayScale);
+        break;
+      case "hour":
+        scales.push(ganttGlobalDataSingleton.monthScale, ganttGlobalDataSingleton.dayScale, ganttGlobalDataSingleton.hourScale);
+        break;
+    }
+    return scales;
+  }
+
+  static resetScales(v: any, o: any) {
+    let originalStartDate: any = null;
+    let originalEndDate: any = null;
+    const gantView = $$("gantt") as any;
+    const current = gantView.getService("local").getScales();
+    if (!(originalEndDate || originalStartDate)) {
+      originalStartDate = webix.Date.add(current.start, 1, o, true);
+      originalEndDate = webix.Date.add(current.end, -1, o, true);
+    }
+
+    const cellWidth = ganttGlobalDataSingleton.cellWidths[v];
+    const scales = GanttViewComponent.getScales(v);
+
+    const start = webix.Date.add(originalStartDate, -1, v, true);
+    const end = webix.Date.add(originalEndDate, 1, v, true);
+    gantView
+      .getService("local")
+      .setScales(
+        start,
+        end,
+        !(v == "day"),
+        cellWidth,
+        current.cellHeight,
+        scales
+      );
+  }
+
 }

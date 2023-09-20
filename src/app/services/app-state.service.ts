@@ -14,6 +14,7 @@ export class AppStateService {
   projects: IProjectDetails[];
 
   globalFilters$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  showSpinner$: Subject<boolean> = new Subject<boolean>();
 
   constructor(@Inject(PLATFORM_ID) private platformId: any,
               private windowRef: WindowRefService,) { }
@@ -25,6 +26,14 @@ export class AppStateService {
 
   getGlobalFilter() {
     return this.globalFilters$.asObservable();
+  }
+
+  setSpinnerState(val: boolean) {
+    this.showSpinner$.next(val);
+  }
+
+  getSpinnerState() {
+    return this.showSpinner$.asObservable();
   }
 
   setCurrentUrl() {

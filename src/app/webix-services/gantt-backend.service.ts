@@ -1,4 +1,4 @@
-import {projectDetails, utilServiceInstance} from "../data";
+import ganttGlobalDataSingleton from "../ganttGlobalDataSingleton";
 
 declare let webix: any;
 declare let gantt: any;
@@ -6,7 +6,7 @@ declare let categories: any;
 
 export class GanttBackendService extends gantt.services.Backend {
   tasks() {
-    return webix.promise.resolve(projectDetails.mappedTasks);
+    return webix.promise.resolve(ganttGlobalDataSingleton.projectDetails.mappedTasks);
   }
 
   categories() {
@@ -15,11 +15,11 @@ export class GanttBackendService extends gantt.services.Backend {
 
   // custom resources structure: "customMaxTime" included
   resources() {
-    return Promise.resolve(projectDetails.mappedResources);
+    return Promise.resolve(ganttGlobalDataSingleton.projectDetails.mappedResources);
   }
 
   assignments() {
-    return webix.promise.resolve(projectDetails.mappedAssigned);
+    return webix.promise.resolve(ganttGlobalDataSingleton.projectDetails.mappedAssigned);
   }
 
   links() {
@@ -27,11 +27,13 @@ export class GanttBackendService extends gantt.services.Backend {
   }
 
   addTask(taskDetails: any) {
+   // ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(taskDetails, 'gantt');
+
     return webix.promise.resolve({id: webix.uid()});
   }
 
   updateTask(taskId: any, taskDetails: any, e:any) {
-    utilServiceInstance.updateActivityWithNewValues(taskDetails);
+    ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(taskDetails, 'gantt');
     return webix.promise.resolve();
   }
 
@@ -55,7 +57,7 @@ export class GanttBackendService extends gantt.services.Backend {
     return Promise.resolve({ id: obj.id });
   }
   updateAssignment(id: any, resources: any) {
-    utilServiceInstance.updateAssignmentInGantt(resources, id);
+    ganttGlobalDataSingleton.utilServiceInstance.updateAssignmentInGantt(resources, id);
     return Promise.resolve({});
   }
   removeAssignment(id: any) {

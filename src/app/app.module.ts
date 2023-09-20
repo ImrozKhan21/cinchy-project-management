@@ -16,6 +16,10 @@ import {MultiSelectModule} from "primeng/multiselect";
 import {ButtonModule} from "primeng/button";
 import {InputTextModule} from "primeng/inputtext";
 import {ProgressSpinnerModule} from "primeng/progressspinner";
+import {ToastModule} from "primeng/toast";
+import {MessageService} from "primeng/api";
+import {HeaderComponent} from "./components/header/header.component";
+import {CheckboxModule} from "primeng/checkbox";
 
 export function appLoadFactory(config: ConfigService) {
   return () => lastValueFrom(config.loadConfig());
@@ -30,7 +34,8 @@ export function getBaseUrl() {
     AppComponent,
     GanttViewComponent,
     KanbanViewComponent,
-    FiltersComponent
+    FiltersComponent,
+    HeaderComponent
   ],
     imports: [
         BrowserModule,
@@ -43,6 +48,8 @@ export function getBaseUrl() {
         ButtonModule,
         InputTextModule,
         ProgressSpinnerModule,
+        ToastModule,
+        CheckboxModule,
     ],
   providers: [
     {
@@ -61,6 +68,7 @@ export function getBaseUrl() {
       deps: [ConfigService]
     },
     {provide: 'BASE_URL', useFactory: getBaseUrl},
+    MessageService
   ],
   bootstrap: [AppComponent]
 })

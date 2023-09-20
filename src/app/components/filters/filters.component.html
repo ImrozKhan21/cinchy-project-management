@@ -1,4 +1,15 @@
 <div class="filters-wrapper">
+  <input placeholder="Search.." type="text" pInputText [(ngModel)]="searchValue" (ngModelChange)="valueChanged()"/>
+
+  <div class="checkbox-wrapper">
+    <p-checkbox inputId="ny" [(ngModel)]="showOnlyProjects" [binary]="true"
+                (ngModelChange)="toggleOnlyProjects()"></p-checkbox>
+    <label for="ny">Projects only</label>
+  </div>
+
+
+  <span>|</span>
+
   <div class="card flex justify-content-center form-wrapper">
     <!--
         <label class="form-label">Owner</label>
@@ -46,8 +57,12 @@
   </div>
 
   <button pButton (click)="apply()">Apply</button>
+</div>
 
-  <input placeholder="Search.." type="text" pInputText [(ngModel)]="searchValue" (ngModelChange)="valueChanged()"/>
+<div class="filters-wrapper">
+
+
+
 </div>
 
 

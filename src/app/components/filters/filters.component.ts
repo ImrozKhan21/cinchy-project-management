@@ -3,7 +3,6 @@ import {IProjectDetails, IStatus, IUser} from "../../models/common.model";
 import {AppStateService} from "../../services/app-state.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {ReplaySubject, take, takeUntil} from "rxjs";
-import {setProjectDetails} from "../../data";
 import {isPlatformBrowser} from "@angular/common";
 
 @Component({
@@ -25,6 +24,7 @@ export class FiltersComponent {
   projects: IProjectDetails[];
   selectedProjectsAdvanced: IProjectDetails[];
   searchValue: string;
+  showOnlyProjects: boolean;
 
   filteredProjects: IProjectDetails[];
   private destroyed$: ReplaySubject<boolean> = new ReplaySubject(1);
@@ -61,7 +61,10 @@ export class FiltersComponent {
   }
 
   valueChanged() {
-    console.log('111', this.searchValue);
+    this.apply(true);
+  }
+
+  toggleOnlyProjects() {
     this.apply(true);
   }
 
@@ -98,7 +101,8 @@ export class FiltersComponent {
       selectedUsers: this.selectedUserAdvanced,
       selectedStatuses: this.selectedStatusesAdvanced,
       selectedProjects: this.selectedProjectsAdvanced,
-      searchValue: this.searchValue
+      searchValue: this.searchValue,
+      showOnlyProjects: this.showOnlyProjects
     });
 
     if (!dontAddParam) {

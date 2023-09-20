@@ -3,5 +3,15 @@
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  gap: 20px;
+  gap: 15px;
+  padding: 5px 0;
+  font-family: 'Open Sans', sans-serif;
+  color: rgb(86, 86, 86);
+
+
+  .checkbox-wrapper {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
 }

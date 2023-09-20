@@ -1,8 +1,8 @@
 import {Component, ElementRef, AfterViewInit, OnInit} from '@angular/core';
 import {AppStateService} from "../../services/app-state.service";
-import {projectDetails, setProjectDetails} from "../../data";
 import {UtilService} from "../../services/util.service";
 import {IProjectDetails, IStatus, IUser} from "../../models/common.model";
+import {Observable} from "rxjs";
 
 declare let webix: any;
 declare let kanban: any;
@@ -10,30 +10,32 @@ declare let base_task_set: any;
 
 @Component({
   selector: 'app-kanban-view',
-  template: '<div style="width: 100%; height: 100vh;"></div>',  // Webix will replace this div with the kanban chart
+  templateUrl: './kanban-view.component.html',
   styleUrls: ['./kanban-view.component.scss']
 })
 export class KanbanViewComponent implements OnInit, AfterViewInit {
   kanbanData: any;
   kanbanView: any;
+  showSpinner$: Observable<boolean>;
 
   constructor(private element: ElementRef, private appStateService: AppStateService,
               private utilService: UtilService) {
   }
 
   ngOnInit() {
+    this.showSpinner$ = this.appStateService.getSpinnerState();
     this.kanbanData = this.utilService.transformToKanbanData(this.appStateService.projectDetails);
   }
 
   ngAfterViewInit(): void {
-    this.appStateService.getGlobalFilter().subscribe(({selectedUsers, selectedStatuses, selectedProjects, searchValue}) => {
-      this.setDetailsAndRender(selectedUsers, selectedStatuses, selectedProjects, searchValue);
+    this.appStateService.getGlobalFilter().subscribe((filterValues) => {
+      this.setDetailsAndRender(filterValues);
     });
   }
 
-  setDetailsAndRender(selectedUsers: IUser[], selectedStatuses: IStatus[], selectedProjects: IProjectDetails[], searchValue: string) {
+  setDetailsAndRender(filterValues: any) {
     const {allTasks} = this.kanbanData;
-    let updatedTasks = this.utilService.getUpdatedTasks(allTasks, selectedUsers, selectedStatuses, selectedProjects, searchValue);
+    let updatedTasks = this.utilService.getUpdatedTasks(allTasks, filterValues);
     this.kanbanData = {...this.kanbanData, mappedTasks: updatedTasks};
     this.kanbanView?.destructor();
     this.initKanban();
@@ -46,7 +48,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
     this.kanbanView = webix.ui(
       {
         view: "kanban",
-        container: this.element.nativeElement.firstChild,
+        container: document.getElementById("kanban-view"),
         cols: mappedStatuses,
         data: mappedTasks,
         userList: true,

@@ -1,7 +1,7 @@
-import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
 import {forkJoin} from 'rxjs';
-import {map, tap} from 'rxjs/operators';
+import {tap} from 'rxjs/operators';
 import {CinchyConfig} from '@cinchy-co/angular-sdk';
 import {IEnv} from "./models/common.model";
 import {WindowRefService} from "./services/window-ref.service";
@@ -18,22 +18,28 @@ export class ConfigService {
   constructor(private http: HttpClient, @Inject('BASE_URL') private baseUrl: string, @Inject(PLATFORM_ID) private platformId: any,
               private windowRefService: WindowRefService) {
     window.addEventListener('message', this.receiveMessage, false);
+
     this.setRowAndFormId();
   }
 
   setRowAndFormId() {
+    let modelId = this.getQueryStringValue('modelId', window.location.search);
+    const parentUri = modelId ? window.location.search : document.referrer;
+    console.log('111 parentUri', parentUri);
     if (isPlatformBrowser(this.platformId)) {
-      let modelId = this.getQueryStringValue('modelId', window.location.search);
-      let viewType = this.getQueryStringValue('viewType', window.location.search);
-      let owner = this.getQueryStringValue('owner', window.location.search);
-      let status = this.getQueryStringValue('status', window.location.search);
-      let project = this.getQueryStringValue('project', window.location.search);
+      modelId = this.getQueryStringValue('modelId', parentUri);
+
+      let viewType = this.getQueryStringValue('viewType', parentUri);
+      let owner = this.getQueryStringValue('owner', parentUri);
+      let status = this.getQueryStringValue('status', parentUri);
+      let project = this.getQueryStringValue('project', parentUri);
+      console.log('1111 modelId IN If', modelId, viewType, parentUri);
       if (!modelId) {
-        modelId = this.getQueryStringValue('modelId', document.referrer);
-        viewType = this.getQueryStringValue('viewType', document.referrer);
-        owner = this.getQueryStringValue('owner', document.referrer);
-        status = this.getQueryStringValue('status', document.referrer);
-        project = this.getQueryStringValue('project', document.referrer);
+        modelId = this.getQueryStringValue('modelId', parentUri);
+        viewType = this.getQueryStringValue('viewType', parentUri);
+        owner = this.getQueryStringValue('owner', parentUri);
+        status = this.getQueryStringValue('status', parentUri);
+        project = this.getQueryStringValue('project', parentUri);
       }
       modelId && sessionStorage.setItem('modelId', modelId);
       viewType && sessionStorage.setItem('viewType', viewType);

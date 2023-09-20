@@ -8,7 +8,7 @@ export interface IEnv {
 
 export interface IProjectDetails {
   project_name: string;
-  project_id: string;
+  project_id: number;
   progress: number;
   status: string;
   status_id: string;
@@ -21,6 +21,7 @@ export interface IProjectDetails {
   owner_photo: string;
   owner_id: string;
   parent_id: string;
+  type: string;
 }
 
 export interface IStatus {
@@ -33,5 +34,12 @@ export interface IUser {
   owner: string;
   owner_photo: number;
   owner_id: number;
+}
+
+export interface IDetails {
+  mappedResources: any;
+  mappedTasks: any;
+  mappedAssigned: any;
+  allTasks: any;
 }
 

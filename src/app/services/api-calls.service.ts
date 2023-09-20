@@ -79,11 +79,27 @@ export class ApiCallsService {
   getAllActivityUsers(model: string): Observable<IUser[]> {
     const actualModel = model ? model : 'Cinchy Project Management Model V1.0.0';
     const query = `SELECT
-    po.[Name] as 'owner',
-    po.[Photo] as 'owner_photo',
-    po.[Cinchy Id] as 'owner_id'
-    FROM [${actualModel}].[Project Management].[People] po
-    WHERE po.[Deleted] IS NULL`;
+    DISTINCT act.[Owner].[Cinchy Id] as 'Cinchy Id'
+    INTO #TMP
+    FROM [Cinchy Project Management Model V1.0.0].[Project Management].[Project Activities] act
+    WHERE act.[Deleted] IS NOT NULL AND act.[Owner] IS NOT NULL
+
+    SELECT x.* FROM (
+
+    SELECT ppl.[Cinchy Id] as 'owner_id', ppl.[Name] as 'owner', ppl.[Photo] as 'owner_photo'
+    FROM [${actualModel}].[Project Management].[People] ppl
+    RIGHT JOIN #TMP tmp ON tmp.[Cinchy Id] = ppl.[Cinchy Id]
+    WHERE ppl.[Deleted] IS NULL
+    AND ppl.[Can Be Assigned] = 0
+
+    UNION ALL
+
+    SELECT ppl2.[Cinchy Id] as 'owner_id', ppl2.[Name] as 'owner', ppl2.[Photo] as 'owner_photo'
+    FROM [${actualModel}].[Project Management].[People] ppl2
+    WHERE ppl2.[Deleted] IS NULL
+    AND ppl2.[Can Be Assigned] = 1
+    ) as x
+    ORDER BY x.owner`;
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }

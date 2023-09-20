@@ -2,9 +2,15 @@
                    *ngIf="!projectDetails">
 </p-progressSpinner>
 
+<app-header></app-header>
 
 <div class="full-height-element" *ngIf="isLoggedIn && projectDetails">
-  <app-filters></app-filters>
-  <app-kanban-view *ngIf="viewType==='kanban'"></app-kanban-view>
-  <app-gantt-view *ngIf="viewType==='gantt'"></app-gantt-view>
+
+  <div class="content-wrapper">
+    <app-filters></app-filters>
+    <app-kanban-view *ngIf="viewType==='kanban'"></app-kanban-view>
+    <app-gantt-view *ngIf="viewType==='gantt'"></app-gantt-view>
+  </div>
 </div>
+
+<p-toast></p-toast>

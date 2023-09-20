@@ -1,1 +1,5 @@
-<p>gantt-view works!</p>
+<div id="gantt-parent" style="width: 100%; height: 100vh;"></div>
+<div id="gantt-toolbar"></div>
+<div id="gantt-scales"></div>
+<div id="gantt-chart" style="width: 100%; height: 100%;"></div>
+<p-progressSpinner class="item-center-n-relative" *ngIf="showSpinner$ | async;"></p-progressSpinner>

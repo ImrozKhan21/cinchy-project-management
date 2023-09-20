@@ -1,16 +1,16 @@
 import {Injectable} from '@angular/core';
 import {IProjectDetails, IStatus, IUser} from "../models/common.model";
-import {projectDetails} from "../data";
 import {AppStateService} from "./app-state.service";
 import {ApiCallsService} from "./api-calls.service";
 import {take} from "rxjs";
+import {MessageService} from "primeng/api";
 
 @Injectable({
   providedIn: 'root'
 })
 export class UtilService {
 
-  constructor(private appStateService: AppStateService, private apiCallsService: ApiCallsService) {
+  constructor(private appStateService: AppStateService, private apiCallsService: ApiCallsService, private messageService: MessageService) {
   }
 
   transformToKanbanData(projectDetails: IProjectDetails[]) {
@@ -96,6 +96,7 @@ export class UtilService {
         id: taskItem.project_id,
         type: 'project',
         parent: 0,
+        progress: 0,
       };
     });
     const childMappedTasks = projectDetails.map((taskItem, i: number) => {
@@ -110,6 +111,7 @@ export class UtilService {
       };
     });
     const allMappedTasks = [...mappedTasks, ...childMappedTasks];
+    console.log('111 allMapped', allMappedTasks);
     const mappedAssigned = this.transformToAssigned(mappedResources, allMappedTasks);
     return {mappedResources, allMappedTasks, mappedAssigned, allTasks: allMappedTasks}
   }
@@ -160,97 +162,10 @@ export class UtilService {
   }
 
 
-  beforeDrag(item: any, context: any) {
-    const name = item.text || "(no title)";
-    const mode = context.mode;
-    if (mode == "move")
-      webix.message("'" + name + "' is being moved");
-    else if (mode == "start" || mode == "end")
-      webix.message(
-        mode + " date of '" + name + "' is being changed"
-      );
-    else if (mode == "progress")
-      webix.message("'" + name + "' progress is being changed");
-    else if (mode == "links") {
-      const from = context.fromStart ? "start" : "end";
-      webix.message(
-        "The new link is being added from " +
-        from +
-        " of '" +
-        name +
-        "'"
-      );
-    }
-    return true;
-  }
+  // UPDATE ACTIVITIES
 
-  afterDrag(item: any, context: any) {
-    const name = item.text || "(no title)";
-    const mode = context.mode;
-    if (context.mode == "move")
-      webix.message("'" + name + "' has been moved");
-    else if (mode == "start" || mode == "end")
-      webix.message(
-        mode + " date has been changed by " + context.timeShift
-      );
-    else if (mode == "progress")
-      webix.message(
-        "'" + name + "' progress is now " + context.progress + "%"
-      );
-    else if (mode == "links") {
-      const targetName =
-        projectDetails.mappedTasks.getItem(context.targetId).text || "(no title)";
-      const t = context.linkType;
-      let type = "";
-      if (t == 0) type = "end-to-start";
-      else if (t === 1) type = "start-to-start";
-      else if (t == 2) type = "end-to-end";
-      else if (t == 3) type = "start-to-end";
-      webix.message(
-        "The new '" +
-        type +
-        "' link has been added added for " +
-        name +
-        " and " +
-        targetName
-      );
-    }
-    return true;
-  }
-
-  onKanbanBeforeDrag(dragContext: any) {
-    //  webix.message("Drag has been started");
-    return true
-  }
-
-  onKanbanBeforeDragIn(dragContext: any, e: any, list: any) {
-
-    // item id
-    /*    const item = this.getItem(dragContext.start);
-
-        // if we move an item from one list to another
-        if(dragContext.from != dragContext.to){
-          const statusFrom = dragContext.from.config.status;
-          const statusTo = dragContext.to.config.status;
-          const statusIndex = {"new": 0, "work": 1, "test": 2, "done": 3};
-          const diff = Math.abs(statusIndex[statusFrom] - statusIndex[statusTo]);
-          if(diff>1){
-            return false;
-          }
-        }*/
-    return true;
-  }
-
-  onKanbanAfterDrop(kanbanView: any, dragContext: any, e: any, list: any) {
-    // Get the ID of the dropped item
-    const itemId = dragContext.source;
-    // Get the actual data of the dropped item
-    const itemData = kanbanView.getItem(itemId);
-    this.updateActivityWithNewValues(itemData);
-
-  }
-
-  updateActivityWithNewValues(itemData: any) {
+  updateActivityWithNewValues(itemData: any, viewType?: string) {
+    this.appStateService.setSpinnerState(true);
     const {status, id, user_id, owner_id} = itemData;
     const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.name === status) as IStatus;
     const model: string = sessionStorage.getItem('modelId') as string;
@@ -263,24 +178,58 @@ export class UtilService {
       endDate: itemData.end_date,
       activityText: itemData.text
     }
-    this.apiCallsService.updateActivity(model, updatedValues).pipe(take(1)).subscribe();
+    this.apiCallsService.updateActivity(model, updatedValues).pipe(take(1)).subscribe(() => {
+      this.appStateService.setSpinnerState(false);
+      if (viewType !== 'gantt') {
+        this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+      }
+
+    });
   }
 
   updateAssignmentInGantt(resources: any, id: any) {
     const userId = resources.resource;
     const activityId = parseInt(id.split('-'));
     const model: string = sessionStorage.getItem('modelId') as string;
-    this.apiCallsService.updateAssignment(model, {userId, activityId}).pipe(take(1)).subscribe();
+    this.apiCallsService.updateAssignment(model, {userId, activityId}).pipe(take(1)).subscribe(() => {
+      this.appStateService.setSpinnerState(false);
+      this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+    });
   }
 
-  getUpdatedTasks(allTasks: any, selectedUsers: IUser[], selectedStatuses: IStatus[], selectedProjects: IProjectDetails[], searchValue: string) {
-    let updatedTasks = allTasks.slice();
+  beforeDrag(item: any, context: any) {
+  }
 
+  afterDrag(item: any, context: any) {
+  }
+
+  onKanbanBeforeDrag(dragContext: any) {
+    //  webix.message("Drag has been started");
+    return true
+  }
+
+  onKanbanBeforeDragIn(dragContext: any, e: any, list: any) {
+    return true;
+  }
+
+  onKanbanAfterDrop(kanbanView: any, dragContext: any, e: any, list: any) {
+    // Get the ID of the dropped item
+    const itemId = dragContext.source;
+    // Get the actual data of the dropped item
+    const itemData = kanbanView.getItem(itemId);
+    this.updateActivityWithNewValues(itemData);
+
+  }
+
+  getUpdatedTasks(allTasks: any, filterValues: any) {
+    const {selectedUsers, selectedStatuses, selectedProjects, searchValue, showOnlyProjects} = filterValues;
+    let updatedTasks = allTasks.slice();
     if (selectedUsers?.length) {
       updatedTasks = allTasks?.filter((task: any) => {
-        return (selectedUsers.find((ownerFilter: IUser) => ownerFilter.owner === task.owner));
+        return (selectedUsers.find((ownerFilter: IUser) => ownerFilter.owner_id === task.owner_id || ownerFilter.owner === task.owner));
       });
     }
+
 
     if (selectedStatuses?.length) {
       updatedTasks = updatedTasks?.filter((task: any) => {
@@ -303,8 +252,33 @@ export class UtilService {
           || task.text?.toLowerCase().includes(searchValue.toLowerCase());
       });
     }
+    let actualList;
+    if (showOnlyProjects) {
+      actualList = updatedTasks.filter((task: IProjectDetails) => task.type === 'project');
+    } else {
+      actualList = this.augmentFilteredList(updatedTasks, allTasks);
+    }
+    return actualList;
+  }
 
-    return updatedTasks;
+  // To also add the parent project if it is not returned after search, is some task has parentId and that parentId task is not present
+  augmentFilteredList(filteredList: IProjectDetails[], allTasks: IProjectDetails[]): IProjectDetails[] {
+    const resultArray: IProjectDetails[] = [...filteredList];
+    const filteredIds = new Set(filteredList.map(task => task.project_id));
+
+    for (let task of filteredList) {
+      if (task.parent_id && !filteredIds.has(Number(task.parent_id))) {
+        // Find the parent task in allTasks
+        const parentTask = allTasks.find(t => t.project_id === Number(task.parent_id));
+        if (parentTask) {
+          resultArray.push(parentTask);
+          // Add the ID to the set so we don't add the same task twice
+          filteredIds.add(parentTask.project_id);
+        }
+      }
+    }
+
+    return resultArray;
   }
 
 }

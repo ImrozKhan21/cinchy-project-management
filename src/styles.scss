@@ -1,19 +1,29 @@
 /* You can add global styles to this file, and also import other style files */
+@import "primeicons/primeicons.css";
 
+
+body {
+  margin: 0;
+}
 
 .item-center-n-relative {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   position: absolute;
+  z-index: 999999;
 }
 
 .filters-wrapper {
-  padding: 10px;
 
-  .p-autocomplete-multiple-container, .p-multiselect, .p-inputtext {
-    min-width: 320px;
-    max-width: 350px;
+  .p-autocomplete-multiple-container, .p-multiselect {
+    min-width: 300px;
+    max-width: 300px;
+  }
+
+  .p-inputtext{
+    min-width: 250px;
+    max-width: 250px;
   }
 
   .form-label {
