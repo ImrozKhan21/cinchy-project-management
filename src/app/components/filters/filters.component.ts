@@ -1,4 +1,4 @@
-import {Component, Inject, PLATFORM_ID} from '@angular/core';
+import {Component, Inject, Input, PLATFORM_ID} from '@angular/core';
 import {IProjectDetails, IStatus, IUser} from "../../models/common.model";
 import {AppStateService} from "../../services/app-state.service";
 import {ActivatedRoute, Router} from "@angular/router";
@@ -11,8 +11,10 @@ import {isPlatformBrowser} from "@angular/common";
   styleUrls: ['./filters.component.scss']
 })
 export class FiltersComponent {
+  @Input() viewType: string;
   users: IUser[];
   selectedUserAdvanced: any[];
+  selectedProjectUserAdvanced: any[];
 
   filteredUsers: any[];
 
@@ -24,7 +26,7 @@ export class FiltersComponent {
   projects: IProjectDetails[];
   selectedProjectsAdvanced: IProjectDetails[];
   searchValue: string;
-  showOnlyProjects: boolean;
+  isProjectsExpanded: boolean;
 
   filteredProjects: IProjectDetails[];
   private destroyed$: ReplaySubject<boolean> = new ReplaySubject(1);
@@ -39,11 +41,10 @@ export class FiltersComponent {
     this.statuses = this.appStateService.allStatuses;
     this.projects = this.appStateService.projects;
     this.activatedRoute.queryParams.pipe(take(1)).subscribe(params => {
-      let status = params['status'];
-      let owner = params['owner'];
-      let project = params['project'];
+      let {status, owner, project, searchValue, projectOwner, isProjectsExpanded} = params;
       if (status) {
         const allStatusesInParams: string[] = (decodeURIComponent(status)).split(',');
+        console.log('11 allStatusesInParams', allStatusesInParams, status);
         this.selectedStatusesAdvanced = this.statuses.filter((statusItem: IStatus) => allStatusesInParams.includes(statusItem.name));
       }
 
@@ -52,20 +53,31 @@ export class FiltersComponent {
         this.selectedUserAdvanced = this.users.filter((user: IUser) => allOwnersInParams.includes(user.owner));
       }
 
-      if (project) {
-        const allProjectInParams: string[] = (decodeURIComponent(owner)).split(',');
-        this.selectedUserAdvanced = this.projects.filter((project: IProjectDetails) => allProjectInParams.includes(project.project_name));
+      if (projectOwner) {
+        const allOwnersInParams: string[] = (decodeURIComponent(projectOwner)).split(',');
+        this.selectedProjectUserAdvanced = this.users.filter((user: IUser) => allOwnersInParams.includes(user.owner));
       }
+
+      if (project) {
+        const allProjectInParams: string[] = (decodeURIComponent(project)).split(',');
+        this.selectedProjectsAdvanced = this.projects.filter((project: IProjectDetails) => allProjectInParams.includes(project.project_name));
+      }
+
+      if (searchValue) {
+        this.searchValue = searchValue;
+      }
+
+      this.isProjectsExpanded = isProjectsExpanded === "true";
       this.apply(true);
     });
   }
 
   valueChanged() {
-    this.apply(true);
+    this.apply();
   }
 
   toggleOnlyProjects() {
-    this.apply(true);
+    this.apply();
   }
 
   filterUser(event: any) {
@@ -98,31 +110,41 @@ export class FiltersComponent {
 
   apply(dontAddParam?: boolean) {
     this.appStateService.applyGlobalFilter({
+      selectedProjectUsers: this.selectedProjectUserAdvanced,
       selectedUsers: this.selectedUserAdvanced,
       selectedStatuses: this.selectedStatusesAdvanced,
       selectedProjects: this.selectedProjectsAdvanced,
       searchValue: this.searchValue,
-      showOnlyProjects: this.showOnlyProjects
+      isProjectsExpanded: this.isProjectsExpanded
     });
 
     if (!dontAddParam) {
+      const currentParams = this.activatedRoute.snapshot.queryParams;
+
       const params = {
-        owner: (this.selectedUserAdvanced?.map((user: IUser) => user.owner)),
-        status: (this.selectedStatusesAdvanced?.map((status: IStatus) => status.name)),
-        project: (this.selectedProjectsAdvanced?.map((project: IProjectDetails) => project.project_name))
+        ...currentParams,
+        projectOwner: (this.selectedProjectUserAdvanced?.map((user: IUser) => user.owner))?.join(','),
+        owner: (this.selectedUserAdvanced?.map((user: IUser) => user.owner))?.join(','),
+        status: (this.selectedStatusesAdvanced?.map((status: IStatus) => status.name))?.join(','),
+        project: (this.selectedProjectsAdvanced?.map((project: IProjectDetails) => project.project_name))?.join(','),
+        searchValue: this.searchValue,
+        isProjectsExpanded: this.isProjectsExpanded,
       };
 
       if (isPlatformBrowser(this.platformId)) {
           !this.selectedUserAdvanced?.length && sessionStorage.removeItem('owner');
-          !this.selectedUserAdvanced?.length && sessionStorage.removeItem('status');
-          !this.selectedUserAdvanced?.length && sessionStorage.removeItem('project');
+          !this.selectedStatusesAdvanced?.length && sessionStorage.removeItem('status');
+          !this.selectedProjectsAdvanced?.length && sessionStorage.removeItem('project');
+          !this.selectedProjectUserAdvanced?.length && sessionStorage.removeItem('projectOwner');
+          !this.searchValue && sessionStorage.removeItem('searchValue');
+          !this.isProjectsExpanded && sessionStorage.removeItem('isProjectsExpanded');
       }
       this.router.navigate(
         [],
         {
           relativeTo: this.activatedRoute,
           queryParams: params,
-          queryParamsHandling: 'merge', // remove to replace all query params by provided
+          queryParamsHandling: '', // Do not preserve other params, since we're spreading them in the updatedParams
         });
     }
   }

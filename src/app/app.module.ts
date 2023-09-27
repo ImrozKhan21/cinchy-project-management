@@ -20,6 +20,7 @@ import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
 import {HeaderComponent} from "./components/header/header.component";
 import {CheckboxModule} from "primeng/checkbox";
+import { EditFormComponent } from './common/edit-form/edit-form.component';
 
 export function appLoadFactory(config: ConfigService) {
   return () => lastValueFrom(config.loadConfig());
@@ -35,7 +36,8 @@ export function getBaseUrl() {
     GanttViewComponent,
     KanbanViewComponent,
     FiltersComponent,
-    HeaderComponent
+    HeaderComponent,
+    EditFormComponent
   ],
     imports: [
         BrowserModule,

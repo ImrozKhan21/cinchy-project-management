@@ -3,9 +3,10 @@ import {GanttBackendService} from "../../webix-services/gantt-backend.service";
 import {AppStateService} from "../../services/app-state.service";
 import ganttGlobalDataSingleton from "../../ganttGlobalDataSingleton";
 import {UtilService} from "../../services/util.service";
-import {IProjectDetails, IStatus, IUser} from "../../models/common.model";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable} from "rxjs";
+import {CustomInfo} from "../../webix-services/gantt-task-info.service";
+import {CustomForm} from "../../webix-services/gantt-form.service";
 
 declare let webix: any;
 declare let gantt: any;
@@ -20,7 +21,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
   ganttView: any;
   currentViewType: string;
   showSpinner$: Observable<boolean>;
-
+  showForm = false;
 
   constructor(private element: ElementRef, @Inject(PLATFORM_ID) private platformId: any, private activatedRoute: ActivatedRoute,
               private appStateService: AppStateService, private router: Router,
@@ -43,7 +44,10 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
   setDetailsAndRender(filterValues: any) {
     const {allTasks} = ganttGlobalDataSingleton.projectDetails;
     let updatedTasks = this.utilService.getUpdatedTasks(allTasks, filterValues);
-    ganttGlobalDataSingleton.setProjectDetails({...ganttGlobalDataSingleton.projectDetails, mappedTasks: updatedTasks});
+    ganttGlobalDataSingleton.setProjectDetails({
+      ...ganttGlobalDataSingleton.projectDetails, mappedTasks: updatedTasks,
+      allStatuses: this.appStateService.allStatuses
+    });
     this.ganttView?.destructor();
     this.initGantt();
   }
@@ -51,6 +55,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
   initGantt(): void {
     if (webix.env.mobile) webix.ui.fullScreen();
     webix.CustomScroll.init();
+
 
     const zoom = {
       view: "richselect",
@@ -62,42 +67,11 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
         onChange: GanttViewComponent.resetScales,
       },
     };
+
     this.ganttView = webix.ui({
       container: document.getElementById('gantt-parent'),
 
       rows: [
-      /*  {
-          container: document.getElementById('gantt-toolbar'),
-
-          view: "toolbar",
-          //css: "webix_dark",
-          padding: {
-            top: 5,
-            bottom: 5,
-            left: 5,
-          },
-          elements: [
-            {},
-            {
-              view: "segmented",
-              label: "",
-              width: 350,
-              value: this.currentViewType,
-              options: [
-                {value: "Task view", id: "tasks"},
-                {value: "Resource view", id: "resources"},
-              ],
-              on: {
-                onChange: (v: any) => {
-                  const gantView = $$("gantt") as any;
-                  gantView.getState().display = v;
-                  this.currentViewType = v;
-                }
-              },
-            },
-            {},
-          ],
-        },*/
         {
           view: "toolbar",
           id: "toolbar",
@@ -114,15 +88,32 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
           resourcesDiagram: false,
           scales: [ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.quarterScale, ganttGlobalDataSingleton.monthScale],
           scaleCellWidth: 400,
+          editor: false,  // assign custom editor configuration
+          //scaleStart: new Date(),
           on: {
             onBeforeDrag: this.utilService.beforeDrag,
-            onBeforeDrop: this.utilService.afterDrag,
+            onBeforeDrop: this.utilService.afterDrag
           },
           override: new Map<any, any>([
+            [gantt.views["task/form"], CustomForm],
+            [gantt.views["task/info"], CustomInfo],
             [gantt.services.Backend, GanttBackendService]
           ])
         }
       ]
+    });
+
+    const gantt1: any = $$("gantt");
+    gantt1.getState().$observe("selected", (id: any) => {
+      console.log(id);
+    });
+
+    /*gantt1.$app.attachEvent("app:task:click", id => {
+      webix.message("Clicked " + id);
+    });*/
+
+    gantt1.attachEvent("onTaskClick", (id: any) => {
+      webix.message("Clicked " + id);
     });
   }
 

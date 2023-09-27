@@ -43,14 +43,22 @@ export class UtilService {
       }
     });
     const userSet = this.transformToKanbanUsers();
-    /*   const  mappedTasks = this.appStateService.projects.map((taskItem: any, i: number) => {
-         return {...taskItem, id: taskItem.project_id, user_id: taskItem.owner_id}
-       });*/
+    const projects = this.appStateService.projects.map((taskItem: any, i: number) => {
+      return {...taskItem, id: `project-${taskItem.project_id}`, user_id: taskItem.owner_id}
+    });
     const childMappedTasks = projectDetails.map((taskItem, i: number) => {
-      return {...taskItem, id: taskItem.project_id, user_id: taskItem.owner_id}
+      return {
+        ...taskItem, id: `activity-${taskItem.project_id}`,
+        type: 'task',
+        parent: `project-${taskItem.parent_id}`,
+        user_id: taskItem.owner_id,
+        isExisting: true,
+        start_date: taskItem.start_date ? new Date(taskItem.start_date) : taskItem.end_date ? new Date(taskItem.end_date) : new Date(),
+        end_date: taskItem.end_date ? new Date(taskItem.end_date) : taskItem.start_date ? new Date(taskItem.start_date) : new Date(),
+      }
     });
     const allMappedTasks = [...childMappedTasks];
-    return {mappedTasks: allMappedTasks, mappedStatuses, userSet, allTasks: allMappedTasks};
+    return {mappedTasks: allMappedTasks, mappedStatuses, userSet, allTasks: allMappedTasks, projects};
   }
 
   transformToKanbanUsers() {
@@ -91,27 +99,29 @@ export class UtilService {
     const mappedTasks = projects.map((taskItem: any, i: number) => {
       return {
         ...taskItem,
-        start_date: new Date(taskItem.start_date),
-        end_date: new Date(taskItem.end_date),
-        id: taskItem.project_id,
+        start_date: taskItem.start_date ? new Date(taskItem.start_date) : taskItem.end_date ? new Date(taskItem.end_date) : new Date(),
+        end_date: taskItem.end_date ? new Date(taskItem.end_date) : taskItem.start_date ? new Date(taskItem.start_date) : new Date(),
+        id: `project-${taskItem.project_id}`,
         type: 'project',
         parent: 0,
         progress: 0,
+        isExisting: true,
+        open: true
       };
     });
     const childMappedTasks = projectDetails.map((taskItem, i: number) => {
       return {
         ...taskItem,
-        start_date: new Date(taskItem.start_date),
-        end_date: new Date(taskItem.end_date),
-        id: taskItem.project_id,
+        start_date: taskItem.start_date ? new Date(taskItem.start_date) : taskItem.end_date ? new Date(taskItem.end_date) : new Date(),
+        end_date: taskItem.end_date ? new Date(taskItem.end_date) : taskItem.start_date ? new Date(taskItem.start_date) : new Date(),
+        id: `activity-${taskItem.project_id}`,
         type: 'task',
-        progress: 10,
-        parent: taskItem.parent_id,
+        progress: 0,
+        parent: `project-${taskItem.parent_id}`,
+        isExisting: true
       };
     });
     const allMappedTasks = [...mappedTasks, ...childMappedTasks];
-    console.log('111 allMapped', allMappedTasks);
     const mappedAssigned = this.transformToAssigned(mappedResources, allMappedTasks);
     return {mappedResources, allMappedTasks, mappedAssigned, allTasks: allMappedTasks}
   }
@@ -164,32 +174,93 @@ export class UtilService {
 
   // UPDATE ACTIVITIES
 
-  updateActivityWithNewValues(itemData: any, viewType?: string) {
-    this.appStateService.setSpinnerState(true);
-    const {status, id, user_id, owner_id} = itemData;
-    const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.name === status) as IStatus;
+  updateActivityWithNewValues(itemData: any, queryType?: string, viewType?: string) {
+    console.log('111 API', itemData, queryType)
     const model: string = sessionStorage.getItem('modelId') as string;
+    if (queryType === 'UPDATE' && itemData.isExisting) {
+      this.updateProjectOrActivity(itemData, model, viewType);
+    } else if (itemData.text && itemData.type === 'project') {
+      this.insertNewProject(itemData, model, viewType);
+    } else if (itemData.text && itemData.type === 'task' && itemData.parent) {
+      this.insertNewActivity(itemData, model, viewType);
+    }
+  }
+
+  updateProjectOrActivity(itemData: any, model: string, viewType?: string) {
+    const {status, project_id, user_id, owner_id, type} = itemData;
+    const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.name === status) as IStatus;
     const peopleIdToUse = user_id ? user_id : owner_id;
     const updatedValues = {
-      activityId: id,
+      activityId: project_id,
       statusId: newStatus.id,
       userId: parseInt(peopleIdToUse),
       startDate: itemData.start_date,
       endDate: itemData.end_date,
-      activityText: itemData.text
+      activityText: itemData.text,
     }
-    this.apiCallsService.updateActivity(model, updatedValues).pipe(take(1)).subscribe(() => {
+    if (type === "task") {
+      this.appStateService.setSpinnerState(true);
+      this.apiCallsService.updateActivity(model, updatedValues).pipe(take(1)).subscribe(() => {
+        this.appStateService.setSpinnerState(false);
+        if (viewType !== 'gantt') {
+          this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+        }
+      });
+    } else if (type === "project") {
+      this.apiCallsService.updateProject(model, updatedValues).pipe(take(1)).subscribe(() => {
+        this.appStateService.setSpinnerState(false);
+        if (viewType !== 'gantt') {
+          this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+        }
+      });
+    }
+
+  }
+
+  insertNewProject(itemData: any, model: string, viewType?: string) {
+    const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.sort_order === 1) as IStatus;
+    this.appStateService.setSpinnerState(true);
+    const insertValues = {
+      startDate: itemData.start_date,
+      endDate: itemData.end_date,
+      activityText: itemData.text,
+      statusId: newStatus.id,
+    }
+    this.apiCallsService.insertProject(model, insertValues).pipe(take(1)).subscribe(() => {
       this.appStateService.setSpinnerState(false);
       if (viewType !== 'gantt') {
         this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
       }
-
     });
   }
 
+  insertNewActivity(itemData: any, model: string, viewType?: string) {
+    const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => itemData.status ?
+      itemData.status === statusItem.name : statusItem.sort_order === 1) as IStatus;
+    this.appStateService.setSpinnerState(true);
+    const parentId = Number(itemData.parent.split('-')[1]);
+    const insertValues: any = {
+      startDate: itemData.start_date,
+      endDate: itemData.end_date,
+      activityText: itemData.text,
+      statusId: `${newStatus.id}`,
+      parentId: `${parentId}`
+    }
+    if (itemData.user_id) {
+      insertValues.userId = itemData.user_id;
+    }
+    this.apiCallsService.insertActivity(model, insertValues).pipe(take(1)).subscribe(() => {
+      this.appStateService.setSpinnerState(false);
+      if (viewType !== 'gantt') {
+        this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+      }
+    });
+  }
+
+
   updateAssignmentInGantt(resources: any, id: any) {
     const userId = resources.resource;
-    const activityId = parseInt(id.split('-'));
+    const activityId = parseInt(id.split('-')[1]);
     const model: string = sessionStorage.getItem('modelId') as string;
     this.apiCallsService.updateAssignment(model, {userId, activityId}).pipe(take(1)).subscribe(() => {
       this.appStateService.setSpinnerState(false);
@@ -197,7 +268,13 @@ export class UtilService {
     });
   }
 
+  showAssignmentAlreadyPresentError() {
+    this.messageService.add({severity: 'error', summary: 'Error', detail: 'Only 1 assignment per task is allowed'});
+
+  }
+
   beforeDrag(item: any, context: any) {
+    console.log('111 drag gantt');
   }
 
   afterDrag(item: any, context: any) {
@@ -222,14 +299,34 @@ export class UtilService {
   }
 
   getUpdatedTasks(allTasks: any, filterValues: any) {
-    const {selectedUsers, selectedStatuses, selectedProjects, searchValue, showOnlyProjects} = filterValues;
+    const {
+      selectedUsers,
+      selectedProjectUsers,
+      selectedStatuses,
+      selectedProjects,
+      searchValue,
+      isProjectsExpanded
+    } = filterValues;
     let updatedTasks = allTasks.slice();
-    if (selectedUsers?.length) {
+    // Project owners
+    if (selectedProjectUsers?.length) {
       updatedTasks = allTasks?.filter((task: any) => {
-        return (selectedUsers.find((ownerFilter: IUser) => ownerFilter.owner_id === task.owner_id || ownerFilter.owner === task.owner));
+        return (selectedProjectUsers.find((ownerFilter: IUser) => (ownerFilter.owner_id === task.owner_id
+          || ownerFilter.owner === task.owner)) && task.type === 'project');
       });
+      const allActivitiesUnderFilteredProjects = this.projectsWithAllChildren(updatedTasks, allTasks);
+      updatedTasks = [...updatedTasks, ...allActivitiesUnderFilteredProjects];
     }
 
+    // activity owner
+    if (selectedUsers?.length) {
+      updatedTasks = updatedTasks?.filter((task: any) => {
+        return (selectedUsers.find((ownerFilter: IUser) => ownerFilter.owner_id === task.owner_id
+          || ownerFilter.owner === task.owner) && task.type === 'task');
+      });
+      // Adding all parent projects to list
+      updatedTasks = this.augmentFilteredList(updatedTasks, allTasks);
+    }
 
     if (selectedStatuses?.length) {
       updatedTasks = updatedTasks?.filter((task: any) => {
@@ -252,13 +349,16 @@ export class UtilService {
           || task.text?.toLowerCase().includes(searchValue.toLowerCase());
       });
     }
-    let actualList;
-    if (showOnlyProjects) {
-      actualList = updatedTasks.filter((task: IProjectDetails) => task.type === 'project');
-    } else {
-      actualList = this.augmentFilteredList(updatedTasks, allTasks);
-    }
-    return actualList;
+
+    // actualList = this.augmentFilteredList(updatedTasks, allTasks);
+    return updatedTasks.map((item: any) => {
+      return item.type === "project" ? {...item, open: isProjectsExpanded} : item
+    });
+  }
+
+  projectsWithAllChildren(filteredList: IProjectDetails[], allTasks: IProjectDetails[]) {
+    const projectIds = new Set(filteredList.map(task => task.project_id));
+    return allTasks.filter(task => projectIds.has(Number(task.parent_id)));
   }
 
   // To also add the parent project if it is not returned after search, is some task has parentId and that parentId task is not present

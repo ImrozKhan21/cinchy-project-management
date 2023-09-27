@@ -25,27 +25,26 @@ export class ConfigService {
   setRowAndFormId() {
     let modelId = this.getQueryStringValue('modelId', window.location.search);
     const parentUri = modelId ? window.location.search : document.referrer;
-    console.log('111 parentUri', parentUri);
     if (isPlatformBrowser(this.platformId)) {
       modelId = this.getQueryStringValue('modelId', parentUri);
-
       let viewType = this.getQueryStringValue('viewType', parentUri);
       let owner = this.getQueryStringValue('owner', parentUri);
       let status = this.getQueryStringValue('status', parentUri);
       let project = this.getQueryStringValue('project', parentUri);
-      console.log('1111 modelId IN If', modelId, viewType, parentUri);
-      if (!modelId) {
-        modelId = this.getQueryStringValue('modelId', parentUri);
-        viewType = this.getQueryStringValue('viewType', parentUri);
-        owner = this.getQueryStringValue('owner', parentUri);
-        status = this.getQueryStringValue('status', parentUri);
-        project = this.getQueryStringValue('project', parentUri);
-      }
+      let searchValue = this.getQueryStringValue('searchValue', parentUri);
+      let projectOwner = this.getQueryStringValue('projectOwner', parentUri);
+      let isProjectsExpanded = this.getQueryStringValue('isProjectsExpanded', parentUri);
+      let hideHeader = this.getQueryStringValue('hideHeader', parentUri);
+
       modelId && sessionStorage.setItem('modelId', modelId);
       viewType && sessionStorage.setItem('viewType', viewType);
       owner && sessionStorage.setItem('owner', owner);
       status && sessionStorage.setItem('status', status);
-      project && sessionStorage.setItem('project', status);
+      project && sessionStorage.setItem('project', project);
+      searchValue && sessionStorage.setItem('searchValue', searchValue);
+      projectOwner && sessionStorage.setItem('projectOwner', projectOwner);
+      isProjectsExpanded && sessionStorage.setItem('isProjectsExpanded', isProjectsExpanded);
+      hideHeader && sessionStorage.setItem('hideHeader', hideHeader);
 
       if (!sessionStorage.getItem('modelId') || modelId) {
         modelId && modelId != "null" ? sessionStorage.setItem('modelId', modelId) : sessionStorage.setItem('modelId', '');
@@ -64,10 +63,30 @@ export class ConfigService {
       }
 
       if (!sessionStorage.getItem('project') || project) {
-        owner && owner != "null" ? sessionStorage.setItem('project', project) : sessionStorage.setItem('project', '');
+        project && project != "null" ? sessionStorage.setItem('project', project) : sessionStorage.setItem('project', '');
       }
 
-      console.log('session', sessionStorage.getItem('modelId'));
+      if (!sessionStorage.getItem('projectOwner') || projectOwner) {
+        projectOwner && projectOwner != "null" ? sessionStorage.setItem('projectOwner', projectOwner) : sessionStorage.setItem('projectOwner', '');
+      }
+
+      if (!sessionStorage.getItem('isProjectsExpanded') || isProjectsExpanded) {
+        isProjectsExpanded && isProjectsExpanded != "null" ? sessionStorage.setItem('isProjectsExpanded', isProjectsExpanded)
+          : sessionStorage.setItem('isProjectsExpanded', '');
+      }
+
+      if (!sessionStorage.getItem('searchValue') || searchValue) {
+        searchValue && searchValue != "null" ? sessionStorage.setItem('searchValue', searchValue)
+          : sessionStorage.setItem('searchValue', '');
+      }
+
+      if (!sessionStorage.getItem('hideHeader') || hideHeader) {
+        hideHeader && hideHeader != "null" ? sessionStorage.setItem('hideHeader', hideHeader)
+          : sessionStorage.setItem('hideHeader', '');
+      }
+
+
+      console.log('session', sessionStorage.getItem('searchValue'));
     }
   }
 

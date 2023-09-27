@@ -1,24 +1,32 @@
 <div class="filters-wrapper">
-  <input placeholder="Search.." type="text" pInputText [(ngModel)]="searchValue" (ngModelChange)="valueChanged()"/>
+  <input placeholder="Search.." type="search" pInputText [(ngModel)]="searchValue" (ngModelChange)="valueChanged()"/>
 
-  <div class="checkbox-wrapper">
-    <p-checkbox inputId="ny" [(ngModel)]="showOnlyProjects" [binary]="true"
+  <div class="checkbox-wrapper" *ngIf="viewType === 'gantt'">
+    <p-checkbox inputId="ny" [(ngModel)]="isProjectsExpanded" [binary]="true"
                 (ngModelChange)="toggleOnlyProjects()"></p-checkbox>
-    <label for="ny">Projects only</label>
+    <label for="ny" style="font-size: 13px">{{!isProjectsExpanded ? 'Expand' : 'Expand'}} Projects</label>
   </div>
 
 
   <span>|</span>
 
   <div class="card flex justify-content-center form-wrapper">
-    <!--
-        <label class="form-label">Owner</label>
-    -->
+    <p-multiSelect [(ngModel)]="selectedProjectUserAdvanced"
+                   [options]="users"
+                   display="chip"
+                   placeholder="Project Owner"
+                   optionLabel="owner"
+                   [filter]="true"
+                   [virtualScroll]="true"
+                   [virtualScrollItemSize]="40">
+    </p-multiSelect>
+  </div>
 
+  <div class="card flex justify-content-center form-wrapper">
     <p-multiSelect [(ngModel)]="selectedUserAdvanced"
                    [options]="users"
                    display="chip"
-                   placeholder="Owner"
+                   placeholder="Activity Owner"
                    optionLabel="owner"
                    [filter]="true"
                    [virtualScroll]="true"

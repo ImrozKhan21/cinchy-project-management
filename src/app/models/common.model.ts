@@ -7,6 +7,7 @@ export interface IEnv {
 }
 
 export interface IProjectDetails {
+  id?: string;
   project_name: string;
   project_id: number;
   progress: number;
@@ -22,6 +23,7 @@ export interface IProjectDetails {
   owner_id: string;
   parent_id: string;
   type: string;
+  isExisting?: boolean;
 }
 
 export interface IStatus {
@@ -41,5 +43,6 @@ export interface IDetails {
   mappedTasks: any;
   mappedAssigned: any;
   allTasks: any;
+  allStatuses: any;
 }
 

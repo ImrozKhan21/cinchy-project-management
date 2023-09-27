@@ -25,6 +25,9 @@ export class ApiCallsService {
     pa.[Name] as 'project_name',
     pa.[Cinchy Id] as 'project_id',
     pa.[Status].[Name] as 'status',
+/*
+    pa.[Status].[Display Colour] as 'status_color',
+ */
     pa.[Status].[Cinchy Id] as 'statusId',
     pa.[Start Date] as 'start_date',
     pa.[Finish Date] as 'end_date',
@@ -46,6 +49,9 @@ export class ApiCallsService {
     pa.[Cinchy Id] as 'project_id',
     pa.[Project].[Cinchy Id] as 'parent_id',
     pa.[Status].[Name] as 'status',
+/*
+    pa.[Status].[Display Colour] as 'status_color',
+ */
     pa.[Status].[Cinchy Id] as 'status_id',
     pa.[Status] as 'full_status',
     pa.[Status].[Sort Order] as 'status_sort',
@@ -68,6 +74,9 @@ export class ApiCallsService {
     const query = `SELECT
     psc.[Name] as 'name',
     psc.[Sort Order] as 'sort_order',
+/*
+    psc.[Display Colour] as 'status_color',
+ */
     psc.[Cinchy Id] as 'id'
     FROM [${actualModel}].[Project Management].[Project Status Codes] psc
     WHERE psc.[Deleted] IS NULL
@@ -129,6 +138,111 @@ export class ApiCallsService {
       '@activityText': activityText,
       '@activityId': activityId
     }
+    // todo: change [Project Activity Owners] to [Project Owners]
+    return this.cinchyService.executeCsql(query, params);
+  }
+
+  updateProject(model: string, updatedValues: any): Observable<any> {
+    const {activityId, statusId, userId, startDate, endDate, activityText} = updatedValues;
+    if (!statusId || !activityId) {
+      return of(null);
+    }
+    const actualModel = model ? model : 'Cinchy Project Management Model V1.0.0';
+    const query = `UPDATE a
+    SET
+    a.[Status] = ResolveLink(@statusId,'Cinchy Id'),
+    a.[Start Date] = @startDate,
+    a.[Finish Date] = @endDate
+    FROM [${actualModel}].[Project Management].[Projects] a
+    WHERE a.[Deleted] IS NULL
+    AND a.[Cinchy Id] = @projectId
+    `;
+    const params = {
+      '@statusId': statusId,
+      '@userId': userId,
+      '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
+      '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
+      '@projectId': activityId
+    }
+    // todo: change [Project Activity Owners] to [Project Owners]
+    return this.cinchyService.executeCsql(query, params);
+  }
+
+
+  insertProject(model: string, updatedValues: any): Observable<any> {
+    const {activityId, statusId, userId, startDate, endDate, activityText} = updatedValues;
+    if (!activityText) {
+      return of(null);
+    }
+    const actualModel = model ? model : 'Cinchy Project Management Model V1.0.0';
+    let query = `INSERT INTO [${actualModel}].[Project Management].[Projects]
+           ([Name],
+            [Start Date],
+            [Finish Date])
+        VALUES (
+        @projectName,
+        @startDate,
+        @endDate) `;
+
+    const params = {
+      '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
+      '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
+      '@projectName': activityText,
+      '@userId': userId,
+    }
+    // todo: change [Project Activity Owners] to [Project Owners]
+    return this.cinchyService.executeCsql(query, params).pipe(
+      map((resp: any) => resp?.queryResult?.toObjectArray()));
+  }
+
+  insertActivity(model: string, updatedValues: any): Observable<any> {
+    const {parentId, startDate, userId, endDate, activityText, statusId} = updatedValues;
+    if (!activityText || !parentId) {
+      return of(null);
+    }
+    const actualModel = model ? model : 'Cinchy Project Management Model V1.0.0';
+    let query = `INSERT INTO [${actualModel}].[Project Management].[Project Activities]
+           ([Activity],
+           [Project],
+           [Status],
+           [Start Date],
+           [Finish Date]
+           )
+        VALUES (
+        @activity,
+        ResolveLink(@parentId,'Cinchy Id'),
+        ResolveLink(@statusId,'Cinchy Id'),
+        @startDate,
+        @endDate
+        ) `;
+
+    if(userId) {
+      query = `INSERT INTO [${actualModel}].[Project Management].[Project Activities]
+           ([Activity],
+           [Project],
+           [Status],
+           [Start Date],
+           [Finish Date],
+           [Owner]
+           )
+        VALUES (
+        @activity,
+        ResolveLink(@parentId,'Cinchy Id'),
+        ResolveLink(@statusId,'Cinchy Id'),
+        @startDate,
+        @endDate,
+        ResolveLink(@userId,'Cinchy Id')
+        ) `;
+    }
+    const params = {
+      '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
+      '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
+      '@activity': activityText,
+      '@parentId': parentId,
+      '@statusId': statusId,
+      '@userId': userId,
+    }
+    console.log('PARAMS', params);
     // todo: change [Project Activity Owners] to [Project Owners]
     return this.cinchyService.executeCsql(query, params).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
