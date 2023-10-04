@@ -12,6 +12,7 @@ import {isPlatformBrowser} from "@angular/common";
 })
 export class FiltersComponent {
   @Input() viewType: string;
+  @Input() showOnlyProjectFilter: boolean;
   users: IUser[];
   selectedUserAdvanced: any[];
   selectedProjectUserAdvanced: any[];

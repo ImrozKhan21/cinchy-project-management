@@ -35,6 +35,7 @@ export class ConfigService {
       let projectOwner = this.getQueryStringValue('projectOwner', parentUri);
       let isProjectsExpanded = this.getQueryStringValue('isProjectsExpanded', parentUri);
       let hideHeader = this.getQueryStringValue('hideHeader', parentUri);
+      let showOnlyProjectFilter = this.getQueryStringValue('showOnlyProjectFilter', parentUri);
 
       modelId && sessionStorage.setItem('modelId', modelId);
       viewType && sessionStorage.setItem('viewType', viewType);
@@ -45,6 +46,7 @@ export class ConfigService {
       projectOwner && sessionStorage.setItem('projectOwner', projectOwner);
       isProjectsExpanded && sessionStorage.setItem('isProjectsExpanded', isProjectsExpanded);
       hideHeader && sessionStorage.setItem('hideHeader', hideHeader);
+      showOnlyProjectFilter && sessionStorage.setItem('showOnlyProjectFilter', showOnlyProjectFilter);
 
       if (!sessionStorage.getItem('modelId') || modelId) {
         modelId && modelId != "null" ? sessionStorage.setItem('modelId', modelId) : sessionStorage.setItem('modelId', '');
@@ -83,6 +85,11 @@ export class ConfigService {
       if (!sessionStorage.getItem('hideHeader') || hideHeader) {
         hideHeader && hideHeader != "null" ? sessionStorage.setItem('hideHeader', hideHeader)
           : sessionStorage.setItem('hideHeader', '');
+      }
+
+      if (!sessionStorage.getItem('showOnlyProjectFilter') || showOnlyProjectFilter) {
+        showOnlyProjectFilter && showOnlyProjectFilter != "null" ? sessionStorage.setItem('showOnlyProjectFilter', showOnlyProjectFilter)
+          : sessionStorage.setItem('showOnlyProjectFilter', '');
       }
 
 

@@ -59,7 +59,7 @@ class GanttGlobalDataSingleton {
     this.projectDetails = details;
   }
 
-  getProjectDetails(): IDetails {
+  getActivities(): IDetails {
     return this.projectDetails;
   }
 

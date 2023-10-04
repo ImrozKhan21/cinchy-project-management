@@ -41,7 +41,7 @@ export class ApiCallsService {
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
 
-  getProjectDetails(model: string): Observable<IProjectDetails[]> {
+  getActivities(model: string): Observable<IProjectDetails[]> {
     const actualModel = model ? model : 'Cinchy Project Management Model V1.0.0';
     //[Project Management Skin Model V1.0.0]
     const query = `SELECT
@@ -61,6 +61,7 @@ export class ApiCallsService {
     pa.[Start Date] as 'start_date',
     pa.[Finish Date] as 'end_date',
     pa.[Activity] as 'text'
+    /* pa.[Dependencies] as 'dependencies' */
     FROM [${actualModel}].[Project Management].[Project Activities] pa
     WHERE pa.[Deleted] IS NULL
     AND pa.[Activity] IS NOT NULL
@@ -167,7 +168,6 @@ export class ApiCallsService {
     // todo: change [Project Activity Owners] to [Project Owners]
     return this.cinchyService.executeCsql(query, params);
   }
-
 
   insertProject(model: string, updatedValues: any): Observable<any> {
     const {activityId, statusId, userId, startDate, endDate, activityText} = updatedValues;

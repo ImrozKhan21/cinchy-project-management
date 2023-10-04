@@ -7,7 +7,6 @@ import {forkJoin, lastValueFrom} from 'rxjs';
 import {IProjectDetails} from "./models/common.model";
 import {AppStateService} from "./services/app-state.service";
 import {Router} from "@angular/router";
-import ganttGlobalDataSingleton from "./ganttGlobalDataSingleton";
 
 @Component({
   selector: 'app-root',
@@ -21,6 +20,7 @@ export class AppComponent {
   projectDetails: IProjectDetails[] | undefined;
   viewType: string | null;
   hideHeader: boolean;
+  showOnlyProjectFilter: boolean;
 
   constructor(private cinchyService: CinchyService, @Inject(PLATFORM_ID) private platformId: any,
               private windowRefService: WindowRefService, private apiCallsService: ApiCallsService,
@@ -52,16 +52,24 @@ export class AppComponent {
     this.isLoggedIn = true;
     const modelId: any = sessionStorage.getItem('modelId');
     const viewType: any = sessionStorage.getItem('viewType');
+    const project: any = sessionStorage.getItem('project');
     const owner: any = sessionStorage.getItem('owner');
     const status: any = sessionStorage.getItem('status');
-    const project: any = sessionStorage.getItem('project');
     const searchValue: any = sessionStorage.getItem('searchValue');
     const projectOwner: any = sessionStorage.getItem('projectOwner');
     const isProjectsExpanded: any = sessionStorage.getItem('isProjectsExpanded');
+    const showOnlyProjectFilter: any = sessionStorage.getItem('showOnlyProjectFilter');
+    this.showOnlyProjectFilter = showOnlyProjectFilter === "true";
     const hideHeader: any = sessionStorage.getItem('hideHeader');
     this.hideHeader = hideHeader === "true";
-    const queryParams: any = {modelId, viewType, owner, status, project, searchValue, projectOwner, isProjectsExpanded, hideHeader};
-    this.router.navigate([`/`], {queryParams});
+    const queryParams: any = {
+      modelId, viewType, owner, status, project,
+      searchValue, projectOwner, isProjectsExpanded, hideHeader, showOnlyProjectFilter
+    };
+    const cleanedQueryParams: any = Object.fromEntries(
+      Object.entries(queryParams).filter(([key, value]) => Boolean(value))
+    );
+    this.router.navigate([`/`], {queryParams: cleanedQueryParams});
     this.getViewDetailsAndSetStates();
 
   }
@@ -71,7 +79,7 @@ export class AppComponent {
       this.viewType = sessionStorage.getItem('viewType');
       const model: string = sessionStorage.getItem('modelId') as string;
       const allObs = [this.apiCallsService.getAllProjects(model),
-        this.apiCallsService.getAllStatuses(model), this.apiCallsService.getAllActivityUsers(model), this.apiCallsService.getProjectDetails(model)];
+        this.apiCallsService.getAllStatuses(model), this.apiCallsService.getAllActivityUsers(model), this.apiCallsService.getActivities(model)];
 
       forkJoin(allObs).subscribe((value: any) => {
         const [projects, statuses, owners, projectDetails] = value;

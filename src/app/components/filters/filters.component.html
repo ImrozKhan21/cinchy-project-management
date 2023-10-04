@@ -1,53 +1,4 @@
 <div class="filters-wrapper">
-  <input placeholder="Search.." type="search" pInputText [(ngModel)]="searchValue" (ngModelChange)="valueChanged()"/>
-
-  <div class="checkbox-wrapper" *ngIf="viewType === 'gantt'">
-    <p-checkbox inputId="ny" [(ngModel)]="isProjectsExpanded" [binary]="true"
-                (ngModelChange)="toggleOnlyProjects()"></p-checkbox>
-    <label for="ny" style="font-size: 13px">{{!isProjectsExpanded ? 'Expand' : 'Expand'}} Projects</label>
-  </div>
-
-
-  <span>|</span>
-
-  <div class="card flex justify-content-center form-wrapper">
-    <p-multiSelect [(ngModel)]="selectedProjectUserAdvanced"
-                   [options]="users"
-                   display="chip"
-                   placeholder="Project Owner"
-                   optionLabel="owner"
-                   [filter]="true"
-                   [virtualScroll]="true"
-                   [virtualScrollItemSize]="40">
-    </p-multiSelect>
-  </div>
-
-  <div class="card flex justify-content-center form-wrapper">
-    <p-multiSelect [(ngModel)]="selectedUserAdvanced"
-                   [options]="users"
-                   display="chip"
-                   placeholder="Activity Owner"
-                   optionLabel="owner"
-                   [filter]="true"
-                   [virtualScroll]="true"
-                   [virtualScrollItemSize]="40">
-    </p-multiSelect>
-  </div>
-
-  <div class="card flex justify-content-center form-wrapper">
-    <!--
-        <label class="form-label">Status</label>
-    -->
-
-    <p-multiSelect [(ngModel)]="selectedStatusesAdvanced"
-                   [options]="statuses"
-                   display="chip"
-                   placeholder="Status"
-                   optionLabel="name"
-                   [filter]="true">
-    </p-multiSelect>
-  </div>
-
   <div class="card flex justify-content-center form-wrapper">
     <!--
         <label class="form-label">Owner</label>
@@ -64,7 +15,56 @@
     </p-multiSelect>
   </div>
 
+  <div *ngIf="!showOnlyProjectFilter" class="card flex justify-content-center form-wrapper">
+    <p-multiSelect [(ngModel)]="selectedProjectUserAdvanced"
+                   [options]="users"
+                   display="chip"
+                   placeholder="Project Owner"
+                   optionLabel="owner"
+                   [filter]="true"
+                   [virtualScroll]="true"
+                   [virtualScrollItemSize]="40">
+    </p-multiSelect>
+  </div>
+
+  <div *ngIf="!showOnlyProjectFilter" class="card flex justify-content-center form-wrapper">
+    <p-multiSelect [(ngModel)]="selectedUserAdvanced"
+                   [options]="users"
+                   display="chip"
+                   placeholder="Activity Owner"
+                   optionLabel="owner"
+                   [filter]="true"
+                   [virtualScroll]="true"
+                   [virtualScrollItemSize]="40">
+    </p-multiSelect>
+  </div>
+
+  <div *ngIf="!showOnlyProjectFilter" class="card flex justify-content-center form-wrapper">
+    <!--
+        <label class="form-label">Status</label>
+    -->
+
+    <p-multiSelect [(ngModel)]="selectedStatusesAdvanced"
+                   [options]="statuses"
+                   display="chip"
+                   placeholder="Status"
+                   optionLabel="name"
+                   [filter]="true">
+    </p-multiSelect>
+  </div>
+
   <button pButton (click)="apply()">Apply</button>
+
+  <span>|</span>
+
+  <input placeholder="Search.." type="search" pInputText [(ngModel)]="searchValue" (ngModelChange)="valueChanged()"/>
+
+  <div class="checkbox-wrapper" *ngIf="viewType === 'gantt'">
+    <p-checkbox inputId="ny" [(ngModel)]="isProjectsExpanded" [binary]="true"
+                (ngModelChange)="toggleOnlyProjects()"></p-checkbox>
+    <label for="ny" style="font-size: 13px">{{!isProjectsExpanded ? 'Expand' : 'Expand'}} Projects</label>
+  </div>
+
 </div>
 
 <div class="filters-wrapper">
