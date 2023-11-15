@@ -24,6 +24,9 @@ export interface IProjectDetails {
   parent_id: string;
   type: string;
   isExisting?: boolean;
+  dependencies: any;
+  status_color: string;
+
 }
 
 export interface IStatus {
@@ -44,5 +47,7 @@ export interface IDetails {
   mappedAssigned: any;
   allTasks: any;
   allStatuses: any;
+  links: any;
+  effortEstimate?: any;
 }
 

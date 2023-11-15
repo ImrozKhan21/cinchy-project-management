@@ -17,6 +17,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   kanbanData: any;
   kanbanView: any;
   showSpinner$: Observable<boolean>;
+  filterValues: any;
 
   constructor(private element: ElementRef, private appStateService: AppStateService,
               private utilService: UtilService) {
@@ -35,6 +36,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
 
   setDetailsAndRender(filterValues: any) {
     const {allTasks} = this.kanbanData;
+    this.filterValues = filterValues;
     let updatedTasks = this.utilService.getUpdatedTasks(allTasks, filterValues);
     this.kanbanData = {...this.kanbanData, mappedTasks: updatedTasks};
     this.kanbanView?.destructor();
@@ -67,7 +69,7 @@ console.log('111 mappedtasks', mappedTasks)
           margin: 7,
           cols: [
             {view: "label", label: "Board"},
-            {
+      /*      {
               view: "button", type: "danger", label: "Remove selected", width: 150, click: () => {
                 const kanbanView = $$("kanban") as any;
                 const id = kanbanView.getSelectedId();
@@ -76,11 +78,25 @@ console.log('111 mappedtasks', mappedTasks)
                 }
                 kanbanView.remove(id);
               }
-            },
+            },*/
             {
               view: "button", type: "form", label: "Add new activity", width: 150, click: () => {
                 const kanbanView = $$("kanban") as any;
                 kanbanView.showEditor();
+                const editorForm: any = kanbanView.getEditor();
+                const formValues = editorForm.getValues();
+                const projectField = $$('$combo1');
+                const selectedProject = this.filterValues?.selectedProjects;
+                if (selectedProject?.length) {
+                  const updatedFormValues = {...formValues,
+                    parent: `project-${selectedProject[0].project_id}`,
+                    project_name: selectedProject[0].project_name,
+                    parent_id: selectedProject[0].project_id
+                  };
+                  console.log('111 updatedFormValues', updatedFormValues)
+                  editorForm.setValues(updatedFormValues);
+                  projectField.disable();
+                }
               }
             }
           ]
@@ -96,8 +112,8 @@ console.log('111 mappedtasks', mappedTasks)
           projects: projectsForSelection,
           editor: {
             elements: [
-              {view: "text", name: "text", label: "Task"},
               {view: "combo", name: "parent", label: "Project", options: projectsForSelection, disabled: true},
+              {view: "text", name: "text", label: "Task"},
               {
                 margin: 10,
                 cols: [
@@ -105,13 +121,22 @@ console.log('111 mappedtasks', mappedTasks)
                   {view: "combo", name: "status_id", label: "Status", options: statusesForSelection}
                 ]
               },
-              {
+           /*   {
                 margin: 10,
                 cols: [
                   { view: "datepicker", name: "start_date", label: "Start Date" },
                   { view: "datepicker", name: "end_date", label: "End Date" }
                 ]
+              },*/
+              { view: "text", name: "estimate", label: "Task Effort" },
+              {
+                margin: 10,
+                cols: [
+                  { view: "text", name: "effortCompleted", label: "Effort Completed" },
+                  { view: "text", name: "effortRemaining", label: "Effort Remaining" },
+                ]
               },
+              { view: "textarea", height: 100, name: "qaNotes", label: "QA Notes" }
             ]
           },
           cardActions: [
@@ -120,6 +145,25 @@ console.log('111 mappedtasks', mappedTasks)
           ],
           on:
             {
+              onListItemClick: (id: any, ev: any) => {
+                const kanbanView: any = $$("kanban");
+                const editorForm: any = kanbanView.getEditor();
+                const formValues = kanbanView.getItem(id);
+                kanbanView.showEditor();
+                console.log('111 FORM VALUES', formValues);
+
+                const projectField = $$('$combo1');  // Assuming '$combo1' is the "project" field
+                const statusField = $$('$combo3');  // Assuming '$combo3' is the "status" field
+                !formValues.parent ?  projectField.enable() :  projectField.disable();
+                if (!formValues.text) {
+                  const updatedFormValues = {...formValues, status_id: 1};
+                  editorForm.setValues(updatedFormValues);
+                  statusField.disable();
+                } else {
+                  statusField.enable();
+                }
+                editorForm.setValues(formValues);
+              },
               onDataUpdate: (v: any, itemData: any) => {
                 this.utilService.updateActivityWithNewValues(itemData, 'UPDATE');
               },
@@ -132,9 +176,11 @@ console.log('111 mappedtasks', mappedTasks)
                 const formValues = editorForm.getValues();
                 const projectField = $$('$combo1');  // Assuming '$combo1' is the "project" field
                 const textField = $$('$text1');  // Assuming '$combo1' is the "project" field
+
                 // Check if the editor is for a new card
                 !formValues.parent ?  projectField.enable() :  projectField.disable();
-                !formValues.text ?  textField.enable() :  textField.disable();
+                console.log('111 FORM VALUES', formValues);
+          //      !formValues.text ?  textField.enable() :  textField.disable();
                 const statusField = $$('$combo3');  // Assuming '$combo3' is the "status" field
                 // Check if the editor is for a new card
                 if (!formValues.text) {

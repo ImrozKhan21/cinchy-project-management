@@ -105,6 +105,11 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
 
     const gantt1: any = $$("gantt");
     gantt1.getState().$observe("selected", (id: any) => {
+      if(typeof id === 'string') {
+        ganttGlobalDataSingleton.setViewType('UPDATE');
+      } else {
+        ganttGlobalDataSingleton.setViewType('INSERT');
+      }
       console.log(id);
     });
 
@@ -113,7 +118,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
     });*/
 
     gantt1.attachEvent("onTaskClick", (id: any) => {
-      webix.message("Clicked " + id);
+      console.log('onTaskClick', id);
     });
   }
 

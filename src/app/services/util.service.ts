@@ -104,7 +104,7 @@ export class UtilService {
         id: `project-${taskItem.project_id}`,
         type: 'project',
         parent: 0,
-        progress: 0,
+        progress: taskItem.progress ? taskItem.progress*100 : 0,
         isExisting: true,
         open: true
       };
@@ -115,15 +115,18 @@ export class UtilService {
         start_date: taskItem.start_date ? new Date(taskItem.start_date) : taskItem.end_date ? new Date(taskItem.end_date) : new Date(),
         end_date: taskItem.end_date ? new Date(taskItem.end_date) : taskItem.start_date ? new Date(taskItem.start_date) : new Date(),
         id: `activity-${taskItem.project_id}`,
+        dependencies: taskItem.dependencies ? `activity-${taskItem.dependencies}` : null,
         type: 'task',
-        progress: 0,
+        progress: taskItem.progress ? taskItem.progress*100 : 0,
         parent: `project-${taskItem.parent_id}`,
         isExisting: true
       };
     });
     const allMappedTasks = [...mappedTasks, ...childMappedTasks];
     const mappedAssigned = this.transformToAssigned(mappedResources, allMappedTasks);
-    return {mappedResources, allMappedTasks, mappedAssigned, allTasks: allMappedTasks}
+    const links = this.transformToLinks(allMappedTasks);
+    console.log('11 links', links)
+    return {mappedResources, allMappedTasks, mappedAssigned, allTasks: allMappedTasks, links}
   }
 
   transformToAssigned(mappedResources: any, mappedTasks: any) {
@@ -172,10 +175,29 @@ export class UtilService {
   }
 
 
+  transformToLinks(projectDetails: IProjectDetails[]) {
+    const sample = [
+      { id: 1, source: 3, target: 4, type: 0 },
+      { id: 2, source: 1, target: 2, type: 2 },
+      { id: 3, source: 5, target: 6, type: 3 },
+      { id: 4, source: 8, target: 6, type: 1 },
+    ];
+
+    const allProjectWithLinks = projectDetails.filter(task => task.dependencies);
+
+    return allProjectWithLinks.map((task, index) => {
+      return {
+        id: index,
+        source: task.id,
+        target: task.dependencies,
+        type: 0 }
+    });
+  }
+
+
   // UPDATE ACTIVITIES
 
   updateActivityWithNewValues(itemData: any, queryType?: string, viewType?: string) {
-    console.log('111 API', itemData, queryType)
     const model: string = sessionStorage.getItem('modelId') as string;
     if (queryType === 'UPDATE' && itemData.isExisting) {
       this.updateProjectOrActivity(itemData, model, viewType);
@@ -197,6 +219,7 @@ export class UtilService {
       startDate: itemData.start_date,
       endDate: itemData.end_date,
       activityText: itemData.text,
+      progress: itemData.progress ? itemData.progress/100 : 0
     }
     if (type === "task") {
       this.appStateService.setSpinnerState(true);
@@ -257,6 +280,17 @@ export class UtilService {
     });
   }
 
+  updateProjectForActivity(itemData: any, queryType?: string, viewType?: string) {
+    console.log('11 REORDER', itemData);
+
+    const activityId = parseInt(itemData.id.split('-')[1]);
+    const parentId = itemData.parent_id;
+    const model: string = sessionStorage.getItem('modelId') as string;
+    this.apiCallsService.updateProjectForActivity(model, {parentId, activityId}).pipe(take(1)).subscribe(() => {
+      this.appStateService.setSpinnerState(false);
+      this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+    });
+  }
 
   updateAssignmentInGantt(resources: any, id: any) {
     const userId = resources.resource;

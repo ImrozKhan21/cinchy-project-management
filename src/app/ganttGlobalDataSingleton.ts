@@ -4,6 +4,9 @@ declare let webix: any;
 class GanttGlobalDataSingleton {
   public projectDetails: IDetails = {} as IDetails;
   public utilServiceInstance: any = {};
+  public viewType: string;
+  public currentTaskDetails: any;
+  public currentProjectDetails: any;
 
   public quarterStart(date: any): any {
     date = webix.Date.copy(date);
@@ -65,6 +68,18 @@ class GanttGlobalDataSingleton {
 
   setUtilServiceInstance(instance: any) {
     this.utilServiceInstance = instance;
+  }
+
+  setViewType(viewType: string) {
+    this.viewType = viewType;
+  }
+
+  setCurrentTaskDetails(taskDetails: any) {
+    this.currentTaskDetails = taskDetails;
+  }
+
+  setCurrentProjectDetails(taskDetails: any) {
+    this.currentProjectDetails = taskDetails;
   }
 
   getUtilServiceInstance(): any {

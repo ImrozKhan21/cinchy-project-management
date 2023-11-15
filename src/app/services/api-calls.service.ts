@@ -25,7 +25,8 @@ export class ApiCallsService {
     pa.[Name] as 'project_name',
     pa.[Cinchy Id] as 'project_id',
     pa.[Status].[Name] as 'status',
-/*
+    /*
+    pa.[Percent Done] as 'percentDone',
     pa.[Status].[Display Colour] as 'status_color',
  */
     pa.[Status].[Cinchy Id] as 'statusId',
@@ -49,9 +50,9 @@ export class ApiCallsService {
     pa.[Cinchy Id] as 'project_id',
     pa.[Project].[Cinchy Id] as 'parent_id',
     pa.[Status].[Name] as 'status',
-/*
+    pa.[Dependencies] as 'dependencies',
+    pa.[Percent Done] as 'progress',
     pa.[Status].[Display Colour] as 'status_color',
- */
     pa.[Status].[Cinchy Id] as 'status_id',
     pa.[Status] as 'full_status',
     pa.[Status].[Sort Order] as 'status_sort',
@@ -61,7 +62,10 @@ export class ApiCallsService {
     pa.[Start Date] as 'start_date',
     pa.[Finish Date] as 'end_date',
     pa.[Activity] as 'text'
-    /* pa.[Dependencies] as 'dependencies' */
+    /*
+    pa.[Effort Estimate].[Hours] as 'effortEstimate'
+ */
+
     FROM [${actualModel}].[Project Management].[Project Activities] pa
     WHERE pa.[Deleted] IS NULL
     AND pa.[Activity] IS NOT NULL
@@ -115,7 +119,7 @@ export class ApiCallsService {
   }
 
   updateActivity(model: string, updatedValues: any): Observable<any> {
-    const {activityId, statusId, userId, startDate, endDate, activityText} = updatedValues;
+    const {activityId, statusId, userId, startDate, endDate, activityText, progress} = updatedValues;
     if (!statusId || !activityId) {
       return of(null);
     }
@@ -123,20 +127,46 @@ export class ApiCallsService {
     const query = `UPDATE a
     SET
     a.[Status] = ResolveLink(@statusId,'Cinchy Id'),
-    a.[Owner] = ResolveLink(@userId,'Cinchy Id'),
+    a.[Owner] = CASE
+                 WHEN ISNUMERIC(@userId) = 1 THEN ResolveLink(@userId, 'Cinchy Id')
+                 ELSE a.[Owner]
+               END,
     a.[Activity] = @activityText,
     a.[Start Date] = @startDate,
-    a.[Finish Date] = @endDate
+    a.[Finish Date] = @endDate,
+    a.[Percent Done] = @progress
     FROM [${actualModel}].[Project Management].[Project Activities] a
     WHERE a.[Deleted] IS NULL
     AND a.[Cinchy Id] = @activityId
     `;
     const params = {
       '@statusId': statusId,
-      '@userId': userId,
+      '@userId': userId ? userId : null,
       '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
       '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
       '@activityText': activityText,
+      '@activityId': activityId,
+      '@progress': progress ? progress : 0
+    }
+    // todo: change [Project Activity Owners] to [Project Owners]
+    return this.cinchyService.executeCsql(query, params);
+  }
+
+  updateProjectForActivity(model: string, updatedValues: any): Observable<any> {
+    const {activityId, parentId} = updatedValues;
+    if (!activityId) {
+      return of(null);
+    }
+    const actualModel = model ? model : 'Cinchy Project Management Model V1.0.0';
+    const query = `UPDATE a
+    SET
+    a.[Project] = ResolveLink(@parentId,'Cinchy Id')
+    FROM [${actualModel}].[Project Management].[Project Activities] a
+    WHERE a.[Deleted] IS NULL
+    AND a.[Cinchy Id] = @activityId
+    `;
+    const params = {
+      '@parentId': parentId,
       '@activityId': activityId
     }
     // todo: change [Project Activity Owners] to [Project Owners]

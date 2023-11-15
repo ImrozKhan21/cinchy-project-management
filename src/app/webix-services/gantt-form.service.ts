@@ -6,6 +6,21 @@ declare let gantt: any;
 export class CustomForm extends gantt.views["task/form"] {
   config() {
     const ui = super.config();
+    const toolbar = ui.body.rows.find((row:any) => row.view === "toolbar");
+    if (toolbar) {
+      const doneButton = toolbar.elements.find((el:any) => el.value === "Done");
+      if (doneButton) {
+        // Add a click handler to the "Done" button
+        doneButton.click = () => {
+          console.log("Done button clicked", ganttGlobalDataSingleton.currentTaskDetails, ganttGlobalDataSingleton.viewType);
+          const taskDetails = ganttGlobalDataSingleton.currentTaskDetails;
+          const projectDetails = ganttGlobalDataSingleton.currentProjectDetails;
+          ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(taskDetails, ganttGlobalDataSingleton.viewType, 'gantt');
+          ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(projectDetails, ganttGlobalDataSingleton.viewType, 'gantt');
+          // Additional logic for handling the click event
+        };
+      }
+    }
     const form = ui.body.rows[1];
     // options for "css" richselect
     const paletteOptions: any = [{$empty: true, value: ""}];
@@ -19,8 +34,8 @@ export class CustomForm extends gantt.views["task/form"] {
       if (item.name === "text" || item.name === "type") {
         const newItem = {
           ...item,
-          disabled: true,
-          readonly: true
+          disabled: ganttGlobalDataSingleton.viewType === 'UPDATE',
+          readonly: ganttGlobalDataSingleton.viewType === 'UPDATE'
         };
         newFormElements.push(newItem);
       } else if(item.name === "duration") {
@@ -30,6 +45,7 @@ export class CustomForm extends gantt.views["task/form"] {
         };
         newFormElements.push(newItem);
       } else if(item.multi) {
+/*
         const newItem = {
           ...item,
           view: "combo",
@@ -45,6 +61,7 @@ export class CustomForm extends gantt.views["task/form"] {
             ]
           }
         }
+*/
         newFormElements.push(item);
       }
       else {
