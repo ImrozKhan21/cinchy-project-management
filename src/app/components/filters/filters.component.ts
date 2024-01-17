@@ -45,7 +45,6 @@ export class FiltersComponent {
       let {status, owner, project, searchValue, projectOwner, isProjectsExpanded} = params;
       if (status) {
         const allStatusesInParams: string[] = (decodeURIComponent(status)).split(',');
-        console.log('11 allStatusesInParams', allStatusesInParams, status);
         this.selectedStatusesAdvanced = this.statuses.filter((statusItem: IStatus) => allStatusesInParams.includes(statusItem.name));
       }
 

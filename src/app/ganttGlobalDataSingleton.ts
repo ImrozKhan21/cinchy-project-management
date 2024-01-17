@@ -7,6 +7,8 @@ class GanttGlobalDataSingleton {
   public viewType: string;
   public currentTaskDetails: any;
   public currentProjectDetails: any;
+  private currentTaskDetailsForFormValues: any;
+  private ganttFormInstance: any;
 
   public quarterStart(date: any): any {
     date = webix.Date.copy(date);
@@ -78,8 +80,24 @@ class GanttGlobalDataSingleton {
     this.currentTaskDetails = taskDetails;
   }
 
+  setCurrentTaskDetailsForFormValues(taskDetails: any) {
+    this.currentTaskDetailsForFormValues = taskDetails;
+  }
+
+  getCurrentTaskDetailsForFormValues() {
+    return this.currentTaskDetailsForFormValues
+  }
+
   setCurrentProjectDetails(taskDetails: any) {
     this.currentProjectDetails = taskDetails;
+  }
+
+  getGanttFormInstance() {
+    return this.ganttFormInstance
+  }
+
+  setGanttFormInstance(ganttFormInstance: any) {
+    this.ganttFormInstance = ganttFormInstance;
   }
 
   getUtilServiceInstance(): any {

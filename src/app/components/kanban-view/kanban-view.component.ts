@@ -55,7 +55,6 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
       id: status.id,
       value: status.name
     }));
-console.log('111 mappedtasks', mappedTasks)
     webix.CustomScroll.init();
     this.kanbanView = webix.ui({
       container: document.getElementById("kanban-parent"),
@@ -93,7 +92,6 @@ console.log('111 mappedtasks', mappedTasks)
                     project_name: selectedProject[0].project_name,
                     parent_id: selectedProject[0].project_id
                   };
-                  console.log('111 updatedFormValues', updatedFormValues)
                   editorForm.setValues(updatedFormValues);
                   projectField.disable();
                 }
@@ -146,11 +144,10 @@ console.log('111 mappedtasks', mappedTasks)
           on:
             {
               onListItemClick: (id: any, ev: any) => {
-                const kanbanView: any = $$("kanban");
+            /*    const kanbanView: any = $$("kanban");
                 const editorForm: any = kanbanView.getEditor();
                 const formValues = kanbanView.getItem(id);
                 kanbanView.showEditor();
-                console.log('111 FORM VALUES', formValues);
 
                 const projectField = $$('$combo1');  // Assuming '$combo1' is the "project" field
                 const statusField = $$('$combo3');  // Assuming '$combo3' is the "status" field
@@ -162,7 +159,7 @@ console.log('111 mappedtasks', mappedTasks)
                 } else {
                   statusField.enable();
                 }
-                editorForm.setValues(formValues);
+                editorForm.setValues(formValues);*/
               },
               onDataUpdate: (v: any, itemData: any) => {
                 this.utilService.updateActivityWithNewValues(itemData, 'UPDATE');
@@ -179,7 +176,6 @@ console.log('111 mappedtasks', mappedTasks)
 
                 // Check if the editor is for a new card
                 !formValues.parent ?  projectField.enable() :  projectField.disable();
-                console.log('111 FORM VALUES', formValues);
           //      !formValues.text ?  textField.enable() :  textField.disable();
                 const statusField = $$('$combo3');  // Assuming '$combo3' is the "status" field
                 // Check if the editor is for a new card

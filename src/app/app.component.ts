@@ -4,7 +4,7 @@ import {isPlatformBrowser} from "@angular/common";
 import {WindowRefService} from "./services/window-ref.service";
 import {ApiCallsService} from "./services/api-calls.service";
 import {forkJoin, lastValueFrom} from 'rxjs';
-import {IProjectDetails} from "./models/common.model";
+import {IActivityType, IProjectDetails} from "./models/common.model";
 import {AppStateService} from "./services/app-state.service";
 import {Router} from "@angular/router";
 
@@ -16,8 +16,9 @@ import {Router} from "@angular/router";
 export class AppComponent {
   title = 'cinchy-kanban';
   isLoggedIn: boolean | undefined;
-  fullScreenHeight: number = 400;
+  fullScreenHeight: number = 1000;
   projectDetails: IProjectDetails[] | undefined;
+  activityTypes: IActivityType[];
   viewType: string | null;
   hideHeader: boolean;
   showOnlyProjectFilter: boolean;
@@ -79,13 +80,17 @@ export class AppComponent {
       this.viewType = sessionStorage.getItem('viewType');
       const model: string = sessionStorage.getItem('modelId') as string;
       const allObs = [this.apiCallsService.getAllProjects(model),
-        this.apiCallsService.getAllStatuses(model), this.apiCallsService.getAllActivityUsers(model), this.apiCallsService.getActivities(model)];
+        this.apiCallsService.getAllStatuses(model),
+        this.apiCallsService.getAllActivityUsers(model),
+        this.apiCallsService.getActivities(model),
+        this.apiCallsService.getAllActivityTypes(model)];
 
       forkJoin(allObs).subscribe((value: any) => {
-        const [projects, statuses, owners, projectDetails] = value;
+        const [projects, statuses, owners, projectDetails, activityTypes] = value;
         this.appStateService.projects = projects;
         this.appStateService.allStatuses = statuses;
         this.appStateService.users = owners;
+        this.appStateService.activityTypes = activityTypes;
         this.appStateService.projectDetails = projectDetails;
         this.projectDetails = this.appStateService.projectDetails;
       });
@@ -100,7 +105,6 @@ export class AppComponent {
         this.fullScreenHeight = parseInt(height, 10);
       }
     }
-    console.log('set height', this.fullScreenHeight)
     const elements: any = document.getElementsByClassName('full-height-element');
     // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < elements.length; i++) {

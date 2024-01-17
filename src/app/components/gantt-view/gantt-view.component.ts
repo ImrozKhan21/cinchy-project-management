@@ -7,9 +7,25 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {Observable} from "rxjs";
 import {CustomInfo} from "../../webix-services/gantt-task-info.service";
 import {CustomForm} from "../../webix-services/gantt-form.service";
+import {IProjectDetails} from "../../models/common.model";
 
 declare let webix: any;
 declare let gantt: any;
+
+
+class CustomTree extends gantt.views.tree {
+  config() {
+    const ui = super.config();
+    ui.columns.forEach((column: any) => {
+      if (column.id === "text") {
+        column.width = 300;
+        column.minWidth = 300;
+      }
+    });
+    ui.width = 700;
+    return ui;
+  }
+}
 
 @Component({
   selector: 'app-gantt-view',
@@ -46,7 +62,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
     let updatedTasks = this.utilService.getUpdatedTasks(allTasks, filterValues);
     ganttGlobalDataSingleton.setProjectDetails({
       ...ganttGlobalDataSingleton.projectDetails, mappedTasks: updatedTasks,
-      allStatuses: this.appStateService.allStatuses
+      allStatuses: this.appStateService.allStatuses, activityTypes: this.appStateService.activityTypes
     });
     this.ganttView?.destructor();
     this.initGantt();
@@ -86,8 +102,8 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
           resources: true,
           display: this.currentViewType === 'resources' ? 'resources' : "tasks",
           resourcesDiagram: false,
-          scales: [ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.quarterScale, ganttGlobalDataSingleton.monthScale],
-          scaleCellWidth: 400,
+          scales: [ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.monthScale],
+          scaleCellWidth: 700,
           editor: false,  // assign custom editor configuration
           //scaleStart: new Date(),
           on: {
@@ -95,6 +111,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
             onBeforeDrop: this.utilService.afterDrag
           },
           override: new Map<any, any>([
+            [gantt.views.tree, CustomTree],
             [gantt.views["task/form"], CustomForm],
             [gantt.views["task/info"], CustomInfo],
             [gantt.services.Backend, GanttBackendService]
@@ -105,12 +122,17 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
 
     const gantt1: any = $$("gantt");
     gantt1.getState().$observe("selected", (id: any) => {
-      if(typeof id === 'string') {
+      const formInstance = ganttGlobalDataSingleton.getGanttFormInstance();
+      if (typeof id === 'string') {
         ganttGlobalDataSingleton.setViewType('UPDATE');
       } else {
         ganttGlobalDataSingleton.setViewType('INSERT');
       }
-      console.log(id);
+      let currentFormValues = ganttGlobalDataSingleton.projectDetails.mappedTasks.find((task: IProjectDetails) => task.id === id);
+      ganttGlobalDataSingleton.setCurrentTaskDetailsForFormValues(currentFormValues);
+      if (formInstance) {
+        formInstance.refresh()
+      }
     });
 
     /*gantt1.$app.attachEvent("app:task:click", id => {
@@ -132,7 +154,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
         scales.push(ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.quarterScale);
         break;
       case "month":
-        scales.push(ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.quarterScale, ganttGlobalDataSingleton.monthScale);
+        scales.push(ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.monthScale);
         break;
       case "week":
         scales.push(ganttGlobalDataSingleton.quarterScale, ganttGlobalDataSingleton.monthScale, ganttGlobalDataSingleton.weekScale);

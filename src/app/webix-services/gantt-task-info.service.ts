@@ -12,8 +12,13 @@ export class CustomInfo extends gantt.views["task/info"] {
 
     // Create custom content using the status property from obj
     const customContent = `
-                <div class="quick_info_line" style="margin-bottom: 10px; text-align: center;">
+                <div class="quick_info_line" style="margin-bottom: 15px; text-align: left;">
                     <span style="font-weight: 500; font-size: 20px;">${obj.text}</span>
+                </div>
+
+                <div class="quick_info_line" *ngIf="obj.type_cinch">
+                    <span style="font-weight: 500;">${obj.activity_type ? 'Activity Type:' : 'Type:'}
+                    </span> ${obj.activity_type ? obj.activity_type : obj.type}
                 </div>
 
                 <div class="quick_info_line">

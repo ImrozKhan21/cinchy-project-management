@@ -4,7 +4,9 @@ declare let webix: any;
 declare let gantt: any;
 
 export class CustomForm extends gantt.views["task/form"] {
+
   config() {
+    ganttGlobalDataSingleton.setGanttFormInstance(this); // so that we can refresh form from outside if we change task while form being open
     const ui = super.config();
     const toolbar = ui.body.rows.find((row:any) => row.view === "toolbar");
     if (toolbar) {
@@ -68,10 +70,24 @@ export class CustomForm extends gantt.views["task/form"] {
         newFormElements.push(item);
       }
     });
+    const currentFormValuesForCustomFields = ganttGlobalDataSingleton.getCurrentTaskDetailsForFormValues();
+    if(!currentFormValuesForCustomFields) {
+      // means when closing the form and all, since we now refresh form on selection of gantt row
+      ganttGlobalDataSingleton.setGanttFormInstance(null);
+    }
+    const allActivityTypes = [...ganttGlobalDataSingleton.projectDetails.activityTypes];
+    const activityTypes = {
+      options: allActivityTypes.map((statusItem: any) => ({id: statusItem.value, value: statusItem.value})),
+      view: "richselect",
+      label: "Activity Type",
+      name: "activity_type",
+      value: currentFormValuesForCustomFields?.activity_type,
+      disabled: currentFormValuesForCustomFields ? currentFormValuesForCustomFields.type === "project" : false
+    };
+
     const allStatuses = [...ganttGlobalDataSingleton.projectDetails.allStatuses];
-    console.log('111 aallStatusesl,', allStatuses)
     const status = {
-      options: allStatuses.map((status: any) => ({id: status.name, value: status.name})),
+      options: allStatuses.map((statusItem: any) => ({id: statusItem.name, value: statusItem.name})),
       view: "richselect",
       label: "Status",
       name: "status"
@@ -81,7 +97,9 @@ export class CustomForm extends gantt.views["task/form"] {
     form.elements = [...newFormElements];
     console.log('111 fom', form.elements);
     const index = form.elements.findIndex((obj: any) => obj.name == "type");
-    form.elements.splice(index + 1, 0, status);
+    form.elements.splice(index + 1, 0, activityTypes);
+    const indexOfActivityType = form.elements.findIndex((obj: any) => obj.name == "activity_type");
+    form.elements.splice(indexOfActivityType + 1, 0, status);
 
     return ui;
   }

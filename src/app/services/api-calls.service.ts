@@ -4,7 +4,7 @@ import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {ConfigService} from '../config.service';
 import {CinchyService} from "@cinchy-co/angular-sdk";
 import {map, tap} from "rxjs/operators";
-import {IProjectDetails, IStatus, IUser} from "../models/common.model";
+import {IActivityType, IProjectDetails, IStatus, IUser} from "../models/common.model";
 
 @Injectable({
   providedIn: 'root'
@@ -22,22 +22,22 @@ export class ApiCallsService {
     const actualModel = model ? model : 'Cinchy Project Management Model V1.0.0';
     //[Project Management Skin Model V1.0.0]
     const query = `SELECT
-    pa.[Name] as 'project_name',
-    pa.[Cinchy Id] as 'project_id',
-    pa.[Status].[Name] as 'status',
-    /*
-    pa.[Percent Done] as 'percentDone',
-    pa.[Status].[Display Colour] as 'status_color',
- */
-    pa.[Status].[Cinchy Id] as 'statusId',
-    pa.[Start Date] as 'start_date',
-    pa.[Finish Date] as 'end_date',
-    pa.[Name] as 'text',
-    pa.[Owner].[Name] as 'owner',
-    pa.[Owner].[Cinchy Id] as 'owner_id'
-    FROM [${actualModel}].[Project Management].[Projects] pa
-    WHERE pa.[Deleted] IS NULL
-    AND pa.[Start Date] IS NOT NULL`
+    pj.[Name] as 'project_name',
+    pj.[Name] as 'text',
+    pj.[Cinchy Id] as 'project_id',
+    pj.[Status].[Name] as 'status',
+    pj.[Status].[Cinchy Id] as 'statusId',
+    pj.[Status].[Sort Order] as 'status_sort',
+    pj.[Owner].[Name] as 'owner',
+    pj.[Owner].[Photo] as 'owner_photo',
+    pj.[Owner].[Cinchy Id] as 'owner_id',
+    pj.[Start Date]  as 'start_date',
+    pj.[Finish Date] as 'end_date',
+    null as 'percent_done',
+    null as 'parent_id'
+    FROM [${actualModel}].[Project Management].[Projects] pj
+    WHERE pj.[Deleted] IS NULL
+    AND pj.[Start Date] IS NOT NULL`
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
@@ -47,25 +47,24 @@ export class ApiCallsService {
     //[Project Management Skin Model V1.0.0]
     const query = `SELECT
     pa.[Project].[Name] as 'project_name',
-    pa.[Cinchy Id] as 'project_id',
-    pa.[Project].[Cinchy Id] as 'parent_id',
+    pa.[Project].[Cinchy Id] as 'project_id',
+    pa.[Cinchy Id] as 'activity_id',
     pa.[Status].[Name] as 'status',
-    pa.[Dependencies] as 'dependencies',
-    pa.[Percent Done] as 'progress',
     pa.[Status].[Display Colour] as 'status_color',
+    pa.[Status].[Display Colour].[Hex Value] as 'status_color_hex',
     pa.[Status].[Cinchy Id] as 'status_id',
-    pa.[Status] as 'full_status',
     pa.[Status].[Sort Order] as 'status_sort',
     pa.[Owner].[Name] as 'owner',
     pa.[Owner].[Photo] as 'owner_photo',
     pa.[Owner].[Cinchy Id] as 'owner_id',
     pa.[Start Date] as 'start_date',
-    pa.[Finish Date] as 'end_date',
-    pa.[Activity] as 'text'
-    /*
-    pa.[Effort Estimate].[Hours] as 'effortEstimate'
- */
-
+    pa.[Finish] as 'end_date',
+    pa.[% Done] as 'percent_done',
+    pa.[Activity] as 'text',
+    pa.[Type] as 'activity_type',
+    pa.[Type].[Milestone] as 'milestone',
+    pa.[Parent].[Cinchy Id] as 'parent_id',
+    pa.[Dependencies].[Cinchy Id] as 'dependency_ids'
     FROM [${actualModel}].[Project Management].[Project Activities] pa
     WHERE pa.[Deleted] IS NULL
     AND pa.[Activity] IS NOT NULL
@@ -114,6 +113,16 @@ export class ApiCallsService {
     AND ppl2.[Can Be Assigned] = 1
     ) as x
     ORDER BY x.owner`;
+    return this.cinchyService.executeCsql(query, {}).pipe(
+      map((resp: any) => resp?.queryResult?.toObjectArray()));
+  }
+
+  getAllActivityTypes(model: string): Observable<IActivityType[]> {
+    const query = `
+    SELECT
+        [Label] as 'value',
+        [Cinchy Id] as 'id'
+    FROM [Project Management].[Activity Types]`;
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }

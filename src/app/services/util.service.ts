@@ -48,15 +48,17 @@ export class UtilService {
     });
     const childMappedTasks = projectDetails.map((taskItem, i: number) => {
       return {
-        ...taskItem, id: `activity-${taskItem.project_id}`,
+        ...taskItem, id: `activity-${taskItem.activity_id}`,
+        color: taskItem.status_color_hex,
         type: 'task',
-        parent: `project-${taskItem.parent_id}`,
+        parent: taskItem.parent_id ? `activity-${taskItem.parent_id}` : `project-${taskItem.project_id}`,
         user_id: taskItem.owner_id,
         isExisting: true,
         start_date: taskItem.start_date ? new Date(taskItem.start_date) : taskItem.end_date ? new Date(taskItem.end_date) : new Date(),
         end_date: taskItem.end_date ? new Date(taskItem.end_date) : taskItem.start_date ? new Date(taskItem.start_date) : new Date(),
       }
     });
+    console.log('111 childMappedTasks', childMappedTasks);
     const allMappedTasks = [...childMappedTasks];
     return {mappedTasks: allMappedTasks, mappedStatuses, userSet, allTasks: allMappedTasks, projects};
   }
@@ -109,23 +111,24 @@ export class UtilService {
         open: true
       };
     });
+    const h = projectDetails.filter((p: any) => p.milestone);
+   // console.log('1111 PROJECT', projects, projectDetails, h);
     const childMappedTasks = projectDetails.map((taskItem, i: number) => {
       return {
         ...taskItem,
         start_date: taskItem.start_date ? new Date(taskItem.start_date) : taskItem.end_date ? new Date(taskItem.end_date) : new Date(),
         end_date: taskItem.end_date ? new Date(taskItem.end_date) : taskItem.start_date ? new Date(taskItem.start_date) : new Date(),
-        id: `activity-${taskItem.project_id}`,
-        dependencies: taskItem.dependencies ? `activity-${taskItem.dependencies}` : null,
-        type: 'task',
+        id: `activity-${taskItem.activity_id}`,
+        dependencies: taskItem.dependency_ids ? `activity-${taskItem.dependency_ids}` : null,
+        type: taskItem.milestone ? 'milestone' : 'task',
         progress: taskItem.progress ? taskItem.progress*100 : 0,
-        parent: `project-${taskItem.parent_id}`,
+        parent: taskItem.parent_id ? `activity-${taskItem.parent_id}` : `project-${taskItem.project_id}`,
         isExisting: true
       };
     });
     const allMappedTasks = [...mappedTasks, ...childMappedTasks];
     const mappedAssigned = this.transformToAssigned(mappedResources, allMappedTasks);
     const links = this.transformToLinks(allMappedTasks);
-    console.log('11 links', links)
     return {mappedResources, allMappedTasks, mappedAssigned, allTasks: allMappedTasks, links}
   }
 
@@ -173,7 +176,6 @@ export class UtilService {
       }
     });
   }
-
 
   transformToLinks(projectDetails: IProjectDetails[]) {
     const sample = [

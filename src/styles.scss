@@ -17,13 +17,27 @@ body {
 .filters-wrapper {
 
   .p-autocomplete-multiple-container, .p-multiselect {
-    min-width: 250px;
-    max-width: 250px;
+    min-width: 180px;
+    max-width: 180px;
+  }
+
+  .p-multiselect.p-multiselect-chip .p-multiselect-label {
+    font-size: 12px;
+  }
+
+  .p-multiselect-panel .p-multiselect-items .p-multiselect-item {
+    font-size: 14px;
+  }
+
+  .p-button {
+    padding: 5px 10px !important;
+    font-size: 14px;
   }
 
   .p-inputtext{
-    min-width: 250px;
-    max-width: 250px;
+    min-width: 180px;
+    max-width: 180px;
+    font-size: 14px;
   }
 
   .form-label {
@@ -38,44 +52,38 @@ body {
   .p-multiselect .p-multiselect-label, .p-inputtext {
     padding: 6px;
   }
+}
 
-  .p-button {
-    padding: 8px 10px;
+// COLORS:
+$colors: (
+  "light-gray": #D3D3D3,
+  "light-grey": #D3D3D3,
+  "light-red": #F8BBD0,
+  "light-green": #C8E6C9,
+  "light-yellow": #FFF9CF,
+  "light-blue": #BBDEFB,
+  "light-indigo": #C5CAE9,
+  // Add more colors as needed
+);
+
+@each $color-name, $color-hex in $colors {
+  .task-#{$color-name} {
+    background-color: $color-hex !important; // or `color` if you want to change the text color
+    color: #475466 !important;
   }
 }
 
-.task-light-gray {
-  background: #D3D3D3 !important;
-  color: #475466 !important;
+.quick_info_line{
+  padding: 3px;
 }
 
-.task-light-grey {
-  background: #D3D3D3 !important;
-  color: #475466 !important;
+// WEBIX OVERRIDE
+.webix_gantt_tree, .webix_hs_center, .webix_ss_center {
+  width: 540px !important;
 }
 
-.task-light-green {
-  background: #C8E6C9 !important;
-  color: #475466 !important;
+.webix_accordionitem_label {
+  padding-left: 5px !important;
+  font-size: 11px !important;
 }
 
-.task-light-red {
-  background: #F8BBD0 !important;
-  color: #475466 !important;
-}
-
-.task-light-yellow {
-  background: #FFF9CF !important;
-  color: #475466 !important;
-}
-
-
-.task-light-blue {
-  background: #BBDEFB !important;
-  color: #475466 !important;
-}
-
-.task-light-indigo {
-  background: #C5CAE9 !important;
-  color: #475466 !important;
-}

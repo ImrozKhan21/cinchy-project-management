@@ -1,6 +1,6 @@
 import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
 import {BehaviorSubject, Subject} from "rxjs";
-import {IProjectDetails, IStatus, IUser} from "../models/common.model";
+import {IActivityType, IProjectDetails, IStatus, IUser} from "../models/common.model";
 import {isPlatformBrowser} from "@angular/common";
 import {WindowRefService} from "./window-ref.service";
 
@@ -9,6 +9,7 @@ import {WindowRefService} from "./window-ref.service";
 })
 export class AppStateService {
   projectDetails: IProjectDetails[] = [];
+  activityTypes: IActivityType[];
   allStatuses: IStatus[];
   users: IUser[];
   projects: IProjectDetails[];

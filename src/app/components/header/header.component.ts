@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, PLATFORM_ID} from '@angular/core';
+import {ChangeDetectorRef, Component, Inject, Input, OnDestroy, OnInit, PLATFORM_ID} from '@angular/core';
 import {ReplaySubject} from "rxjs";
 import {ApiCallsService} from "../../services/api-calls.service";
 import {ActivatedRoute, Router} from "@angular/router";

@@ -7,6 +7,9 @@ export interface IEnv {
 }
 
 export interface IProjectDetails {
+  milestone: boolean;
+  activity_id: any;
+  activity_type: string;
   id?: string;
   project_name: string;
   project_id: number;
@@ -25,8 +28,9 @@ export interface IProjectDetails {
   type: string;
   isExisting?: boolean;
   dependencies: any;
+  dependency_ids: any;
   status_color: string;
-
+  status_color_hex: string;
 }
 
 export interface IStatus {
@@ -34,6 +38,12 @@ export interface IStatus {
   sort_order: number;
   id: number;
 }
+
+export interface IActivityType {
+  value: string;
+  id: number;
+}
+
 
 export interface IUser {
   owner: string;
@@ -49,5 +59,6 @@ export interface IDetails {
   allStatuses: any;
   links: any;
   effortEstimate?: any;
+  activityTypes: IActivityType[];
 }
 
