@@ -4495,10 +4495,10 @@ legend.webix_required:after,
 }
 .webix_all_tabs {
   height: 100%;
-  display: table;
+  display: flex;
+  align-items: stretch;
 }
 .webix_tab_filler {
-  display: table-cell;
   background: transparent;
   font-size: 1px;
   border-bottom: 1px solid #DADEE0;
@@ -4513,10 +4513,11 @@ legend.webix_required:after,
   border-left: 1px solid #DADEE0;
 }
 .webix_item_tab {
-  display: table-cell;
-  text-align: center;
-  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
+  position: relative;
   cursor: pointer;
   border: 1px solid #DADEE0;
   border-left-width: 0px;
@@ -4586,10 +4587,9 @@ legend.webix_required:after,
 }
 .webix_tab_more_icon {
   cursor: pointer;
-  display: table-cell;
+  display: flex;
+  align-items: center;
   overflow: hidden;
-  text-align: center;
-  vertical-align: middle;
   padding: 0 3px;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -4603,9 +4603,8 @@ legend.webix_required:after,
 }
 .webix_icon.webix_tab_close {
   font-size: 12px;
-  float: right;
-  padding: 4px;
-  margin-top: -4px;
+  position: absolute;
+  right: 0px;
 }
 .webix_icon.webix_tab_close:focus {
   color: #FF5C4C;
@@ -4626,6 +4625,15 @@ legend.webix_required:after,
   color: #94A1B3;
   background-color: #fbfbfd;
   border-color: transparent;
+}
+.webix_item_tab_text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 5px;
+}
+.webix_item_tab_text_close {
+  padding-right: 22px;
 }
 .webix_menu .webix_list_item:hover,
 .webix_menu-x .webix_list_item:hover,
@@ -7835,12 +7843,12 @@ div.webix_inp_static,
   background-color: #fbfbfd;
   color: #94A1B3;
 }
-.webix_cal_body .webix_hours .webix_cal_day_disabled span:hover,
-.webix_cal_body .webix_hours .webix_cal_day_disabled.webix_cal_event span:hover,
-.webix_cal_body .webix_minutes .webix_cal_day_disabled span:hover,
-.webix_cal_body .webix_minutes .webix_cal_day_disabled.webix_cal_event span:hover,
-.webix_cal_body .webix_cal_day_disabled span:hover,
-.webix_cal_body .webix_cal_day_disabled.webix_cal_event span:hover {
+.webix_cal_body .webix_hours .webix_cal_day_disabled:not(.webix_cal_select) span:hover,
+.webix_cal_body .webix_hours .webix_cal_day_disabled.webix_cal_event:not(.webix_cal_select) span:hover,
+.webix_cal_body .webix_minutes .webix_cal_day_disabled:not(.webix_cal_select) span:hover,
+.webix_cal_body .webix_minutes .webix_cal_day_disabled.webix_cal_event:not(.webix_cal_select) span:hover,
+.webix_cal_body .webix_cal_day_disabled:not(.webix_cal_select) span:hover,
+.webix_cal_body .webix_cal_day_disabled.webix_cal_event:not(.webix_cal_select) span:hover {
   background-color: transparent;
 }
 .webix_cal_body .webix_cal_range_first,

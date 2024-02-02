@@ -2,7 +2,7 @@ import {Component, Inject, Input, PLATFORM_ID} from '@angular/core';
 import {IProjectDetails, IStatus, IUser} from "../../models/common.model";
 import {AppStateService} from "../../services/app-state.service";
 import {ActivatedRoute, Router} from "@angular/router";
-import {ReplaySubject, take, takeUntil} from "rxjs";
+import {lastValueFrom, ReplaySubject, take, takeUntil} from "rxjs";
 import {isPlatformBrowser} from "@angular/common";
 
 @Component({
@@ -27,6 +27,7 @@ export class FiltersComponent {
   projects: IProjectDetails[];
   selectedProjectsAdvanced: IProjectDetails[];
   searchValue: string;
+  scopedTaskId: string;
   isProjectsExpanded: boolean;
 
   filteredProjects: IProjectDetails[];
@@ -42,7 +43,7 @@ export class FiltersComponent {
     this.statuses = this.appStateService.allStatuses;
     this.projects = this.appStateService.projects;
     this.activatedRoute.queryParams.pipe(take(1)).subscribe(params => {
-      let {status, owner, project, searchValue, projectOwner, isProjectsExpanded} = params;
+      let {status, owner, project, searchValue, projectOwner, isProjectsExpanded, scopedTaskId} = params;
       if (status) {
         const allStatusesInParams: string[] = (decodeURIComponent(status)).split(',');
         this.selectedStatusesAdvanced = this.statuses.filter((statusItem: IStatus) => allStatusesInParams.includes(statusItem.name));
@@ -63,6 +64,10 @@ export class FiltersComponent {
         this.selectedProjectsAdvanced = this.projects.filter((project: IProjectDetails) => allProjectInParams.includes(project.project_name));
       }
 
+      if (scopedTaskId) {
+        this.scopedTaskId = scopedTaskId;
+      }
+
       if (searchValue) {
         this.searchValue = searchValue;
       }
@@ -76,7 +81,7 @@ export class FiltersComponent {
     this.apply();
   }
 
-  toggleOnlyProjects() {
+  toggleExpansion() {
     this.apply();
   }
 
@@ -108,14 +113,17 @@ export class FiltersComponent {
     }, 100)
   }
 
-  apply(dontAddParam?: boolean) {
+  async apply(dontAddParam?: boolean) {
+    const currentFilters = await lastValueFrom(this.appStateService.getGlobalFilter().pipe(take(1)));
+
     this.appStateService.applyGlobalFilter({
       selectedProjectUsers: this.selectedProjectUserAdvanced,
       selectedUsers: this.selectedUserAdvanced,
       selectedStatuses: this.selectedStatusesAdvanced,
       selectedProjects: this.selectedProjectsAdvanced,
       searchValue: this.searchValue,
-      isProjectsExpanded: this.isProjectsExpanded
+      isProjectsExpanded: this.isProjectsExpanded,
+      slicedActivity: currentFilters?.slicedActivity?.id ? currentFilters?.slicedActivity : {id: this.scopedTaskId, isTaskSliced: false}
     });
 
     if (!dontAddParam) {

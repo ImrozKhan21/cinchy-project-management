@@ -9,7 +9,7 @@ import {ConfigService} from "./config.service";
 import {lastValueFrom} from "rxjs";
 import { GanttViewComponent } from './components/gantt-view/gantt-view.component';
 import { KanbanViewComponent } from './components/kanban-view/kanban-view.component';
-import { FiltersComponent } from './components/filters/filters.component';
+import { FiltersComponent } from './common/filters/filters.component';
 import {FormsModule} from "@angular/forms";
 import {AutoCompleteModule} from "primeng/autocomplete";
 import {MultiSelectModule} from "primeng/multiselect";
@@ -18,9 +18,10 @@ import {InputTextModule} from "primeng/inputtext";
 import {ProgressSpinnerModule} from "primeng/progressspinner";
 import {ToastModule} from "primeng/toast";
 import {MessageService} from "primeng/api";
-import {HeaderComponent} from "./components/header/header.component";
+import {HeaderComponent} from "./common/header/header.component";
 import {CheckboxModule} from "primeng/checkbox";
-import { EditFormComponent } from './common/edit-form/edit-form.component';
+import { BreadcrumbsTreeComponent } from './common/breadcrumbs-tree/breadcrumbs-tree.component';
+import {BreadcrumbModule} from "primeng/breadcrumb";
 
 export function appLoadFactory(config: ConfigService) {
   return () => lastValueFrom(config.loadConfig());
@@ -37,22 +38,23 @@ export function getBaseUrl() {
     KanbanViewComponent,
     FiltersComponent,
     HeaderComponent,
-    EditFormComponent
+    BreadcrumbsTreeComponent
   ],
-    imports: [
-        BrowserModule,
-        BrowserAnimationsModule,
-        AppRoutingModule,
-        AutoCompleteModule,
-        CinchyModule.forRoot(),
-        FormsModule,
-        MultiSelectModule,
-        ButtonModule,
-        InputTextModule,
-        ProgressSpinnerModule,
-        ToastModule,
-        CheckboxModule,
-    ],
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    AppRoutingModule,
+    AutoCompleteModule,
+    CinchyModule.forRoot(),
+    FormsModule,
+    MultiSelectModule,
+    ButtonModule,
+    InputTextModule,
+    ProgressSpinnerModule,
+    ToastModule,
+    CheckboxModule,
+    BreadcrumbModule,
+  ],
   providers: [
     {
       provide: APP_INITIALIZER,

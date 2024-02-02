@@ -14,7 +14,7 @@ export class CustomForm extends gantt.views["task/form"] {
       if (doneButton) {
         // Add a click handler to the "Done" button
         doneButton.click = () => {
-          console.log("Done button clicked", ganttGlobalDataSingleton.currentTaskDetails, ganttGlobalDataSingleton.viewType);
+          console.log("Done button clicked",ganttGlobalDataSingleton.currentTaskDetails, ganttGlobalDataSingleton.currentProjectDetails, ganttGlobalDataSingleton.viewType);
           const taskDetails = ganttGlobalDataSingleton.currentTaskDetails;
           const projectDetails = ganttGlobalDataSingleton.currentProjectDetails;
           ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(taskDetails, ganttGlobalDataSingleton.viewType, 'gantt');

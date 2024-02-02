@@ -8,13 +8,14 @@ import {WindowRefService} from "./window-ref.service";
   providedIn: 'root'
 })
 export class AppStateService {
-  projectDetails: IProjectDetails[] = [];
+  activities: IProjectDetails[] = [];
   activityTypes: IActivityType[];
   allStatuses: IStatus[];
   users: IUser[];
   projects: IProjectDetails[];
 
   globalFilters$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  slicerFilteredItems$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
   showSpinner$: Subject<boolean> = new Subject<boolean>();
 
   constructor(@Inject(PLATFORM_ID) private platformId: any,
@@ -29,6 +30,13 @@ export class AppStateService {
     return this.globalFilters$.asObservable();
   }
 
+  setSlicerFilterItems(val: any) {
+    this.slicerFilteredItems$.next(val);
+  }
+
+  getSlicerFilterItems() {
+    return this.slicerFilteredItems$.asObservable();
+  }
   setSpinnerState(val: boolean) {
     this.showSpinner$.next(val);
   }

@@ -8,24 +8,12 @@ import {Observable} from "rxjs";
 import {CustomInfo} from "../../webix-services/gantt-task-info.service";
 import {CustomForm} from "../../webix-services/gantt-form.service";
 import {IProjectDetails} from "../../models/common.model";
+import {CustomTree} from "../../webix-services/gantt-tree.service";
+import {DataTransformerService} from "../../services/data-transformer.service";
+import {FilterDataService} from "../../services/filter-data.service";
 
 declare let webix: any;
 declare let gantt: any;
-
-
-class CustomTree extends gantt.views.tree {
-  config() {
-    const ui = super.config();
-    ui.columns.forEach((column: any) => {
-      if (column.id === "text") {
-        column.width = 300;
-        column.minWidth = 300;
-      }
-    });
-    ui.width = 700;
-    return ui;
-  }
-}
 
 @Component({
   selector: 'app-gantt-view',
@@ -40,14 +28,15 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
   showForm = false;
 
   constructor(private element: ElementRef, @Inject(PLATFORM_ID) private platformId: any, private activatedRoute: ActivatedRoute,
-              private appStateService: AppStateService, private router: Router,
-              private utilService: UtilService) {
+              private appStateService: AppStateService, private router: Router, private filterDataService: FilterDataService,
+              private utilService: UtilService, private dataTransformerService: DataTransformerService) {
   }
 
   ngOnInit() {
     this.showSpinner$ = this.appStateService.getSpinnerState();
     ganttGlobalDataSingleton.setUtilServiceInstance(this.utilService);
-    this.ganttData = this.utilService.transformToGanttData(this.appStateService.projectDetails, this.appStateService.projects);
+    ganttGlobalDataSingleton.setFilterDataServiceInstance(this.filterDataService);
+    this.ganttData = this.dataTransformerService.transformToGanttData(this.appStateService.activities, this.appStateService.projects);
     ganttGlobalDataSingleton.setProjectDetails(this.ganttData);
   }
 
@@ -59,7 +48,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
 
   setDetailsAndRender(filterValues: any) {
     const {allTasks} = ganttGlobalDataSingleton.projectDetails;
-    let updatedTasks = this.utilService.getUpdatedTasks(allTasks, filterValues);
+    let updatedTasks = this.filterDataService.getUpdatedTasks(allTasks, filterValues);
     ganttGlobalDataSingleton.setProjectDetails({
       ...ganttGlobalDataSingleton.projectDetails, mappedTasks: updatedTasks,
       allStatuses: this.appStateService.allStatuses, activityTypes: this.appStateService.activityTypes
@@ -83,6 +72,15 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
         onChange: GanttViewComponent.resetScales,
       },
     };
+
+/*    webix.protoUI({
+      name:"gantt",
+      $init: function(){
+        this.$app.attachEvent("app:task:click", (task: any) => {
+          this.callEvent("onTaskClick", [task]);
+        });
+      }
+    }, webix.ui.gantt);*/
 
     this.ganttView = webix.ui({
       container: document.getElementById('gantt-parent'),
@@ -135,13 +133,6 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
       }
     });
 
-    /*gantt1.$app.attachEvent("app:task:click", id => {
-      webix.message("Clicked " + id);
-    });*/
-
-    gantt1.attachEvent("onTaskClick", (id: any) => {
-      console.log('onTaskClick', id);
-    });
   }
 
   static getScales(minScale: any) {

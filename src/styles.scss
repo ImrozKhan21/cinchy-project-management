@@ -79,7 +79,7 @@ $colors: (
 
 // WEBIX OVERRIDE
 .webix_gantt_tree, .webix_hs_center, .webix_ss_center {
-  width: 540px !important;
+  min-width: 540px !important;
 }
 
 .webix_accordionitem_label {

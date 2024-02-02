@@ -10,7 +10,8 @@ export interface IProjectDetails {
   milestone: boolean;
   activity_id: any;
   activity_type: string;
-  id?: string;
+  activity_type_id: any;
+  id?: any;
   project_name: string;
   project_id: number;
   progress: number;

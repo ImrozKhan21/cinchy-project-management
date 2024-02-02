@@ -7,8 +7,6 @@ class GanttGlobalDataSingleton {
   public viewType: string;
   public currentTaskDetails: any;
   public currentProjectDetails: any;
-  private currentTaskDetailsForFormValues: any;
-  private ganttFormInstance: any;
 
   public quarterStart(date: any): any {
     date = webix.Date.copy(date);
@@ -48,8 +46,6 @@ class GanttGlobalDataSingleton {
   };
   public dayScale = { unit: "day", format: "%M %d" };
   public hourScale = { unit: "hour", format: "%H:00" };
-
-
   public cellWidths: any = {
     year: 400,
     quarter: 400,
@@ -58,6 +54,11 @@ class GanttGlobalDataSingleton {
     day: 200,
     hour: 50,
   };
+
+  private filterDataServiceInstance: any = {};
+  private currentTaskDetailsForFormValues: any;
+  private currentSlicedTaskDetails: any;
+  private ganttFormInstance: any;
 
 
   setProjectDetails(details: IDetails) {
@@ -70,6 +71,14 @@ class GanttGlobalDataSingleton {
 
   setUtilServiceInstance(instance: any) {
     this.utilServiceInstance = instance;
+  }
+
+  setFilterDataServiceInstance(instance: any) {
+    this.filterDataServiceInstance = instance;
+  }
+
+  getFilterDataServiceInstance() {
+    return this.filterDataServiceInstance;
   }
 
   setViewType(viewType: string) {
@@ -86,6 +95,14 @@ class GanttGlobalDataSingleton {
 
   getCurrentTaskDetailsForFormValues() {
     return this.currentTaskDetailsForFormValues
+  }
+
+  setCurrentSlicedTaskDetails(taskDetails: any) {
+    this.currentSlicedTaskDetails = taskDetails;
+  }
+
+  getCurrentSlicedTaskDetails() {
+    return this.currentSlicedTaskDetails
   }
 
   setCurrentProjectDetails(taskDetails: any) {

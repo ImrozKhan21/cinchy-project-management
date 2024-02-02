@@ -3,6 +3,8 @@ import {AppStateService} from "../../services/app-state.service";
 import {UtilService} from "../../services/util.service";
 import {Observable} from "rxjs";
 import {IProjectDetails, IStatus} from "../../models/common.model";
+import {DataTransformerService} from "../../services/data-transformer.service";
+import {FilterDataService} from "../../services/filter-data.service";
 
 declare let webix: any;
 declare let kanban: any;
@@ -20,12 +22,13 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   filterValues: any;
 
   constructor(private element: ElementRef, private appStateService: AppStateService,
-              private utilService: UtilService) {
+              private utilService: UtilService, private dataTransformerService: DataTransformerService,
+              private filterDataService: FilterDataService) {
   }
 
   ngOnInit() {
     this.showSpinner$ = this.appStateService.getSpinnerState();
-    this.kanbanData = this.utilService.transformToKanbanData(this.appStateService.projectDetails);
+    this.kanbanData = this.dataTransformerService.transformToKanbanData(this.appStateService.activities);
   }
 
   ngAfterViewInit(): void {
@@ -37,7 +40,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   setDetailsAndRender(filterValues: any) {
     const {allTasks} = this.kanbanData;
     this.filterValues = filterValues;
-    let updatedTasks = this.utilService.getUpdatedTasks(allTasks, filterValues);
+    let updatedTasks = this.filterDataService.getUpdatedTasks(allTasks, filterValues);
     this.kanbanData = {...this.kanbanData, mappedTasks: updatedTasks};
     this.kanbanView?.destructor();
     this.initKanban();
@@ -68,16 +71,6 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
           margin: 7,
           cols: [
             {view: "label", label: "Board"},
-      /*      {
-              view: "button", type: "danger", label: "Remove selected", width: 150, click: () => {
-                const kanbanView = $$("kanban") as any;
-                const id = kanbanView.getSelectedId();
-                if (!id) {
-                  return webix.alert("Please selected a card that you want to remove!");
-                }
-                kanbanView.remove(id);
-              }
-            },*/
             {
               view: "button", type: "form", label: "Add new activity", width: 150, click: () => {
                 const kanbanView = $$("kanban") as any;

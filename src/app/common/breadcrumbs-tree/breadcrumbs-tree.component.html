@@ -1,0 +1,3 @@
+<div class="card flex justify-content-center" *ngIf="items?.length">
+  <p-breadcrumb class="max-w-full" [model]="items" [home]="home" (onItemClick)="breadcrumbClicked($event)"></p-breadcrumb>
+</div>

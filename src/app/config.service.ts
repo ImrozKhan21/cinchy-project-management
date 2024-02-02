@@ -36,6 +36,7 @@ export class ConfigService {
       let isProjectsExpanded = this.getQueryStringValue('isProjectsExpanded', parentUri);
       let hideHeader = this.getQueryStringValue('hideHeader', parentUri);
       let showOnlyProjectFilter = this.getQueryStringValue('showOnlyProjectFilter', parentUri);
+      let scopedTaskId = this.getQueryStringValue('scopedTaskId', parentUri);
 
       modelId && sessionStorage.setItem('modelId', modelId);
       viewType && sessionStorage.setItem('viewType', viewType);
@@ -47,6 +48,7 @@ export class ConfigService {
       isProjectsExpanded && sessionStorage.setItem('isProjectsExpanded', isProjectsExpanded);
       hideHeader && sessionStorage.setItem('hideHeader', hideHeader);
       showOnlyProjectFilter && sessionStorage.setItem('showOnlyProjectFilter', showOnlyProjectFilter);
+      scopedTaskId && sessionStorage.setItem('scopedTaskId', scopedTaskId);
 
       if (!sessionStorage.getItem('modelId') || modelId) {
         modelId && modelId != "null" ? sessionStorage.setItem('modelId', modelId) : sessionStorage.setItem('modelId', '');
@@ -92,8 +94,11 @@ export class ConfigService {
           : sessionStorage.setItem('showOnlyProjectFilter', '');
       }
 
-
-      console.log('session', sessionStorage.getItem('searchValue'));
+      if (!sessionStorage.getItem('scopedTaskId') || scopedTaskId) {
+        scopedTaskId && scopedTaskId != "null" ? sessionStorage.setItem('scopedTaskId', scopedTaskId)
+          : sessionStorage.setItem('scopedTaskId', '');
+      }
+      console.log('session', sessionStorage.getItem('scopedTaskId'));
     }
   }
 

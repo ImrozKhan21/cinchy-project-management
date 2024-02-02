@@ -61,7 +61,7 @@
 
   <div class="checkbox-wrapper" *ngIf="viewType === 'gantt'">
     <p-checkbox inputId="ny" [(ngModel)]="isProjectsExpanded" [binary]="true"
-                (ngModelChange)="toggleOnlyProjects()"></p-checkbox>
+                (ngModelChange)="toggleExpansion()"></p-checkbox>
     <label for="ny" style="font-size: 13px">{{!isProjectsExpanded ? 'Expand' : 'Expand'}} Projects</label>
   </div>
 

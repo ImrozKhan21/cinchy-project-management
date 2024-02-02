@@ -1,7 +1,29 @@
+import ganttGlobalDataSingleton from "../ganttGlobalDataSingleton";
+
 declare let webix: any;
 declare let gantt: any;
 
 export class CustomInfo extends gantt.views["task/info"] {
+
+  config() {
+    const ui = super.config();
+    const task = ganttGlobalDataSingleton.getCurrentTaskDetailsForFormValues();
+    const slicedTask = ganttGlobalDataSingleton.getCurrentSlicedTaskDetails();
+    const isTaskSliced = task.id === slicedTask?.id ? slicedTask?.isSliced : false;
+    // Find the toolbar in the config
+    const toolbar = ui.body.rows.find((row: any) => row.view === "toolbar");
+
+   /* if (toolbar) {
+      // Add a new button to the toolbar
+      toolbar.elements.push({
+        view: "button",
+        value: isTaskSliced ? 'UnSlice' : 'Slice', // The text on the button
+        width: 100,        // Width of the button, adjust as needed
+        click: () => this.onSliceButtonClick(task, isTaskSliced) // Event handler for the button click
+      });
+    }*/
+    return ui;
+  }
 
   InfoTemplate(obj: any) {
     //remove links data
@@ -46,7 +68,16 @@ export class CustomInfo extends gantt.views["task/info"] {
     return customContent;
   }
 
+
   EditTask() {
     super.EditTask();
+  }
+
+  onSliceButtonClick(task: any, wasSliced: boolean) {
+    // First time, there will be no sliced task, so from next time it will get sliced task
+    const taskWithSliceUpdates = {...task, isSliced: !wasSliced}
+    ganttGlobalDataSingleton.setCurrentSlicedTaskDetails(taskWithSliceUpdates);
+    const filterDataServiceInstance = ganttGlobalDataSingleton.getFilterDataServiceInstance();
+    filterDataServiceInstance.scopeInTask(task, wasSliced)
   }
 }

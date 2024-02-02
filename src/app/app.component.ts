@@ -3,7 +3,7 @@ import {CinchyService} from "@cinchy-co/angular-sdk";
 import {isPlatformBrowser} from "@angular/common";
 import {WindowRefService} from "./services/window-ref.service";
 import {ApiCallsService} from "./services/api-calls.service";
-import {forkJoin, lastValueFrom} from 'rxjs';
+import {catchError, forkJoin, lastValueFrom, of} from 'rxjs';
 import {IActivityType, IProjectDetails} from "./models/common.model";
 import {AppStateService} from "./services/app-state.service";
 import {Router} from "@angular/router";
@@ -60,12 +60,13 @@ export class AppComponent {
     const projectOwner: any = sessionStorage.getItem('projectOwner');
     const isProjectsExpanded: any = sessionStorage.getItem('isProjectsExpanded');
     const showOnlyProjectFilter: any = sessionStorage.getItem('showOnlyProjectFilter');
+    const scopedTaskId: any = sessionStorage.getItem('scopedTaskId');
     this.showOnlyProjectFilter = showOnlyProjectFilter === "true";
     const hideHeader: any = sessionStorage.getItem('hideHeader');
     this.hideHeader = hideHeader === "true";
     const queryParams: any = {
       modelId, viewType, owner, status, project,
-      searchValue, projectOwner, isProjectsExpanded, hideHeader, showOnlyProjectFilter
+      searchValue, projectOwner, isProjectsExpanded, hideHeader, showOnlyProjectFilter, scopedTaskId
     };
     const cleanedQueryParams: any = Object.fromEntries(
       Object.entries(queryParams).filter(([key, value]) => Boolean(value))
@@ -79,20 +80,30 @@ export class AppComponent {
     if (isPlatformBrowser(this.platformId)) {
       this.viewType = sessionStorage.getItem('viewType');
       const model: string = sessionStorage.getItem('modelId') as string;
-      const allObs = [this.apiCallsService.getAllProjects(model),
-        this.apiCallsService.getAllStatuses(model),
-        this.apiCallsService.getAllActivityUsers(model),
-        this.apiCallsService.getActivities(model),
-        this.apiCallsService.getAllActivityTypes(model)];
+      const allObs = [this.apiCallsService.getAllProjects(model).pipe(
+        catchError(error => of('Fetch API failed'))
+      ),
+        this.apiCallsService.getAllStatuses(model).pipe(
+          catchError(error => of('Fetch API failed'))
+        ),
+        this.apiCallsService.getAllActivityUsers(model).pipe(
+          catchError(error => of('Fetch API failed'))
+        ),
+        this.apiCallsService.getActivities(model).pipe(
+          catchError(error => of('Fetch API failed'))
+        ),
+        this.apiCallsService.getAllActivityTypes(model).pipe(
+          catchError(error => of('Fetch API failed'))
+        )];
 
       forkJoin(allObs).subscribe((value: any) => {
-        const [projects, statuses, owners, projectDetails, activityTypes] = value;
+        const [projects, statuses, owners, activities, activityTypes] = value;
         this.appStateService.projects = projects;
         this.appStateService.allStatuses = statuses;
         this.appStateService.users = owners;
         this.appStateService.activityTypes = activityTypes;
-        this.appStateService.projectDetails = projectDetails;
-        this.projectDetails = this.appStateService.projectDetails;
+        this.appStateService.activities = activities;
+        this.projectDetails = this.appStateService.activities;
       });
     }
 

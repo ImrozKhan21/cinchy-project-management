@@ -89,12 +89,12 @@ export class GanttBackendService extends gantt.services.Backend {
 
   addAssignment(obj: any, e: any) {
     const currentItem = ganttGlobalDataSingleton.projectDetails.mappedTasks.find((item: any) => item.id === obj.task);
-    if (currentItem.parent) {
+    if (currentItem?.parent) {
       ganttGlobalDataSingleton.setCurrentTaskDetails({...currentItem, owner_id: obj.resource});
     } else {
       ganttGlobalDataSingleton.setCurrentProjectDetails({...currentItem, owner_id: obj.resource});
     }
-    if (!currentItem.owner) {
+    if (!currentItem?.owner) {
       return Promise.resolve({id: obj.id});
     } else {
       ganttGlobalDataSingleton.utilServiceInstance.showAssignmentAlreadyPresentError();
@@ -103,7 +103,7 @@ export class GanttBackendService extends gantt.services.Backend {
   }
 
   updateAssignment(id: any, resources: any) {
-    const idSplit = id ? id.split('-') : []
+    const idSplit = id && id.split ? id.split('-') : []; // checking because id.slit fails on numbers
     const idToCheck = `${idSplit[0]}-${idSplit[1]}`;
     const currentItem = ganttGlobalDataSingleton.projectDetails.mappedTasks.find((item: any) => item.id === idToCheck);
     if (currentItem?.parent) {

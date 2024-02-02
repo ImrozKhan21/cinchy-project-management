@@ -33,11 +33,12 @@ export class ApiCallsService {
     pj.[Owner].[Cinchy Id] as 'owner_id',
     pj.[Start Date]  as 'start_date',
     pj.[Finish Date] as 'end_date',
-    null as 'percent_done',
-    null as 'parent_id'
+    pj.[Parent].[Cinchy Id] as 'parent_id',
+    null as 'percent_done'
     FROM [${actualModel}].[Project Management].[Projects] pj
     WHERE pj.[Deleted] IS NULL
-    AND pj.[Start Date] IS NOT NULL`
+    AND pj.[Start Date] IS NOT NULL
+    ORDER BY pj.[Name]`
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
@@ -62,13 +63,14 @@ export class ApiCallsService {
     pa.[% Done] as 'percent_done',
     pa.[Activity] as 'text',
     pa.[Type] as 'activity_type',
+    pa.[Type].[Cinchy Id] as 'activity_type_id',
     pa.[Type].[Milestone] as 'milestone',
     pa.[Parent].[Cinchy Id] as 'parent_id',
     pa.[Dependencies].[Cinchy Id] as 'dependency_ids'
     FROM [${actualModel}].[Project Management].[Project Activities] pa
     WHERE pa.[Deleted] IS NULL
     AND pa.[Activity] IS NOT NULL
-    ORDER BY pa.[Status].[Sort Order]`
+    ORDER BY pa.[Project].[Name]`
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
@@ -94,7 +96,7 @@ export class ApiCallsService {
     const query = `SELECT
     DISTINCT act.[Owner].[Cinchy Id] as 'Cinchy Id'
     INTO #TMP
-    FROM [Cinchy Project Management Model V1.0.0].[Project Management].[Project Activities] act
+    FROM [${actualModel}].[Project Management].[Project Activities] act
     WHERE act.[Deleted] IS NOT NULL AND act.[Owner] IS NOT NULL
 
     SELECT x.* FROM (
@@ -118,11 +120,12 @@ export class ApiCallsService {
   }
 
   getAllActivityTypes(model: string): Observable<IActivityType[]> {
+    const actualModel = model ? model : 'Cinchy Project Management Model V1.0.0';
     const query = `
     SELECT
         [Label] as 'value',
         [Cinchy Id] as 'id'
-    FROM [Project Management].[Activity Types]`;
+    FROM [${actualModel}].[Project Management].[Activity Types]`;
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
@@ -142,8 +145,8 @@ export class ApiCallsService {
                END,
     a.[Activity] = @activityText,
     a.[Start Date] = @startDate,
-    a.[Finish Date] = @endDate,
-    a.[Percent Done] = @progress
+    a.[Finish] = @endDate,
+    a.[% Done] = @progressg
     FROM [${actualModel}].[Project Management].[Project Activities] a
     WHERE a.[Deleted] IS NULL
     AND a.[Cinchy Id] = @activityId
@@ -235,34 +238,19 @@ export class ApiCallsService {
   }
 
   insertActivity(model: string, updatedValues: any): Observable<any> {
-    const {parentId, startDate, userId, endDate, activityText, statusId} = updatedValues;
+    const {parentId, startDate, userId, endDate, activityText, statusId, activityTypeId, projectId} = updatedValues;
     if (!activityText || !parentId) {
       return of(null);
     }
     const actualModel = model ? model : 'Cinchy Project Management Model V1.0.0';
     let query = `INSERT INTO [${actualModel}].[Project Management].[Project Activities]
            ([Activity],
-           [Project],
+           [Parent],
            [Status],
            [Start Date],
-           [Finish Date]
-           )
-        VALUES (
-        @activity,
-        ResolveLink(@parentId,'Cinchy Id'),
-        ResolveLink(@statusId,'Cinchy Id'),
-        @startDate,
-        @endDate
-        ) `;
-
-    if(userId) {
-      query = `INSERT INTO [${actualModel}].[Project Management].[Project Activities]
-           ([Activity],
-           [Project],
-           [Status],
-           [Start Date],
-           [Finish Date],
-           [Owner]
+           [Finish],
+           [Type],
+           [Project]
            )
         VALUES (
         @activity,
@@ -270,7 +258,30 @@ export class ApiCallsService {
         ResolveLink(@statusId,'Cinchy Id'),
         @startDate,
         @endDate,
-        ResolveLink(@userId,'Cinchy Id')
+        ResolveLink(@activityTypeId,'Cinchy Id'),
+        ResolveLink(@projectId,'Cinchy Id')
+        ) `;
+
+    if(userId) {
+      query = `INSERT INTO [${actualModel}].[Project Management].[Project Activities]
+           ([Activity],
+           [Parent],
+           [Status],
+           [Start Date],
+           [Finish],
+           [Owner],
+           [Type],
+           [Project]
+           )
+        VALUES (
+        @activity,
+        ResolveLink(@parentId,'Cinchy Id'),
+        ResolveLink(@statusId,'Cinchy Id'),
+        @startDate,
+        @endDate,
+        ResolveLink(@userId,'Cinchy Id'),
+        ResolveLink(@activityTypeId,'Cinchy Id'),
+        ResolveLink(@projectId,'Cinchy Id')
         ) `;
     }
     const params = {
@@ -280,6 +291,8 @@ export class ApiCallsService {
       '@parentId': parentId,
       '@statusId': statusId,
       '@userId': userId,
+      '@activityTypeId': activityTypeId,
+      '@projectId': projectId
     }
     console.log('PARAMS', params);
     // todo: change [Project Activity Owners] to [Project Owners]
