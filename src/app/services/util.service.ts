@@ -15,35 +15,45 @@ export class UtilService {
   }
   // UPDATE ACTIVITIES
 
-  updateActivityWithNewValues(itemData: any, queryType?: string, viewType?: string) {
+  updateActivityWithNewValues(itemData: any, queryType?: string, viewType?: string, isFromDrag?: boolean) {
     const model: string = sessionStorage.getItem('modelId') as string;
     if (queryType === 'UPDATE' && itemData.isExisting) {
-      this.updateProjectOrActivity(itemData, model, viewType);
+      this.updateProjectOrActivity(itemData, model, viewType, isFromDrag);
     } else if (itemData.text && itemData.type === 'project') {
       this.insertNewProject(itemData, model, viewType);
-    } else if (itemData.text && itemData.type === 'task' && itemData.parent) {
+    } else if (itemData.text && (itemData.type === 'task' || viewType==="kanban") && (itemData.parent || itemData.parent_id)) {
+      // as from kanban we can only add activities
       this.insertNewActivity(itemData, model, viewType);
     }
   }
 
-  updateProjectOrActivity(itemData: any, model: string, viewType?: string) {
-    const {status, project_id, user_id, owner_id, type} = itemData;
-    const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.name === status) as IStatus;
+  updateProjectOrActivity(itemData: any, model: string, viewType?: string, isFromDrag?: boolean) {
+    const {status, status_id, project_id, user_id, owner_id, type, activity_id} = itemData;
+    let newStatus = this.appStateService.allStatuses
+      .find((statusItem: IStatus) => statusItem.id == status_id) as IStatus;
+
+    // as from drag, only status is updated
+    if (isFromDrag) {
+      newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.name == status) as IStatus;
+    }
+    console.log('111 STATUS', newStatus, this.appStateService.allStatuses, itemData)
     const peopleIdToUse = user_id ? user_id : owner_id;
     const updatedValues = {
-      activityId: project_id,
+      activityId: type === "task" || type === "milestone" ? activity_id : project_id,
       statusId: newStatus.id,
       userId: parseInt(peopleIdToUse),
       startDate: itemData.start_date,
       endDate: itemData.end_date,
       activityText: itemData.text,
-      progress: itemData.progress ? itemData.progress/100 : 0
+      progress: itemData.percent_done ? itemData.percent_done/100 : 0
     }
+    console.log('111', itemData)
     if (type === "task") {
       this.appStateService.setSpinnerState(true);
       this.apiCallsService.updateActivity(model, updatedValues).pipe(take(1)).subscribe(() => {
         this.appStateService.setSpinnerState(false);
         if (viewType !== 'gantt') {
+          this.appStateService.updateActivitiesStateOnUpdateForKanban(itemData, newStatus);
           this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
         }
       });
@@ -78,23 +88,36 @@ export class UtilService {
   insertNewActivity(itemData: any, model: string, viewType?: string) {
     const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => itemData.status ?
       itemData.status === statusItem.name : statusItem.sort_order === 1) as IStatus;
-    const activityTypeSelected = this.appStateService.activityTypes.find((type: IActivityType) => type.value === itemData.activity_type);
+    const activityTypeSelected = this.appStateService.activityTypes
+      .find((type: IActivityType) => type.value === itemData.activity_type || type.id === Number(itemData.activity_type_id));
     this.appStateService.setSpinnerState(true);
-    const parentId = Number(itemData.parent.split('-')[1]);
-    const projectId = this.getProjectId(itemData, parentId);
+    const parentId = itemData.parent_id ? itemData.parent_id : Number(itemData.parent.split('-')[1]);
+    const projectId = viewType === "kanban" ? parentId : this.getProjectId(itemData, parentId);
     const insertValues: any = {
       startDate: itemData.start_date,
       endDate: itemData.end_date,
       activityText: itemData.text,
       statusId: `${newStatus.id}`,
       parentId: `${parentId}`,
-      activityTypeId: activityTypeSelected?.id,
+      activityTypeId: `${activityTypeSelected?.id}`,
       projectId: `${projectId}`
     }
     if (itemData.user_id) {
       insertValues.userId = itemData.user_id;
     }
     this.apiCallsService.insertActivity(model, insertValues).pipe(take(1)).subscribe(() => {
+      this.appStateService.setSpinnerState(false);
+      if (viewType !== 'gantt') {
+        this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+      }
+    });
+  }
+
+  deleteActivity(activityId: any, viewType?: string) {
+    const model: string = sessionStorage.getItem('modelId') as string;
+    const activityIdToUse = activityId.split('-')[1];
+    this.appStateService.setSpinnerState(true);
+    this.apiCallsService.deleteActivity(model, activityIdToUse).pipe(take(1)).subscribe(() => {
       this.appStateService.setSpinnerState(false);
       if (viewType !== 'gantt') {
         this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
@@ -161,6 +184,12 @@ export class UtilService {
     const itemData = kanbanView.getItem(itemId);
     this.updateActivityWithNewValues(itemData);
 
+  }
+
+  getAbbreviation(name: string) {
+    return name.split(" ") // Split the string into an array of words
+      .map(word => word.charAt(0).toUpperCase()) // Map over the array and take the first character of each word in uppercase
+      .join(""); // Join the first letters back into a string
   }
 
 }

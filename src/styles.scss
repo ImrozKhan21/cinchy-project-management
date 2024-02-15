@@ -34,7 +34,7 @@ body {
     font-size: 14px;
   }
 
-  .p-inputtext{
+  .p-inputtext {
     min-width: 180px;
     max-width: 180px;
     font-size: 14px;
@@ -44,7 +44,7 @@ body {
     margin-right: 10px;
   }
 
-  .p-multiselect.p-multiselect-chip .p-multiselect-token{
+  .p-multiselect.p-multiselect-chip .p-multiselect-token {
     padding: 0;
     margin-right: 5px;
   }
@@ -71,19 +71,65 @@ $colors: (
     background-color: $color-hex !important; // or `color` if you want to change the text color
     color: #475466 !important;
   }
+  .webix_kanban .webix_accordionitem {
+    &.task-#{$color-name} > * {
+      background-color: $color-hex !important; // or `color` if you want to change the text color
+      color: #475466 !important;
+    }
+  }
+
+  .kanban-task-#{$color-name} {
+    .webix_kanban_list_content {
+    //  background-color: $color-hex !important; // or `color` if you want to change the text color
+      border-left: 6px solid $color-hex !important; // or `color` if you want to change the text color
+      color: #475466 !important;
+    }
+  }
 }
 
-.quick_info_line{
-  padding: 3px;
+.content-wrapper {
+  .quick_info_line {
+    padding: 3px;
+  }
+
+  // WEBIX OVERRIDE
+  .webix_gantt_tree, .webix_hs_center, .webix_ss_center {
+    min-width: 540px !important;
+  }
+
+  .webix_accordionitem_label {
+    padding-left: 5px !important;
+    font-size: 12px !important;
+  }
+
+  .webix_kanban_body {
+    font-weight: 400;
+  }
+
 }
 
-// WEBIX OVERRIDE
-.webix_gantt_tree, .webix_hs_center, .webix_ss_center {
-  min-width: 540px !important;
+
+.filters-wrapper {
+  .p-icon {
+    width: 0.6rem;
+    height: 1rem;
+  }
+
+  p-multiselect.p-multiselect-clearable .p-multiselect-label-container {
+    height: 26px;
+    padding-right: 1.5rem;
+  }
+
+  p-multiselect.p-multiselect-clearable .p-multiselect-clear-icon {
+    right: 1.5rem;
+  }
+
+  .p-multiselect .p-multiselect-trigger {
+    width: 1rem;
+  }
 }
 
-.webix_accordionitem_label {
-  padding-left: 5px !important;
-  font-size: 11px !important;
+.kbi-cogs:before {
+  content: "\F002" !important;
 }
-
+//"\F015"

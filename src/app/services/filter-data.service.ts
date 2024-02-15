@@ -9,11 +9,12 @@ import {lastValueFrom, take} from "rxjs";
 })
 export class FilterDataService {
 
-  constructor(private appStateService: AppStateService,  private activatedRoute: ActivatedRoute, private router: Router) {
+  constructor(private appStateService: AppStateService, private activatedRoute: ActivatedRoute, private router: Router) {
 
   }
 
-  getUpdatedTasks(allTasks: any, filterValues: any) {
+  getUpdatedTasks(allTasks: any, filterValues: any, fromKanban?: boolean) {
+    const filters = filterValues || {};
     const {
       selectedUsers,
       selectedProjectUsers,
@@ -22,8 +23,8 @@ export class FilterDataService {
       searchValue,
       isProjectsExpanded,
       slicedActivity
-    } = filterValues;
- //   console.log("Slice button clicked for task:", allTasks, filterValues);
+    } = filters;
+    //   console.log("Slice button clicked for task:", allTasks, filterValues);
 
     let updatedTasks = allTasks.slice(); // ON square can be ON, by making this a map object but our data is not that big
     // Project owners
@@ -52,22 +53,26 @@ export class FilterDataService {
       });
     }
 
-    console.log('filter updatedTasks', updatedTasks)
     if (selectedProjects?.length) {
-     /* updatedTasks = updatedTasks?.filter((task: any) => {
-        return selectedProjects.find((project: IProjectDetails) => project.project_name === task.project_name);
-      });*/
-      const slicedTasksForMultipleProjects: any = [];
-      console.log('111 selectedProjects', selectedProjects);
-      selectedProjects.forEach((task: any) => {
-        const idToUse = task.id ? task.id : `project-${task.project_id}`
-        const tasksForSlicers: any = this.getSlicedTasksAndProjectOnly(updatedTasks, idToUse, true);
-        if (tasksForSlicers) {
-          slicedTasksForMultipleProjects.push(...tasksForSlicers);
-        }
-      });
-      updatedTasks = slicedTasksForMultipleProjects;
-      updatedTasks = this.getUniqueItemsBasedOnId(updatedTasks);
+      if (fromKanban) {
+        updatedTasks = updatedTasks?.filter((task: any) => {
+          return selectedProjects.find((project: IProjectDetails) => project.project_name === task.project_name);
+        });
+      } else {
+        /* updatedTasks = updatedTasks?.filter((task: any) => {
+           return selectedProjects.find((project: IProjectDetails) => project.project_name === task.project_name);
+         });*/
+        const slicedTasksForMultipleProjects: any = [];
+        selectedProjects.forEach((task: any) => {
+          const idToUse = task.id ? task.id : `project-${task.project_id}`
+          const tasksForSlicers: any = this.getSlicedTasksAndProjectOnly(updatedTasks, idToUse, true);
+          if (tasksForSlicers) {
+            slicedTasksForMultipleProjects.push(...tasksForSlicers);
+          }
+        });
+        updatedTasks = slicedTasksForMultipleProjects;
+        updatedTasks = this.getUniqueItemsBasedOnId(updatedTasks);
+      }
     }
 
 
@@ -146,7 +151,7 @@ export class FilterDataService {
     let initialTask: any = taskMap.get(taskId);
     if (!initialTask) return;
 
-    if(!needAllTask) {
+    if (!needAllTask) {
       result.push(structuredClone({...initialTask, parent: 0})) // Add the current task
     }
     if (initialTask) {
@@ -166,7 +171,6 @@ export class FilterDataService {
     const currentFilters = await lastValueFrom(this.appStateService.getGlobalFilter().pipe(take(1)));
     this.appStateService.applyGlobalFilter({...currentFilters, slicedActivity: {id: task?.id, isTaskSliced}});
     this.routeWithParams(task?.id, isTaskSliced);
-    console.log('111 OUT task', task, currentFilters);
   }
 
   getUniqueItemsBasedOnId(dataArray: any) {

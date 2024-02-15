@@ -10,6 +10,7 @@
                    placeholder="Project"
                    optionLabel="project_name"
                    [filter]="true"
+                   [showClear]="true"
                    [virtualScroll]="true"
                    [virtualScrollItemSize]="40">
     </p-multiSelect>
@@ -19,9 +20,10 @@
     <p-multiSelect [(ngModel)]="selectedProjectUserAdvanced"
                    [options]="users"
                    display="chip"
-                   placeholder="Project Owner"
+                   placeholder="Project Manager"
                    optionLabel="owner"
                    [filter]="true"
+                   [showClear]="true"
                    [virtualScroll]="true"
                    [virtualScrollItemSize]="40">
     </p-multiSelect>
@@ -31,9 +33,10 @@
     <p-multiSelect [(ngModel)]="selectedUserAdvanced"
                    [options]="users"
                    display="chip"
-                   placeholder="Activity Owner"
+                   placeholder="Work Owner"
                    optionLabel="owner"
                    [filter]="true"
+                   [showClear]="true"
                    [virtualScroll]="true"
                    [virtualScrollItemSize]="40">
     </p-multiSelect>
@@ -49,7 +52,8 @@
                    display="chip"
                    placeholder="Status"
                    optionLabel="name"
-                   [filter]="true">
+                   [filter]="true"
+                   [showClear]="true">
     </p-multiSelect>
   </div>
 

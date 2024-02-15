@@ -2,7 +2,7 @@
                    *ngIf="!projectDetails">
 </p-progressSpinner>
 
-<app-header *ngIf="!hideHeader"></app-header>
+<app-header *ngIf="!hideHeader && viewType" [viewType]="viewType"></app-header>
 
 <div class="full-height-element" *ngIf="isLoggedIn && projectDetails">
 

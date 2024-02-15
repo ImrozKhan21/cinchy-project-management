@@ -20,6 +20,8 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   kanbanView: any;
   showSpinner$: Observable<boolean>;
   filterValues: any;
+  dontMakeCallToUpdate: boolean = false;
+  isDragged: boolean = false;
 
   constructor(private element: ElementRef, private appStateService: AppStateService,
               private utilService: UtilService, private dataTransformerService: DataTransformerService,
@@ -29,6 +31,14 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.showSpinner$ = this.appStateService.getSpinnerState();
     this.kanbanData = this.dataTransformerService.transformToKanbanData(this.appStateService.activities);
+    this.appStateService.getRefreshViewState().subscribe(({refresh, activity}) => {
+      if (refresh) {
+        this.dontMakeCallToUpdate = true;
+        const kanban: any = $$("kanban");
+        kanban.updateItem(activity.id, activity);
+        this.dontMakeCallToUpdate = false;
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -38,16 +48,18 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   }
 
   setDetailsAndRender(filterValues: any) {
+    const selectedProjects = filterValues?.selectedProjects;
+    //  this.kanbanData = this.dataTransformerService.transformToKanbanData(this.appStateService.activities, selectedProjects);
     const {allTasks} = this.kanbanData;
     this.filterValues = filterValues;
-    let updatedTasks = this.filterDataService.getUpdatedTasks(allTasks, filterValues);
+    let updatedTasks = this.filterDataService.getUpdatedTasks(allTasks, filterValues, true);
     this.kanbanData = {...this.kanbanData, mappedTasks: updatedTasks};
     this.kanbanView?.destructor();
     this.initKanban();
   }
 
   initKanban(): void {
-    const {mappedStatuses, mappedTasks, userSet, projects} = this.kanbanData;
+    const {mappedStatuses, mappedTasks, userSet, projects, tagsList} = this.kanbanData;
     if (webix.env.mobile) webix.ui.fullScreen();
     const projectsForSelection = projects.map((project: IProjectDetails) => ({
       id: project.id,
@@ -58,7 +70,10 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
       id: status.id,
       value: status.name
     }));
+
+    const typesForSelection = this.appStateService.activityTypes;
     webix.CustomScroll.init();
+
     this.kanbanView = webix.ui({
       container: document.getElementById("kanban-parent"),
       rows: [
@@ -77,16 +92,16 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
                 kanbanView.showEditor();
                 const editorForm: any = kanbanView.getEditor();
                 const formValues = editorForm.getValues();
-                const projectField = $$('$combo1');
+                const projectField = $$('project-combo');
                 const selectedProject = this.filterValues?.selectedProjects;
-                if (selectedProject?.length) {
-                  const updatedFormValues = {...formValues,
-                    parent: `project-${selectedProject[0].project_id}`,
+                if (selectedProject?.length === 1) {
+                  const updatedFormValues = {
+                    ...formValues,
+                    parent_project: `project-${selectedProject[0].project_id}`,
                     project_name: selectedProject[0].project_name,
                     parent_id: selectedProject[0].project_id
                   };
                   editorForm.setValues(updatedFormValues);
-                  projectField.disable();
                 }
               }
             }
@@ -100,89 +115,91 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
           data: mappedTasks,
           userList: true,
           users: userSet,
+          tags: tagsList,
           projects: projectsForSelection,
           editor: {
             elements: [
-              {view: "combo", name: "parent", label: "Project", options: projectsForSelection, disabled: true},
-              {view: "text", name: "text", label: "Task"},
+              {
+                id: "project-combo",
+                view: "combo",
+                name: "parent_project",
+                label: "Project",
+                options: projectsForSelection,
+                disabled: true
+              },
               {
                 margin: 10,
                 cols: [
-                  {view: "combo", name: "user_id", label: "Assign to", options: userSet},
-                  {view: "combo", name: "status_id", label: "Status", options: statusesForSelection}
+                  {view: "text", name: "text", label: "Task"},
+                  {
+                    id: "activity-type-combo",
+                    view: "combo",
+                    name: "activity_type_id",
+                    label: "Type",
+                    options: typesForSelection
+                  }
                 ]
               },
-           /*   {
-                margin: 10,
-                cols: [
-                  { view: "datepicker", name: "start_date", label: "Start Date" },
-                  { view: "datepicker", name: "end_date", label: "End Date" }
-                ]
-              },*/
-              { view: "text", name: "estimate", label: "Task Effort" },
               {
                 margin: 10,
                 cols: [
-                  { view: "text", name: "effortCompleted", label: "Effort Completed" },
-                  { view: "text", name: "effortRemaining", label: "Effort Remaining" },
+                  {id: "user-combo", view: "combo", name: "user_id", label: "Assign to", options: userSet},
+                  {id: "status-combo", view: "combo", name: "status_id", label: "Status", options: statusesForSelection}
                 ]
               },
-              { view: "textarea", height: 100, name: "qaNotes", label: "QA Notes" }
+              {
+                margin: 10,
+                cols: [
+                  {view: "datepicker", name: "start_date", label: "Start Date"},
+                  {view: "datepicker", name: "end_date", label: "End Date"}
+                ]
+              },
+              {
+                cols: [
+                  {view: "text", name: "estimate", label: "Task Effort"},
+                  {view: "text", name: "percent_done", label: "Percent Done"},
+                ],
+                margin: 10
+              },
+              /* {view: "textarea", height: 100, name: "qaNotes", label: "QA Notes"}*/
             ]
           },
           cardActions: [
             //default
             "edit", "remove"
           ],
-          on:
-            {
-              onListItemClick: (id: any, ev: any) => {
-            /*    const kanbanView: any = $$("kanban");
-                const editorForm: any = kanbanView.getEditor();
-                const formValues = kanbanView.getItem(id);
-                kanbanView.showEditor();
-
-                const projectField = $$('$combo1');  // Assuming '$combo1' is the "project" field
-                const statusField = $$('$combo3');  // Assuming '$combo3' is the "status" field
-                !formValues.parent ?  projectField.enable() :  projectField.disable();
-                if (!formValues.text) {
-                  const updatedFormValues = {...formValues, status_id: 1};
-                  editorForm.setValues(updatedFormValues);
-                  statusField.disable();
-                } else {
-                  statusField.enable();
-                }
-                editorForm.setValues(formValues);*/
-              },
-              onDataUpdate: (v: any, itemData: any) => {
-                this.utilService.updateActivityWithNewValues(itemData, 'UPDATE');
-              },
-              onBeforeAdd: (obj: any, list: any, e: any) => {
-                this.utilService.updateActivityWithNewValues({...list, type: 'task'}, 'INSERT')
-              },
-              onAfterEditorShow: () => {
-                const kanbanView: any = $$("kanban");
-                const editorForm: any = kanbanView.getEditor();
-                const formValues = editorForm.getValues();
-                const projectField = $$('$combo1');  // Assuming '$combo1' is the "project" field
-                const textField = $$('$text1');  // Assuming '$combo1' is the "project" field
-
-                // Check if the editor is for a new card
-                !formValues.parent ?  projectField.enable() :  projectField.disable();
-          //      !formValues.text ?  textField.enable() :  textField.disable();
-                const statusField = $$('$combo3');  // Assuming '$combo3' is the "status" field
-                // Check if the editor is for a new card
-                if (!formValues.text) {
-                  const updatedFormValues = {...formValues, status_id: 1};
-                  editorForm.setValues(updatedFormValues);
-                  statusField.disable();
-                } else {
-                  statusField.enable();
-                }
-              },
-              onListBeforeDrag: this.utilService.onKanbanBeforeDrag,
-              onListBeforeDragIn: this.utilService.onKanbanBeforeDragIn,
+          on: {
+            onListItemClick: (id: any, ev: any) => {
             },
+            onDataUpdate: (v: any, itemData: any) => {
+              if (!this.dontMakeCallToUpdate) {
+                this.utilService.updateActivityWithNewValues(itemData, 'UPDATE', 'kanban', this.isDragged);
+              }
+            },
+            onBeforeAdd: (obj: any, list: any, e: any) => {
+              this.utilService.updateActivityWithNewValues({...list, type: 'task'}, 'INSERT', 'kanban');
+            },
+            onAfterEditorShow: () => {
+              const kanbanView: any = $$("kanban");
+              const editorForm: any = kanbanView.getEditor();
+              const formValues = editorForm.getValues();
+              const projectField = $$('project-combo');
+
+              // Check if the editor is for a new card
+              !formValues.parent ? projectField.enable() : projectField.disable();
+            },
+            onBeforeDelete: (id: any) => {
+              this.utilService.deleteActivity(id, 'kanban')
+            },
+            onListAfterDrop: (kanbanView: any, dragContext: any, e: any, list: any) => {
+              this.isDragged = false;
+              console.log('111 after drop', e, list, dragContext, kanbanView)
+            },
+            onListBeforeDrag: () => {
+              this.isDragged = true;
+              },
+            onListBeforeDragIn: this.utilService.onKanbanBeforeDragIn,
+          },
         }
       ],
     });

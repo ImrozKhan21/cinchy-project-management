@@ -11,6 +11,7 @@ import {WindowRefService} from "../../services/window-ref.service";
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  @Input() viewType: any;
   headerDetails: any;
   private destroyed$: ReplaySubject<boolean> = new ReplaySubject(1);
 
