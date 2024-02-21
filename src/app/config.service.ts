@@ -37,6 +37,9 @@ export class ConfigService {
       let hideHeader = this.getQueryStringValue('hideHeader', parentUri);
       let showOnlyProjectFilter = this.getQueryStringValue('showOnlyProjectFilter', parentUri);
       let scopedTaskId = this.getQueryStringValue('scopedTaskId', parentUri);
+      let workType = this.getQueryStringValue('workType', parentUri);
+      let department = this.getQueryStringValue('department', parentUri);
+      let portfolio = this.getQueryStringValue('portfolio', parentUri);
 
       modelId && sessionStorage.setItem('modelId', modelId);
       viewType && sessionStorage.setItem('viewType', viewType);
@@ -49,6 +52,9 @@ export class ConfigService {
       hideHeader && sessionStorage.setItem('hideHeader', hideHeader);
       showOnlyProjectFilter && sessionStorage.setItem('showOnlyProjectFilter', showOnlyProjectFilter);
       scopedTaskId && sessionStorage.setItem('scopedTaskId', scopedTaskId);
+      workType && sessionStorage.setItem('workType', workType);
+      department && sessionStorage.setItem('department', department);
+      portfolio && sessionStorage.setItem('portfolio', portfolio);
 
       if (!sessionStorage.getItem('modelId') || modelId) {
         modelId && modelId != "null" ? sessionStorage.setItem('modelId', modelId) : sessionStorage.setItem('modelId', '');
@@ -98,7 +104,19 @@ export class ConfigService {
         scopedTaskId && scopedTaskId != "null" ? sessionStorage.setItem('scopedTaskId', scopedTaskId)
           : sessionStorage.setItem('scopedTaskId', '');
       }
-      console.log('session', sessionStorage.getItem('scopedTaskId'));
+
+      if (!sessionStorage.getItem('workType') || workType ) {
+        workType && workType != "null" ? sessionStorage.setItem('workType', workType) : sessionStorage.setItem('workType', '');
+      }
+
+      if (!sessionStorage.getItem('department') || department ) {
+        department && department != "null" ? sessionStorage.setItem('department', department) : sessionStorage.setItem('department', '');
+      }
+
+      if (!sessionStorage.getItem('portfolio') || portfolio ) {
+        portfolio && portfolio != "null" ? sessionStorage.setItem('portfolio', portfolio) : sessionStorage.setItem('portfolio', '');
+      }
+
     }
   }
 

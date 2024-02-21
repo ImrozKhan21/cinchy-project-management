@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {IProjectDetails, IStatus, IUser} from "../models/common.model";
+import {IComboType, IProjectDetails, IStatus, IUser} from "../models/common.model";
 import {AppStateService} from "./app-state.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {lastValueFrom, take} from "rxjs";
@@ -22,29 +22,51 @@ export class FilterDataService {
       selectedProjects,
       searchValue,
       isProjectsExpanded,
-      slicedActivity
+      slicedActivity,
+      selectedWorkType,
+      selectedDepartment,
+      selectedPortfolios
     } = filters;
-    //   console.log("Slice button clicked for task:", allTasks, filterValues);
 
     let updatedTasks = allTasks.slice(); // ON square can be ON, by making this a map object but our data is not that big
-    // Project owners
-    if (selectedProjectUsers?.length) {
-      updatedTasks = allTasks?.filter((task: any) => {
-        return (selectedProjectUsers.find((ownerFilter: IUser) => (ownerFilter.owner_id === task.owner_id
-          || ownerFilter.owner === task.owner)) && task.type === 'project');
-      });
-      const allActivitiesUnderFilteredProjects = this.projectsWithAllChildren(updatedTasks, allTasks);
-      updatedTasks = [...updatedTasks, ...allActivitiesUnderFilteredProjects];
-    }
 
-    // activity owner
-    if (selectedUsers?.length) {
-      updatedTasks = updatedTasks?.filter((task: any) => {
-        return (selectedUsers.find((ownerFilter: IUser) => ownerFilter.owner_id === task.owner_id
-          || ownerFilter.owner === task.owner) && task.type === 'task');
-      });
-      // Adding all parent projects to list
-      updatedTasks = this.augmentFilteredList(updatedTasks, allTasks);
+    // work owner or work type as both may need to add all parents
+    if (selectedUsers?.length || selectedWorkType?.length || selectedDepartment?.length) {
+      let [filteredItemsByWorkType, filteredItemsByWorkOwner, filterItemsByDepartmentType] = [[], [], []]
+      if (selectedUsers?.length) {
+        const filterByWorkOwnerFn = (task: any) => {
+          return selectedUsers.some((ownerFilter: IUser) =>
+            task.owner && (task.owner === ownerFilter.owner || ownerFilter.owner_id == task.owner_id) && task.type !== 'project'
+          );
+        };
+        filteredItemsByWorkOwner = this.findTasksAndAncestors(allTasks, filterByWorkOwnerFn, fromKanban);
+      }
+
+      if (selectedWorkType?.length) {
+        const filterByTaskTypeFn = (task: IProjectDetails) => {
+          return selectedWorkType.some((workType: IComboType) =>
+            task.activity_type_id && (task.activity_type_id === workType.id)
+          );
+        };
+        filteredItemsByWorkType = this.findTasksAndAncestors(allTasks, filterByTaskTypeFn, fromKanban);
+      }
+
+      if (selectedDepartment?.length) {
+        const filterByTaskTypeFn = (task: IProjectDetails) => {
+          return selectedDepartment.some((department: IComboType) =>
+            task.owner_department && (task.owner_department === department.value)
+          );
+        };
+        filterItemsByDepartmentType = this.findTasksAndAncestors(allTasks, filterByTaskTypeFn, fromKanban);
+      }
+      const combinedFilteredItems = [...filteredItemsByWorkOwner, ...filteredItemsByWorkType, ...filterItemsByDepartmentType];
+
+      // Remove duplicates
+      updatedTasks = combinedFilteredItems.filter((item: any, index, self) =>
+          index === self.findIndex((t: any) => (
+            t.id === item.id
+          ))
+      );
     }
 
     if (selectedStatuses?.length) {
@@ -53,28 +75,41 @@ export class FilterDataService {
       });
     }
 
-    if (selectedProjects?.length) {
-      if (fromKanban) {
+    // because below all need to add either all children or parents back
+    if (selectedProjects?.length || selectedProjectUsers?.length || selectedPortfolios?.length) {
+      if (fromKanban && selectedProjects?.length) {
         updatedTasks = updatedTasks?.filter((task: any) => {
           return selectedProjects.find((project: IProjectDetails) => project.project_name === task.project_name);
         });
       } else {
-        /* updatedTasks = updatedTasks?.filter((task: any) => {
-           return selectedProjects.find((project: IProjectDetails) => project.project_name === task.project_name);
-         });*/
         const slicedTasksForMultipleProjects: any = [];
-        selectedProjects.forEach((task: any) => {
-          const idToUse = task.id ? task.id : `project-${task.project_id}`
-          const tasksForSlicers: any = this.getSlicedTasksAndProjectOnly(updatedTasks, idToUse, true);
-          if (tasksForSlicers) {
-            slicedTasksForMultipleProjects.push(...tasksForSlicers);
-          }
-        });
+        if (selectedProjects?.length) {
+          const hierarchyTasks = this.getAllHierarchyTask(selectedProjects, updatedTasks, fromKanban);
+          slicedTasksForMultipleProjects.push(...hierarchyTasks);
+        }
+        if (selectedPortfolios?.length) {
+          const selectedProjects = updatedTasks?.filter((task: any) => {
+            return selectedPortfolios.find((portfolio: IComboType) => {
+              return (task.type === "project" && portfolio.value === task.portfolio)
+            });
+          });
+          const hierarchyTasks = this.getAllHierarchyTask(selectedProjects, updatedTasks, fromKanban);
+          slicedTasksForMultipleProjects.push(...hierarchyTasks);
+        }
+
+        if (selectedProjectUsers?.length) {
+          const selectedProjects = updatedTasks?.filter((task: any) => {
+            return (selectedProjectUsers.find((ownerFilter: IUser) => (((ownerFilter.owner_id === task.owner_id
+                || ownerFilter.owner === task.owner) && task.type === 'project'))))
+          });
+          const hierarchyTasks = this.getAllHierarchyTask(selectedProjects, updatedTasks, fromKanban);
+          slicedTasksForMultipleProjects.push(...hierarchyTasks);
+        }
+
         updatedTasks = slicedTasksForMultipleProjects;
         updatedTasks = this.getUniqueItemsBasedOnId(updatedTasks);
       }
     }
-
 
     //task.owner.includes(searchValue)
     if (searchValue) {
@@ -91,39 +126,72 @@ export class FilterDataService {
         updatedTasks = this.getSlicedTasksAndProjectOnly(updatedTasks, id);
       }
     }
+
+    if (fromKanban) {
+      updatedTasks = updatedTasks.filter((item: any) => {
+        return item.type === "task";
+      });
+    }
     // actualList = this.augmentFilteredList(updatedTasks, allTasks);
     return updatedTasks.map((item: any) => {
       return {...item, open: isProjectsExpanded};
     });
   }
 
-  projectsWithAllChildren(filteredList: IProjectDetails[], allTasks: IProjectDetails[]) {
-    const projectIds = new Set(filteredList.map(task => task.project_id));
-    return allTasks.filter(task => projectIds.has(Number(task.parent_id)));
+  getAllHierarchyTask(selectedProjects: any, updatedTasks: any, fromKanban?: boolean) {
+    const needOnlyChildren = fromKanban;
+    const hierarchyTasks: any = [];
+    selectedProjects.forEach((task: any) => {
+      const idToUse = task.id ? task.id : `project-${task.project_id}`
+      const tasksForSlicers: any = this.getSlicedTasksAndProjectOnly(updatedTasks, idToUse, !needOnlyChildren);
+      if (tasksForSlicers) {
+        hierarchyTasks.push(...tasksForSlicers);
+      }
+    });
+    return hierarchyTasks;
   }
 
   // To also add the parent project if it is not returned after search, is some task has parentId and that parentId task is not present
-  augmentFilteredList(filteredList: IProjectDetails[], allTasks: IProjectDetails[]): IProjectDetails[] {
-    const resultArray: IProjectDetails[] = [...filteredList];
-    const filteredIds = new Set(filteredList.map(task => task.project_id));
+  findTasksAndAncestors(items: any, filterFn: any, fromKanban?: boolean) {
+    // Map to store parent relationships for quick lookup
+    const parentMap = new Map(items.map((item: any) => [item.id, item.parent]));
+    // Set to store IDs of tasks that match the filter or are ancestors of filtered tasks
+    const relevantIds = new Set();
 
-    for (let task of filteredList) {
-      if (task.parent_id && !filteredIds.has(Number(task.parent_id))) {
-        // Find the parent task in allTasks
-        const parentTask = allTasks.find(t => t.project_id === Number(task.parent_id));
-        if (parentTask) {
-          resultArray.push(parentTask);
-          // Add the ID to the set so we don't add the same task twice
-          filteredIds.add(parentTask.project_id);
-        }
+    // Step 1: Directly mark tasks that match the filter and store their IDs
+    items.forEach((item: any) => {
+      if (filterFn(item)) {
+        relevantIds.add(item.id);
       }
+    });
+
+    // Step 2: Given a child ID, recursively mark all its ancestors
+    const markAncestors = (childId: any) => {
+      const parentId = parentMap.get(childId);
+      if (parentId && !relevantIds.has(parentId)) {
+        relevantIds.add(parentId);
+        markAncestors(parentId); // Recurse to mark further ancestors
+      }
+    };
+
+    // Start marking ancestors from each directly filtered task
+    if (!fromKanban) {
+      relevantIds.forEach(markAncestors);
     }
 
-    return resultArray;
+    // Step 3: Collect all relevant tasks and their ancestors into the final list
+    return items.filter((item: any) => relevantIds.has(item.id));
+  }
+
+  projectsWithAllChildren(filteredList: IProjectDetails[], allTasks: IProjectDetails[]) {
+    const projectIds = new Set(filteredList.map(task => task.project_id));
+    return allTasks.filter(task => projectIds.has(Number(task.project_id)) || projectIds.has(Number(task.parent_id)));
   }
 
   addTaskAndParents(taskId: any, taskMap: { get: (arg0: any) => any; }, result: any[]) {
     let task = taskMap.get(taskId);
+    // console.log('TASK 2',taskMap, task, taskId)
+
     if (task) {
       result.push(structuredClone({...task})) // Add the current task
     }

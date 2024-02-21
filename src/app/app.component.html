@@ -8,9 +8,11 @@
 
   <div class="content-wrapper">
     <app-filters *ngIf="viewType" [viewType]="viewType" [showOnlyProjectFilter]="showOnlyProjectFilter"></app-filters>
-    <app-breadcrumbs-tree></app-breadcrumbs-tree>
-    <app-kanban-view *ngIf="viewType==='kanban'"></app-kanban-view>
-    <app-gantt-view *ngIf="viewType==='gantt'"></app-gantt-view>
+    <div>
+      <app-breadcrumbs-tree></app-breadcrumbs-tree>
+      <app-kanban-view *ngIf="viewType==='kanban'"></app-kanban-view>
+      <app-gantt-view *ngIf="viewType==='gantt'"></app-gantt-view>
+    </div>
   </div>
 </div>
 

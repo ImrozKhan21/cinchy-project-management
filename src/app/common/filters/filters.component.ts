@@ -1,8 +1,8 @@
 import {Component, Inject, Input, PLATFORM_ID} from '@angular/core';
-import {IProjectDetails, IStatus, IUser} from "../../models/common.model";
+import {IActivityType, IComboType, IProjectDetails, IStatus, IUser} from "../../models/common.model";
 import {AppStateService} from "../../services/app-state.service";
 import {ActivatedRoute, Router} from "@angular/router";
-import {lastValueFrom, ReplaySubject, take, takeUntil} from "rxjs";
+import {lastValueFrom, ReplaySubject, take} from "rxjs";
 import {isPlatformBrowser} from "@angular/common";
 
 @Component({
@@ -14,8 +14,12 @@ export class FiltersComponent {
   @Input() viewType: string;
   @Input() showOnlyProjectFilter: boolean;
   users: IUser[];
+  departments: IComboType[];
+  portfolios: IComboType[];
   selectedUserAdvanced: any[];
   selectedProjectUserAdvanced: any[];
+  selectedDepartmentAdvanced: IComboType[];
+  selectedPortfoliosAdvanced: IComboType[];
 
   filteredUsers: any[];
 
@@ -25,7 +29,9 @@ export class FiltersComponent {
   filteredStatuses: any[];
 
   projects: IProjectDetails[];
+  activityTypes: IActivityType[];
   selectedProjectsAdvanced: IProjectDetails[];
+  selectedWorkType: IActivityType[];
   searchValue: string;
   scopedTaskId: string;
   isProjectsExpanded: boolean;
@@ -42,8 +48,11 @@ export class FiltersComponent {
     this.users = this.appStateService.users;
     this.statuses = this.appStateService.allStatuses;
     this.projects = this.appStateService.projects;
+    this.activityTypes = this.appStateService.activityTypes;
+    this.departments = this.appStateService.departments;
+    this.portfolios = this.appStateService.portfolios;
     this.activatedRoute.queryParams.pipe(take(1)).subscribe(params => {
-      let {status, owner, project, searchValue, projectOwner, isProjectsExpanded, scopedTaskId} = params;
+      let {status, owner, project, searchValue, projectOwner, isProjectsExpanded, scopedTaskId, workType, department, portfolio} = params;
       if (status) {
         const allStatusesInParams: string[] = (decodeURIComponent(status)).split(',');
         this.selectedStatusesAdvanced = this.statuses.filter((statusItem: IStatus) => allStatusesInParams.includes(statusItem.name));
@@ -51,17 +60,32 @@ export class FiltersComponent {
 
       if (owner) {
         const allOwnersInParams: string[] = (decodeURIComponent(owner)).split(',');
-        this.selectedUserAdvanced = this.users.filter((user: IUser) => allOwnersInParams.includes(user.owner));
+        this.selectedUserAdvanced = this.users.filter((user: IUser) => allOwnersInParams.includes(`${user.owner_id}`));
       }
 
       if (projectOwner) {
         const allOwnersInParams: string[] = (decodeURIComponent(projectOwner)).split(',');
-        this.selectedProjectUserAdvanced = this.users.filter((user: IUser) => allOwnersInParams.includes(user.owner));
+        this.selectedProjectUserAdvanced = this.users.filter((user: IUser) => allOwnersInParams.includes(`${user.owner_id}`));
       }
 
       if (project) {
         const allProjectInParams: string[] = (decodeURIComponent(project)).split(',');
-        this.selectedProjectsAdvanced = this.projects.filter((project: IProjectDetails) => allProjectInParams.includes(project.project_name));
+        this.selectedProjectsAdvanced = this.projects.filter((project: IProjectDetails) => allProjectInParams.includes(`${project.project_id}`));
+      }
+
+      if (workType) {
+        const allWorkTypeInParams: string[] = (decodeURIComponent(workType)).split(',');
+        this.selectedWorkType = this.activityTypes.filter((activityType: IComboType) => allWorkTypeInParams.includes(`${activityType.id}`));
+      }
+
+      if (department) {
+        const allDepartmentInParams: string[] = (decodeURIComponent(department)).split(',');
+        this.selectedDepartmentAdvanced = this.departments.filter((departmentItem: IComboType) => allDepartmentInParams.includes(`${departmentItem.id}`));
+      }
+
+      if (portfolio) {
+        const allPortfolioInParams: string[] = (decodeURIComponent(portfolio)).split(',');
+        this.selectedPortfoliosAdvanced = this.portfolios.filter((portfolioItem: IComboType) => allPortfolioInParams.includes(`${portfolioItem.id}`));
       }
 
       if (scopedTaskId) {
@@ -123,7 +147,13 @@ export class FiltersComponent {
       selectedProjects: this.selectedProjectsAdvanced,
       searchValue: this.searchValue,
       isProjectsExpanded: this.isProjectsExpanded,
-      slicedActivity: currentFilters?.slicedActivity?.id ? currentFilters?.slicedActivity : {id: this.scopedTaskId, isTaskSliced: false}
+      selectedWorkType: this.selectedWorkType,
+      selectedDepartment: this.selectedDepartmentAdvanced,
+      selectedPortfolios: this.selectedPortfoliosAdvanced,
+      slicedActivity: currentFilters?.slicedActivity?.id ? currentFilters?.slicedActivity : {
+        id: this.scopedTaskId,
+        isTaskSliced: false
+      }
     });
 
     if (!dontAddParam) {
@@ -131,21 +161,27 @@ export class FiltersComponent {
 
       const params = {
         ...currentParams,
-        projectOwner: (this.selectedProjectUserAdvanced?.map((user: IUser) => user.owner))?.join(','),
-        owner: (this.selectedUserAdvanced?.map((user: IUser) => user.owner))?.join(','),
+        projectOwner: (this.selectedProjectUserAdvanced?.map((user: IUser) => user.owner_id))?.join(','),
+        owner: (this.selectedUserAdvanced?.map((user: IUser) => user.owner_id))?.join(','),
         status: (this.selectedStatusesAdvanced?.map((status: IStatus) => status.name))?.join(','),
-        project: (this.selectedProjectsAdvanced?.map((project: IProjectDetails) => project.project_name))?.join(','),
+        project: (this.selectedProjectsAdvanced?.map((project: IProjectDetails) => project.project_id))?.join(','),
         searchValue: this.searchValue,
-        isProjectsExpanded: this.isProjectsExpanded,
+        workType: (this.selectedWorkType?.map((activityType: IActivityType) => activityType.id))?.join(','),
+        isProjectsExpanded: this.isProjectsExpanded ? true : null,
+        department: (this.selectedDepartmentAdvanced?.map((department: IComboType) => department.id))?.join(','),
+        portfolio: (this.selectedPortfoliosAdvanced?.map((portfolio: IComboType) => portfolio.id))?.join(','),
       };
 
       if (isPlatformBrowser(this.platformId)) {
-          !this.selectedUserAdvanced?.length && sessionStorage.removeItem('owner');
-          !this.selectedStatusesAdvanced?.length && sessionStorage.removeItem('status');
-          !this.selectedProjectsAdvanced?.length && sessionStorage.removeItem('project');
-          !this.selectedProjectUserAdvanced?.length && sessionStorage.removeItem('projectOwner');
-          !this.searchValue && sessionStorage.removeItem('searchValue');
-          !this.isProjectsExpanded && sessionStorage.removeItem('isProjectsExpanded');
+        !this.selectedUserAdvanced?.length && sessionStorage.removeItem('owner');
+        !this.selectedStatusesAdvanced?.length && sessionStorage.removeItem('status');
+        !this.selectedProjectsAdvanced?.length && sessionStorage.removeItem('project');
+        !this.selectedProjectUserAdvanced?.length && sessionStorage.removeItem('projectOwner');
+        !this.searchValue && sessionStorage.removeItem('searchValue');
+        !this.isProjectsExpanded && sessionStorage.removeItem('isProjectsExpanded');
+        !this.selectedWorkType?.length && sessionStorage.removeItem('workType');
+        !this.selectedDepartmentAdvanced?.length && sessionStorage.removeItem('department');
+        !this.selectedPortfoliosAdvanced?.length && sessionStorage.removeItem('portfolio');
       }
       this.router.navigate(
         [],

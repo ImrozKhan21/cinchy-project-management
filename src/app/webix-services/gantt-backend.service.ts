@@ -7,7 +7,8 @@ declare let categories: any;
 export class GanttBackendService extends gantt.services.Backend {
   tasks() {
     ganttGlobalDataSingleton.projectDetails.mappedTasks.forEach((item: any) => {
-      item.css = item.status_color ? `task-${item.status_color.replace(/\s+/g, '-').toLowerCase()}` : '';
+      item.css = item.status_color_hex ? `task-${item.status_color_hex.replace(/#+/g, '')}` : ''
+
     })
     return webix.promise.resolve(ganttGlobalDataSingleton.projectDetails.mappedTasks);
   }

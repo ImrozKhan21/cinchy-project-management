@@ -19,6 +19,7 @@ export interface IProjectDetails {
   status_id: number;
   full_status: string;
   owner: string;
+  owner_department: string;
   start_date: string;
   end_date: string;
   text: string;
@@ -33,7 +34,14 @@ export interface IProjectDetails {
   status_color: string;
   status_color_hex: string;
   percent_done: number;
-
+  project_color?: string;
+  status_commentary?: string;
+  priority?: string;
+  effort?: string;
+  effort_id?: number;
+  rgb_project_color?: string;
+  project_portfolio?: string;
+  project_owner_id?: string;
 }
 
 export interface IStatus {
@@ -44,7 +52,13 @@ export interface IStatus {
   id: number;
 }
 
-export interface IActivityType {
+export interface IActivityType { /// TODO: remove this in future and use combo type
+  value: string;
+  id: number;
+  icon?: string;
+}
+
+export interface IComboType {
   value: string;
   id: number;
 }
@@ -75,3 +89,14 @@ export const COLORS_MAP: any = {
   'Light Blue': 'skyblue', // Darker blue, navy blue
   'Light Indigo': '#4B0082', // Darker indigo, more towards the actual indigo color
 };
+
+export const PRIORITY_OPTIONS = [
+  {id: '1. Very High', value: '1. Very High'},
+  {id: '2. High', value: '2. High'},
+  {id: '3. Medium', value: '3. Medium'},
+  {id: '4. Low', value: '4. Low'},
+  {id: '5. Very Low', value: '5. Very Low'}
+];
+
+
+export const WORK_TABLE_URL = "https://cinchy.net/Tables/140?viewId=0&fil[Title].Op=1&fil[Title].Val={{title}}"

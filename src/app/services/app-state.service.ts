@@ -1,6 +1,6 @@
 import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
 import {BehaviorSubject, Subject} from "rxjs";
-import {IActivityType, IProjectDetails, IStatus, IUser} from "../models/common.model";
+import {IActivityType, IComboType, IProjectDetails, IStatus, IUser} from "../models/common.model";
 import {isPlatformBrowser} from "@angular/common";
 import {WindowRefService} from "./window-ref.service";
 
@@ -13,6 +13,9 @@ export class AppStateService {
   allStatuses: IStatus[];
   users: IUser[];
   projects: IProjectDetails[];
+  estimates: IComboType[];
+  departments: IComboType[];
+  portfolios: IComboType[];
 
   globalFilters$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
   slicerFilteredItems$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
@@ -64,7 +67,7 @@ export class AppStateService {
   }
 
   updateActivitiesStateOnUpdateForKanban(activity: any, newStatus: IStatus) {
-    const kanban: any= $$("kanban");
+    const kanban: any = $$("kanban");
     const activityToUpdate: any = kanban.getItem(activity.id);
     // Update status
     if (newStatus && activityToUpdate) {
@@ -83,11 +86,40 @@ export class AppStateService {
       activityToUpdate.owner_photo = newAssignee.owner_photo;
       activityToUpdate.owner_id = newAssignee.owner_id;
     }
+
+    // Updating activity so that any filter change get latest details
+    this.activities = this.activities.map((activityItem: IProjectDetails) => {
+      return activityItem.activity_id === activityToUpdate.activity_id ? activityToUpdate : activityItem;
+    });
     this.setRefreshViewState(true, activityToUpdate);
   }
 
-  updateActivitiesStateOnInsert(activity: IProjectDetails) {
+  updateActivitiesStateOnInsert(activity: any, newStatus: IStatus, activityTypeSelected?: IActivityType) {
     // this.activities = activities;
+    if (newStatus) {
+      activity.status = newStatus.name;
+      activity.status_id = newStatus.id;
+      activity.status_color = newStatus.status_color;
+      activity.status_color_hex = newStatus.status_color_hex;
+      activity.$css = newStatus.status_color ? `kanban-task-${newStatus.status_color.replace(/\s+/g, '-').toLowerCase()}` : '';
+    }
+
+    if (activityTypeSelected) {
+      activity.activity_type = activityTypeSelected.value;
+      activity.activity_type_id = activityTypeSelected.id;
+      activity.activity_type_icon = activityTypeSelected.icon;
+    }
+
+    const assigneeIdToUse = activity.user_id ? +activity.user_id : activity.owner_id;
+    const newAssignee = this.users.find((user: IUser) => user.owner_id === assigneeIdToUse);
+    if (newAssignee) {
+      activity.owner = newAssignee.owner;
+      activity.owner_photo = newAssignee.owner_photo;
+      activity.owner_id = newAssignee.owner_id;
+    }
+    this.activities.push(activity);
+    console.log('111 NEW ACTIVITY', activity)
+    this.setRefreshViewState(true, activity);
   }
 
 }

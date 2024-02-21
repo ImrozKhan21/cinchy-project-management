@@ -28,7 +28,7 @@ export class DataTransformerService {
     };
     const projectsToUse = selectedProjects?.length ? selectedProjects : this.appStateService.projects;
     const projects = projectsToUse.map((taskItem: any, i: number) => {
-      return {...taskItem, id: `project-${taskItem.project_id}`, user_id: taskItem.owner_id}
+      return {...taskItem, id: `project-${taskItem.project_id}`, user_id: taskItem.owner_id,  type: 'project'}
     });
 
     const rowsMapSorStatus: any = {};
@@ -48,7 +48,7 @@ export class DataTransformerService {
     const mappedStatuses = this.appStateService.allStatuses.map((status: IStatus) => {
       return {
         header: status.name,
-        css: status.status_color ? `task-${status.status_color.replace(/\s+/g, '-').toLowerCase()}` : '',
+        css: status.status_color_hex ? `task-${status.status_color_hex.replace(/#+/g, '')}` : '',
         body: {view: "kanbanlist", status: status.name, type:"cards" }
       }
       /* return {
@@ -77,7 +77,8 @@ export class DataTransformerService {
     const childMappedTasks = projectDetails.map((taskItem, i: number) => {
       return {
         ...taskItem, id: `activity-${taskItem.activity_id}`,
-        color: COLORS_MAP[taskItem.status_color],
+        color: taskItem.status_color_hex,
+        rgb_project_color: this.utilService.convertFromHexToRGB(taskItem.project_color, 1),
         $css: taskItem.status_color ? `kanban-task-${taskItem.status_color.replace(/\s+/g, '-').toLowerCase()}` : '',
         type: 'task',
         parent: taskItem.parent_id ? `activity-${taskItem.parent_id}` : `project-${taskItem.project_id}`,
@@ -86,7 +87,7 @@ export class DataTransformerService {
         isExisting: true,
         start_date: taskItem.start_date ? new Date(taskItem.start_date) : taskItem.end_date ? new Date(taskItem.end_date) : new Date(),
         end_date: taskItem.end_date ? new Date(taskItem.end_date) : taskItem.start_date ? new Date(taskItem.start_date) : new Date(),
-        tags: [taskItem.activity_type_id, taskItem.project_id],
+        tags: [taskItem.project_id],
         progress: taskItem.percent_done
       }
     });

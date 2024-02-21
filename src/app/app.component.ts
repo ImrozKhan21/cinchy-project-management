@@ -61,12 +61,16 @@ export class AppComponent {
     const isProjectsExpanded: any = sessionStorage.getItem('isProjectsExpanded');
     const showOnlyProjectFilter: any = sessionStorage.getItem('showOnlyProjectFilter');
     const scopedTaskId: any = sessionStorage.getItem('scopedTaskId');
+    const workType: any = sessionStorage.getItem('workType');
+    const department: any = sessionStorage.getItem('department');
+    const portfolio: any = sessionStorage.getItem('portfolio');
     this.showOnlyProjectFilter = showOnlyProjectFilter === "true";
     const hideHeader: any = sessionStorage.getItem('hideHeader');
     this.hideHeader = hideHeader === "true";
     const queryParams: any = {
       modelId, viewType, owner, status, project,
-      searchValue, projectOwner, isProjectsExpanded, hideHeader, showOnlyProjectFilter, scopedTaskId
+      searchValue, projectOwner, isProjectsExpanded, hideHeader, showOnlyProjectFilter, scopedTaskId,
+      workType, department, portfolio
     };
     const cleanedQueryParams: any = Object.fromEntries(
       Object.entries(queryParams).filter(([key, value]) => Boolean(value))
@@ -77,6 +81,9 @@ export class AppComponent {
   }
 
   getViewDetailsAndSetStates() {
+ /*   this.apiCallsService.getTableEntitlements().subscribe((response: any) => {
+      console.log('entitlements', response);
+    })*/
     if (isPlatformBrowser(this.platformId)) {
       this.viewType = sessionStorage.getItem('viewType');
       const model: string = sessionStorage.getItem('modelId') as string;
@@ -94,15 +101,28 @@ export class AppComponent {
         ),
         this.apiCallsService.getAllActivityTypes(model).pipe(
           catchError(error => of('Fetch API failed'))
-        )];
+        ),
+        this.apiCallsService.getAllEstimates(model).pipe(
+          catchError(error => of('Fetch API failed'))
+        ),
+        this.apiCallsService.getDistinctDepartments(model).pipe(
+          catchError(error => of('Fetch API failed'))
+        ),
+        this.apiCallsService.getPortfolios(model).pipe(
+          catchError(error => of('Fetch API failed'))
+        )
+      ];
 
       forkJoin(allObs).subscribe((value: any) => {
-        const [projects, statuses, owners, activities, activityTypes] = value;
+        const [projects, statuses, owners, activities, activityTypes, estimates, departments, portfolios] = value;
         this.appStateService.projects = projects;
         this.appStateService.allStatuses = statuses;
         this.appStateService.users = owners;
         this.appStateService.activityTypes = activityTypes;
         this.appStateService.activities = activities;
+        this.appStateService.estimates = estimates;
+        this.appStateService.departments = departments;
+        this.appStateService.portfolios = portfolios;
         this.projectDetails = this.appStateService.activities;
       });
     }

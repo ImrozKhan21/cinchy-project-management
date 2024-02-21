@@ -1,10 +1,34 @@
 /* You can add global styles to this file, and also import other style files */
 @import "primeicons/primeicons.css";
+@import "colors.scss";
 
 
 body {
   margin: 0;
 }
+
+
+@each $color-name, $color-hex in $colors {
+  .task-#{$color-name} {
+    background-color: $color-hex !important; // or `color` if you want to change the text color
+    color: #475466 !important;
+  }
+  .webix_kanban .webix_accordionitem {
+    &.task-#{$color-name} > * {
+      background-color: $color-hex !important; // or `color` if you want to change the text color
+      color: #475466 !important;
+    }
+  }
+
+  .kanban-task-#{$color-name} {
+    .webix_kanban_list_content {
+      //  background-color: $color-hex !important; // or `color` if you want to change the text color
+      border-left: 6px solid $color-hex !important; // or `color` if you want to change the text color
+      color: #475466 !important;
+    }
+  }
+}
+
 
 .item-center-n-relative {
   top: 50%;
@@ -17,8 +41,8 @@ body {
 .filters-wrapper {
 
   .p-autocomplete-multiple-container, .p-multiselect {
-    min-width: 180px;
-    max-width: 180px;
+    min-width: 148px;
+    max-width: 148px;
   }
 
   .p-multiselect.p-multiselect-chip .p-multiselect-label {
@@ -35,8 +59,8 @@ body {
   }
 
   .p-inputtext {
-    min-width: 180px;
-    max-width: 180px;
+    min-width: 130px;
+    max-width: 130px;
     font-size: 14px;
   }
 
@@ -54,39 +78,6 @@ body {
   }
 }
 
-// COLORS:
-$colors: (
-  "light-gray": #D3D3D3,
-  "light-grey": #D3D3D3,
-  "light-red": #F8BBD0,
-  "light-green": #C8E6C9,
-  "light-yellow": #FFF9CF,
-  "light-blue": #BBDEFB,
-  "light-indigo": #C5CAE9,
-  // Add more colors as needed
-);
-
-@each $color-name, $color-hex in $colors {
-  .task-#{$color-name} {
-    background-color: $color-hex !important; // or `color` if you want to change the text color
-    color: #475466 !important;
-  }
-  .webix_kanban .webix_accordionitem {
-    &.task-#{$color-name} > * {
-      background-color: $color-hex !important; // or `color` if you want to change the text color
-      color: #475466 !important;
-    }
-  }
-
-  .kanban-task-#{$color-name} {
-    .webix_kanban_list_content {
-    //  background-color: $color-hex !important; // or `color` if you want to change the text color
-      border-left: 6px solid $color-hex !important; // or `color` if you want to change the text color
-      color: #475466 !important;
-    }
-  }
-}
-
 .content-wrapper {
   .quick_info_line {
     padding: 3px;
@@ -98,12 +89,17 @@ $colors: (
   }
 
   .webix_accordionitem_label {
-    padding-left: 5px !important;
-    font-size: 12px !important;
+    padding-left: 10px !important;
+    font-size: 13px !important;
   }
 
   .webix_kanban_body {
     font-weight: 400;
+    font-size: 12px;
+  }
+
+  .webix_accordionitem .webix_accordionitem_header .webix_accordionitem_button {
+    color: #485466;
   }
 
 }
@@ -129,7 +125,18 @@ $colors: (
   }
 }
 
-.kbi-cogs:before {
-  content: "\F002" !important;
+.custom-tag {
+  border-radius: 10px;
+  border: 1px solid aliceblue;
+  padding: 0 10px;
+  color: black;
+  font-size: 10px;
 }
+
+.center-item-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 //"\F015"

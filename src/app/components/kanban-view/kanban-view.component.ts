@@ -2,7 +2,7 @@ import {AfterViewInit, Component, ElementRef, OnInit} from '@angular/core';
 import {AppStateService} from "../../services/app-state.service";
 import {UtilService} from "../../services/util.service";
 import {Observable} from "rxjs";
-import {IProjectDetails, IStatus} from "../../models/common.model";
+import {IProjectDetails, IStatus, PRIORITY_OPTIONS, WORK_TABLE_URL} from "../../models/common.model";
 import {DataTransformerService} from "../../services/data-transformer.service";
 import {FilterDataService} from "../../services/filter-data.service";
 
@@ -49,10 +49,10 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
 
   setDetailsAndRender(filterValues: any) {
     const selectedProjects = filterValues?.selectedProjects;
-    //  this.kanbanData = this.dataTransformerService.transformToKanbanData(this.appStateService.activities, selectedProjects);
-    const {allTasks} = this.kanbanData;
+    this.kanbanData = this.dataTransformerService.transformToKanbanData(this.appStateService.activities, selectedProjects);
+    const {allTasks, projects} = this.kanbanData;
     this.filterValues = filterValues;
-    let updatedTasks = this.filterDataService.getUpdatedTasks(allTasks, filterValues, true);
+    let updatedTasks = this.filterDataService.getUpdatedTasks(allTasks.concat(projects), filterValues, true);
     this.kanbanData = {...this.kanbanData, mappedTasks: updatedTasks};
     this.kanbanView?.destructor();
     this.initKanban();
@@ -72,7 +72,29 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
     }));
 
     const typesForSelection = this.appStateService.activityTypes;
+    const estimatesForSelection = this.appStateService.estimates;
     webix.CustomScroll.init();
+
+    // Custom footer in cards (tags and icons)
+    webix.type(webix.ui.kanbanlist, {
+      name: "cards",
+      templateBody:function(obj: any){
+        const defaultHtml =`<span>${obj.text}</span>`;
+        return `${defaultHtml}`;
+      },
+      templateFooter: (obj: any, common: any, kanban: any) => {
+        const defaultTags = common.templateTags(obj, common, kanban);
+        const defaultIconsString = common.templateIcons(obj, common, kanban);
+        // TODO: find a better way to do below
+        const updateIcons = defaultIconsString.replace('webix_kanban_icon kbi-cogs', 'wxi-dots');
+        const defaultHtml =
+          `<span style="background-color: ${obj.rgb_project_color}" class="custom-tag" title="${obj.project_name}">
+            ${obj.project_name?.substring(0, 16)}...</span>` + updateIcons;
+        return `<span class="center-item-flex" title="${obj.activity_type}">
+                    <img height="20px" style="margin-right: 5px;" src=${obj.activity_type_icon}  alt="icon"/>
+                </span> ${defaultHtml}`;
+      }
+    });
 
     this.kanbanView = webix.ui({
       container: document.getElementById("kanban-parent"),
@@ -150,26 +172,54 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
               {
                 margin: 10,
                 cols: [
+                  {id: "priority-combo", view: "combo", name: "priority", label: "Priority", options: PRIORITY_OPTIONS},
+                  {id: "estimates-combo", view: "combo", name: "effort_id", label: "Total Effort", options: estimatesForSelection},
+                ]
+              },
+              {id: "percent-done", view: "slider", name: "percent_done", label: "Percent Done"},
+              {
+                margin: 10,
+                cols: [
                   {view: "datepicker", name: "start_date", label: "Start Date"},
                   {view: "datepicker", name: "end_date", label: "End Date"}
                 ]
               },
-              {
-                cols: [
-                  {view: "text", name: "estimate", label: "Task Effort"},
-                  {view: "text", name: "percent_done", label: "Percent Done"},
-                ],
-                margin: 10
-              },
+              {view: "textarea", height: 140, name: "status_commentary", label: "Status Commentary"}
+
               /* {view: "textarea", height: 100, name: "qaNotes", label: "QA Notes"}*/
-            ]
+            ],
+            rules:{
+              parent_project: webix.rules.isNotEmpty,
+              text: webix.rules.isNotEmpty,
+              activity_type_id: webix.rules.isNotEmpty
+            }
           },
           cardActions: [
             //default
-            "edit", "remove"
+            "edit",
+            // custom,
+            'View in Table',
+            "remove"
           ],
           on: {
+            onBeforeCardAction:function(action: any, id: any){
+              if(action === "View in Table") {
+                const kanbanView: any = $$("kanban");
+                const itemData = kanbanView.getItem(id);
+                const updatedURL = WORK_TABLE_URL.replace("{{title}}", encodeURIComponent(itemData.text));
+                window.open(updatedURL, '_blank');
+              }
+            },
             onListItemClick: (id: any, ev: any) => {
+            },
+            onListItemDblClick: function (id: any, e: any, node: any, list: any) {
+              const kanbanView: any = $$("kanban");
+              const editorForm: any = kanbanView.getEditor();
+              const formValues = kanbanView.getItem(id);
+              kanbanView.showEditor();
+              const projectField = $$('project-combo');
+              !formValues.parent ? projectField.enable() : projectField.disable();
+              editorForm.setValues(formValues);
             },
             onDataUpdate: (v: any, itemData: any) => {
               if (!this.dontMakeCallToUpdate) {
@@ -184,24 +234,31 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
               const editorForm: any = kanbanView.getEditor();
               const formValues = editorForm.getValues();
               const projectField = $$('project-combo');
-
               // Check if the editor is for a new card
               !formValues.parent ? projectField.enable() : projectField.disable();
+            },
+            onBeforeEditorAction: (action: any, editor: any, obj: any) => {
+              return !(action === "save" && !editor.getForm().validate());
             },
             onBeforeDelete: (id: any) => {
               this.utilService.deleteActivity(id, 'kanban')
             },
             onListAfterDrop: (kanbanView: any, dragContext: any, e: any, list: any) => {
               this.isDragged = false;
-              console.log('111 after drop', e, list, dragContext, kanbanView)
             },
             onListBeforeDrag: () => {
               this.isDragged = true;
-              },
+            },
             onListBeforeDragIn: this.utilService.onKanbanBeforeDragIn,
           },
         }
       ],
+    });
+    // EDITOR EVENTS
+    const kanbanView: any = $$("kanban");
+    const editorForm: any = kanbanView.getEditor();
+    editorForm.attachEvent("onHide", function(){
+      editorForm.getForm().clearValidation();
     });
 
   }

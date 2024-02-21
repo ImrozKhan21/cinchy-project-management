@@ -1,10 +1,9 @@
 import {Injectable} from '@angular/core';
-import {IActivityType, IProjectDetails, IStatus, IUser} from "../models/common.model";
+import {IActivityType, IComboType, IProjectDetails, IStatus} from "../models/common.model";
 import {AppStateService} from "./app-state.service";
 import {ApiCallsService} from "./api-calls.service";
 import {take} from "rxjs";
 import {MessageService} from "primeng/api";
-import ganttGlobalDataSingleton from "../ganttGlobalDataSingleton";
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +12,7 @@ export class UtilService {
 
   constructor(private appStateService: AppStateService, private apiCallsService: ApiCallsService, private messageService: MessageService) {
   }
+
   // UPDATE ACTIVITIES
 
   updateActivityWithNewValues(itemData: any, queryType?: string, viewType?: string, isFromDrag?: boolean) {
@@ -21,22 +21,24 @@ export class UtilService {
       this.updateProjectOrActivity(itemData, model, viewType, isFromDrag);
     } else if (itemData.text && itemData.type === 'project') {
       this.insertNewProject(itemData, model, viewType);
-    } else if (itemData.text && (itemData.type === 'task' || viewType==="kanban") && (itemData.parent || itemData.parent_id)) {
+    } else if (itemData.text && (itemData.type === 'task' || viewType === "kanban") && (itemData.parent || itemData.parent_id)) {
       // as from kanban we can only add activities
       this.insertNewActivity(itemData, model, viewType);
     }
   }
 
   updateProjectOrActivity(itemData: any, model: string, viewType?: string, isFromDrag?: boolean) {
-    const {status, status_id, project_id, user_id, owner_id, type, activity_id} = itemData;
+    const {status, status_id, project_id, user_id, owner_id, type, activity_id, effort_id} = itemData;
     let newStatus = this.appStateService.allStatuses
       .find((statusItem: IStatus) => statusItem.id == status_id) as IStatus;
+
+    let newEffortSelected = this.appStateService.estimates
+      .find((effortItem: IComboType) => effortItem.id == effort_id) as IComboType;
 
     // as from drag, only status is updated
     if (isFromDrag) {
       newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.name == status) as IStatus;
     }
-    console.log('111 STATUS', newStatus, this.appStateService.allStatuses, itemData)
     const peopleIdToUse = user_id ? user_id : owner_id;
     const updatedValues = {
       activityId: type === "task" || type === "milestone" ? activity_id : project_id,
@@ -45,10 +47,13 @@ export class UtilService {
       startDate: itemData.start_date,
       endDate: itemData.end_date,
       activityText: itemData.text,
-      progress: itemData.percent_done ? itemData.percent_done/100 : 0
+      progress: itemData.percent_done ? itemData.percent_done / 100 : 0,
+      statusCommentary: itemData.status_commentary,
+      priority: itemData.priority,
+      effortId: newEffortSelected?.id
     }
-    console.log('111', itemData)
-    if (type === "task") {
+//    console.log('111', itemData, updatedValues)
+    if (type === "task" || type === "milestone") {
       this.appStateService.setSpinnerState(true);
       this.apiCallsService.updateActivity(model, updatedValues).pipe(take(1)).subscribe(() => {
         this.appStateService.setSpinnerState(false);
@@ -56,6 +61,9 @@ export class UtilService {
           this.appStateService.updateActivitiesStateOnUpdateForKanban(itemData, newStatus);
           this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
         }
+      }, error => {
+        this.messageService.add({severity: 'error', summary: 'Error', detail: JSON.stringify(error)});
+        this.appStateService.setSpinnerState(false);
       });
     } else if (type === "project") {
       this.apiCallsService.updateProject(model, updatedValues).pipe(take(1)).subscribe(() => {
@@ -86,8 +94,10 @@ export class UtilService {
   }
 
   insertNewActivity(itemData: any, model: string, viewType?: string) {
-    const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => itemData.status ?
-      itemData.status === statusItem.name : statusItem.sort_order === 1) as IStatus;
+ /*   const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => itemData.status ?
+      itemData.status === statusItem.name : statusItem.sort_order === 1) as IStatus;*/
+    let newStatus = this.appStateService.allStatuses
+      .find((statusItem: IStatus) => statusItem.id == itemData.status_id) as IStatus;
     const activityTypeSelected = this.appStateService.activityTypes
       .find((type: IActivityType) => type.value === itemData.activity_type || type.id === Number(itemData.activity_type_id));
     this.appStateService.setSpinnerState(true);
@@ -108,8 +118,12 @@ export class UtilService {
     this.apiCallsService.insertActivity(model, insertValues).pipe(take(1)).subscribe(() => {
       this.appStateService.setSpinnerState(false);
       if (viewType !== 'gantt') {
+        this.appStateService.updateActivitiesStateOnInsert(itemData, newStatus, activityTypeSelected);
         this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
       }
+    }, error => {
+      this.messageService.add({severity: 'error', summary: 'Error', detail: JSON.stringify(error)});
+      this.appStateService.setSpinnerState(false);
     });
   }
 
@@ -127,7 +141,7 @@ export class UtilService {
 
   getProjectId(itemData: any, parentId: number) {
     const parent = itemData.parent;
-    if(parent.includes('activity')) {
+    if (parent.includes('activity')) {
       const activityId = parseInt(itemData.parent.split('-')[1]);
       const parentActivity = this.appStateService.activities.find((activity: IProjectDetails) => activity.activity_id === activityId);
       return parentActivity?.project_id;
@@ -186,10 +200,35 @@ export class UtilService {
 
   }
 
+  convertFromHexToRGB(hex: any, alpha: number) {
+    // Remove the hash at the start if it's there
+    if (!hex) { return 'white'}
+    hex = hex.replace(/^#/, '');
+    // Parse the hex string
+    let r, g, b;
+    if (hex.length === 3) {
+      // In case of shorthand hex color
+      r = parseInt(hex.charAt(0) + hex.charAt(0), 16);
+      g = parseInt(hex.charAt(1) + hex.charAt(1), 16);
+      b = parseInt(hex.charAt(2) + hex.charAt(2), 16);
+    } else if (hex.length === 6) {
+      // In case of full hex color
+      r = parseInt(hex.substring(0, 2), 16);
+      g = parseInt(hex.substring(2, 4), 16);
+      b = parseInt(hex.substring(4, 6), 16);
+    } else {
+      throw new Error('Invalid hex color: ' + hex);
+    }
+
+    // Return the RGBA color
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
   getAbbreviation(name: string) {
-    return name.split(" ") // Split the string into an array of words
-      .map(word => word.charAt(0).toUpperCase()) // Map over the array and take the first character of each word in uppercase
-      .join(""); // Join the first letters back into a string
+    return `${name.substring(0, 10)}...`;
+    /* return name.split(" ") // Split the string into an array of words
+       .map(word => word.charAt(0).toUpperCase()) // Map over the array and take the first character of each word in uppercase
+       .join(""); // Join the first letters back into a string*/
   }
 
 }

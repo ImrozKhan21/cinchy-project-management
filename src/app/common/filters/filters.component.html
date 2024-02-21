@@ -16,6 +16,23 @@
     </p-multiSelect>
   </div>
 
+  <div class="card flex justify-content-center form-wrapper">
+    <!--
+        <label class="form-label">Owner</label>
+    -->
+
+    <p-multiSelect [(ngModel)]="selectedWorkType"
+                   [options]="activityTypes"
+                   display="chip"
+                   placeholder="Work Type"
+                   optionLabel="value"
+                   [filter]="true"
+                   [showClear]="true"
+                   [virtualScroll]="true"
+                   [virtualScrollItemSize]="40">
+    </p-multiSelect>
+  </div>
+
   <div *ngIf="!showOnlyProjectFilter" class="card flex justify-content-center form-wrapper">
     <p-multiSelect [(ngModel)]="selectedProjectUserAdvanced"
                    [options]="users"
@@ -35,6 +52,32 @@
                    display="chip"
                    placeholder="Work Owner"
                    optionLabel="owner"
+                   [filter]="true"
+                   [showClear]="true"
+                   [virtualScroll]="true"
+                   [virtualScrollItemSize]="40">
+    </p-multiSelect>
+  </div>
+
+  <div *ngIf="!showOnlyProjectFilter" class="card flex justify-content-center form-wrapper">
+    <p-multiSelect [(ngModel)]="selectedDepartmentAdvanced"
+                   [options]="departments"
+                   display="chip"
+                   placeholder="Department"
+                   optionLabel="value"
+                   [filter]="true"
+                   [showClear]="true"
+                   [virtualScroll]="true"
+                   [virtualScrollItemSize]="40">
+    </p-multiSelect>
+  </div>
+
+  <div *ngIf="!showOnlyProjectFilter" class="card flex justify-content-center form-wrapper">
+    <p-multiSelect [(ngModel)]="selectedPortfoliosAdvanced"
+                   [options]="portfolios"
+                   display="chip"
+                   placeholder="Portfolio"
+                   optionLabel="value"
                    [filter]="true"
                    [showClear]="true"
                    [virtualScroll]="true"
@@ -66,7 +109,7 @@
   <div class="checkbox-wrapper" *ngIf="viewType === 'gantt'">
     <p-checkbox inputId="ny" [(ngModel)]="isProjectsExpanded" [binary]="true"
                 (ngModelChange)="toggleExpansion()"></p-checkbox>
-    <label for="ny" style="font-size: 13px">{{!isProjectsExpanded ? 'Expand' : 'Expand'}} Projects</label>
+    <label for="ny" style="font-size: 13px">{{!isProjectsExpanded ? 'Expand' : 'Expand'}}</label>
   </div>
 
 </div>
