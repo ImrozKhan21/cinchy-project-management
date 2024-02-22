@@ -3120,6 +3120,7 @@ div.webix_modal_cover {
   color: #313131;
   border-color: #ff8d82;
   background-color: #ffdedb;
+  display: none;
 }
 .webix_message.webix_success {
   color: #313131;

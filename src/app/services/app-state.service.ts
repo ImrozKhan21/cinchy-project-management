@@ -1,8 +1,9 @@
 import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
 import {BehaviorSubject, Subject} from "rxjs";
-import {IActivityType, IComboType, IProjectDetails, IStatus, IUser} from "../models/common.model";
+import {IActivityType, IComboType, IProjectDetails, IStatus, IUser, PRIORITY_OPTIONS} from "../models/common.model";
 import {isPlatformBrowser} from "@angular/common";
 import {WindowRefService} from "./window-ref.service";
+import {ActivatedRoute, Router} from "@angular/router";
 
 @Injectable({
   providedIn: 'root'
@@ -16,14 +17,15 @@ export class AppStateService {
   estimates: IComboType[];
   departments: IComboType[];
   portfolios: IComboType[];
+  filtersState: any = {};
 
   globalFilters$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
   slicerFilteredItems$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
   refreshViews$: Subject<any> = new Subject<any>();
   showSpinner$: Subject<boolean> = new Subject<boolean>();
 
-  constructor(@Inject(PLATFORM_ID) private platformId: any,
-              private windowRef: WindowRefService,) {
+  constructor(@Inject(PLATFORM_ID) private platformId: any, private activatedRoute: ActivatedRoute,
+              private windowRef: WindowRefService, private router: Router) {
   }
 
 
@@ -59,6 +61,14 @@ export class AppStateService {
     return this.refreshViews$.asObservable();
   }
 
+  setFiltersState(state: any) {
+   this.filtersState = state;
+  }
+
+  getFiltersState() {
+    return this.filtersState;
+  }
+
   setCurrentUrl() {
     if (isPlatformBrowser(this.platformId)) {
       const url = this.windowRef.nativeWindow.location.href;
@@ -75,9 +85,9 @@ export class AppStateService {
       activityToUpdate.status_id = newStatus.id;
       activityToUpdate.status_color = newStatus.status_color;
       activityToUpdate.status_color_hex = newStatus.status_color_hex;
-      activityToUpdate.$css = newStatus.status_color ? `kanban-task-${newStatus.status_color.replace(/\s+/g, '-').toLowerCase()}` : '';
+      //   activityToUpdate.$css = newStatus.status_color ? `kanban-task-${newStatus.status_color.replace(/\s+/g, '-').toLowerCase()}` : '';
     }
-
+    activityToUpdate.color = PRIORITY_OPTIONS[activity.priority]?.color || 'white';
     // Update assignee
     const assigneeIdToUse = activity.user_id ? +activity.user_id : activity.owner_id;
     const newAssignee = this.users.find((user: IUser) => user.owner_id === assigneeIdToUse);
@@ -120,6 +130,42 @@ export class AppStateService {
     this.activities.push(activity);
     console.log('111 NEW ACTIVITY', activity)
     this.setRefreshViewState(true, activity);
+  }
+
+  addParamsInRoute(currentParams: any) {
+    const params = {
+      ...currentParams,
+      projectOwner: (this.filtersState.selectedProjectUsers?.map((user: IUser) => user.owner_id))?.join(','),
+      owner: (this.filtersState.selectedUsers?.map((user: IUser) => user.owner_id))?.join(','),
+      status: (this.filtersState.selectedStatuses?.map((status: IStatus) => status.name))?.join(','),
+      project: (this.filtersState.selectedProjects?.map((project: IProjectDetails) => project.project_id))?.join(','),
+      searchValue: this.filtersState.searchValue,
+      workType: (this.filtersState.selectedWorkType?.map((activityType: IActivityType) => activityType.id))?.join(','),
+      isProjectsExpanded: this.filtersState.isProjectsExpanded ? true : null,
+      department: (this.filtersState.selectedDepartment?.map((department: IComboType) => department.id))?.join(','),
+      portfolio: (this.filtersState.selectedPortfolios?.map((portfolio: IComboType) => portfolio.id))?.join(','),
+      priority: (this.filtersState.selectedPriorities?.map((priority: any) => priority.id))?.join(','),
+    };
+
+    if (isPlatformBrowser(this.platformId)) {
+      !this.filtersState.selectedUsers?.length && sessionStorage.removeItem('owner');
+      !this.filtersState.selectedStatuses?.length && sessionStorage.removeItem('status');
+      !this.filtersState.selectedProjects?.length && sessionStorage.removeItem('project');
+      !this.filtersState.selectedProjectUsers?.length && sessionStorage.removeItem('projectOwner');
+      !this.filtersState.searchValue && sessionStorage.removeItem('searchValue');
+      !this.filtersState.isProjectsExpanded && sessionStorage.removeItem('isProjectsExpanded');
+      !this.filtersState.selectedWorkType?.length && sessionStorage.removeItem('workType');
+      !this.filtersState.selectedDepartment?.length && sessionStorage.removeItem('department');
+      !this.filtersState.selectedPortfolios?.length && sessionStorage.removeItem('portfolio');
+      !this.filtersState.selectedPriorities?.length && sessionStorage.removeItem('priority');
+    }
+    this.router.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: params,
+        queryParamsHandling: '', // Do not preserve other params, since we're spreading them in the updatedParams
+      });
   }
 
 }

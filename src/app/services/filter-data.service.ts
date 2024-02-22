@@ -25,49 +25,11 @@ export class FilterDataService {
       slicedActivity,
       selectedWorkType,
       selectedDepartment,
-      selectedPortfolios
+      selectedPortfolios,
+      selectedPriorities
     } = filters;
 
     let updatedTasks = allTasks.slice(); // ON square can be ON, by making this a map object but our data is not that big
-
-    // work owner or work type as both may need to add all parents
-    if (selectedUsers?.length || selectedWorkType?.length || selectedDepartment?.length) {
-      let [filteredItemsByWorkType, filteredItemsByWorkOwner, filterItemsByDepartmentType] = [[], [], []]
-      if (selectedUsers?.length) {
-        const filterByWorkOwnerFn = (task: any) => {
-          return selectedUsers.some((ownerFilter: IUser) =>
-            task.owner && (task.owner === ownerFilter.owner || ownerFilter.owner_id == task.owner_id) && task.type !== 'project'
-          );
-        };
-        filteredItemsByWorkOwner = this.findTasksAndAncestors(allTasks, filterByWorkOwnerFn, fromKanban);
-      }
-
-      if (selectedWorkType?.length) {
-        const filterByTaskTypeFn = (task: IProjectDetails) => {
-          return selectedWorkType.some((workType: IComboType) =>
-            task.activity_type_id && (task.activity_type_id === workType.id)
-          );
-        };
-        filteredItemsByWorkType = this.findTasksAndAncestors(allTasks, filterByTaskTypeFn, fromKanban);
-      }
-
-      if (selectedDepartment?.length) {
-        const filterByTaskTypeFn = (task: IProjectDetails) => {
-          return selectedDepartment.some((department: IComboType) =>
-            task.owner_department && (task.owner_department === department.value)
-          );
-        };
-        filterItemsByDepartmentType = this.findTasksAndAncestors(allTasks, filterByTaskTypeFn, fromKanban);
-      }
-      const combinedFilteredItems = [...filteredItemsByWorkOwner, ...filteredItemsByWorkType, ...filterItemsByDepartmentType];
-
-      // Remove duplicates
-      updatedTasks = combinedFilteredItems.filter((item: any, index, self) =>
-          index === self.findIndex((t: any) => (
-            t.id === item.id
-          ))
-      );
-    }
 
     if (selectedStatuses?.length) {
       updatedTasks = updatedTasks?.filter((task: any) => {
@@ -94,6 +56,8 @@ export class FilterDataService {
             });
           });
           const hierarchyTasks = this.getAllHierarchyTask(selectedProjects, updatedTasks, fromKanban);
+          console.log('111 updatedTasks 2', hierarchyTasks, selectedProjects);
+
           slicedTasksForMultipleProjects.push(...hierarchyTasks);
         }
 
@@ -111,6 +75,48 @@ export class FilterDataService {
       }
     }
 
+    // work owner or work type as both may need to add all parents
+    if (selectedUsers?.length || selectedWorkType?.length || selectedDepartment?.length || selectedPriorities?.length) {
+      let [filteredItemsByWorkType, filteredItemsByWorkOwner, filterItemsByDepartmentType, filterItemsByPriority] = [[], [], [], []]
+      if (selectedUsers?.length) {
+        const filterByWorkOwnerFn = (task: any) => {
+          return selectedUsers.some((ownerFilter: IUser) =>
+            task.owner && (task.owner === ownerFilter.owner || ownerFilter.owner_id == task.owner_id) && task.type !== 'project'
+          );
+        };
+        filteredItemsByWorkOwner = this.findTasksAndAncestors(allTasks, filterByWorkOwnerFn, fromKanban);
+      }
+
+      if (selectedWorkType?.length) {
+        const filterByTaskTypeFn = (task: IProjectDetails) => {
+          return selectedWorkType.some((workType: IComboType) =>
+            task.activity_type_id && (task.activity_type_id === workType.id)
+          );
+        };
+        filteredItemsByWorkType = this.findTasksAndAncestors(allTasks, filterByTaskTypeFn, fromKanban);
+      }
+
+      if (selectedDepartment?.length) {
+        const filterByTaskTypeFn = (task: IProjectDetails) => {
+          return selectedDepartment.some((department: IComboType) =>
+            task.owner_department && (task.owner_department === department.value)
+          );
+        };
+        filterItemsByDepartmentType = this.findTasksAndAncestors(allTasks, filterByTaskTypeFn, fromKanban);
+      }
+
+      if (selectedPriorities?.length) {
+        const filterByPriorityTypeFn = (task: IProjectDetails) => {
+          return selectedPriorities.some((priority: any) =>
+            task.priority && (task.priority === priority.id)
+          );
+        };
+        filterItemsByPriority = this.findTasksAndAncestors(allTasks, filterByPriorityTypeFn, fromKanban);
+      }
+      updatedTasks = this.findCommonObjects(updatedTasks, filteredItemsByWorkType,
+        filteredItemsByWorkOwner, filterItemsByDepartmentType, filterItemsByPriority);
+    }
+
     //task.owner.includes(searchValue)
     if (searchValue) {
       updatedTasks = updatedTasks?.filter((task: any) => {
@@ -120,6 +126,7 @@ export class FilterDataService {
           || task.text?.toLowerCase().includes(searchValue.toLowerCase());
       });
     }
+
     if (slicedActivity && slicedActivity.id) {
       const {id, isTaskSliced} = slicedActivity;
       if (!isTaskSliced) {
@@ -245,6 +252,26 @@ export class FilterDataService {
     return Array.from(new Map(dataArray.map((item: any) => [item.id, item])).values());
   }
 
+  findCommonObjects(...arrays: any[]) {
+    // Filter out any empty arrays or assume they contain all possible ids
+    const nonEmptyArrays = arrays.filter(arr => arr.length > 0);
+
+    // If all arrays are empty, return an empty array (or adjust based on requirements)
+    if (nonEmptyArrays.length === 0) return [];
+
+    // Finding common objects
+    const common: any = nonEmptyArrays.reduce((acc, arr, index) => {
+      if (index === 0) {
+        // The accumulator for the first array is the array itself
+        return arr;
+      } else {
+        // For subsequent arrays, find common elements
+        return acc.filter((a: any) => arr.some((b: any) => a.id === b.id));
+      }
+    });
+
+    return common;
+  }
   routeWithParams(scopedTaskId: string, isTaskSliced?: boolean) {
     const currentParams = this.activatedRoute.snapshot.queryParams;
     const params = {...currentParams, scopedTaskId: isTaskSliced ? null : scopedTaskId}

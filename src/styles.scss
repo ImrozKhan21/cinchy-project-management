@@ -29,6 +29,9 @@ body {
   }
 }
 
+.w-full {
+  width: 100%;
+}
 
 .item-center-n-relative {
   top: 50%;
@@ -38,19 +41,25 @@ body {
   z-index: 999999;
 }
 
+.p-multiselect.p-multiselect-chip .p-multiselect-label {
+  font-size: 12px;
+}
+
+.p-multiselect-panel .p-multiselect-items .p-multiselect-item {
+  font-size: 14px;
+}
+
+.p-multiselect-filter-container {
+  .p-multiselect-filter{
+    padding: 5px;
+  }
+}
+
 .filters-wrapper {
 
   .p-autocomplete-multiple-container, .p-multiselect {
     min-width: 148px;
     max-width: 148px;
-  }
-
-  .p-multiselect.p-multiselect-chip .p-multiselect-label {
-    font-size: 12px;
-  }
-
-  .p-multiselect-panel .p-multiselect-items .p-multiselect-item {
-    font-size: 14px;
   }
 
   .p-button {
@@ -74,7 +83,15 @@ body {
   }
 
   .p-multiselect .p-multiselect-label, .p-inputtext {
-    padding: 6px;
+    padding: 6px !important;
+    display: flex;
+    .custom-select-chip {
+      background: rgb(0, 191, 255, 0.1);
+      padding: 0 2px;
+      border: 1px solid aliceblue;
+      border-radius: 5px;
+      color: #1d4ed8;
+    }
   }
 }
 
@@ -138,5 +155,14 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+.start-item-flex {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+
+
+
 
 //"\F015"

@@ -69,6 +69,7 @@ export class ApiCallsService {
     pa.[Name] as 'text',
     pa.[Type] as 'activity_type',
     pa.[Priority] as 'priority',
+    pa.[Description] as 'description',
     pa.[Total Effort] as 'effort',
     pa.[Total Effort].[Cinchy Id] as 'effort_id',
     pa.[Status Commentary] as 'status_commentary',
@@ -80,7 +81,12 @@ export class ApiCallsService {
     FROM [${actualModel}].[Work Management].[Work] pa
     WHERE pa.[Deleted] IS NULL
     AND pa.[Name] IS NOT NULL
-    ORDER BY pa.[Priority]`
+    ORDER BY
+                     CASE
+                     WHEN pa.[Priority] IS NULL THEN 1
+                     ELSE 0
+    END,
+  pa.[Priority] ASC`
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
@@ -120,14 +126,16 @@ export class ApiCallsService {
   getDistinctDepartments(model: string): Observable<IUser[]> {
     const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
     const query = `
-      SELECT
-        DISTINCT
-        ppl2.[Department] as 'value',
-        ppl2.[Department] as 'id'
-      FROM [${actualModel}].[Work Management].[People] ppl2
-    WHERE ppl2.[Deleted] IS NULL
-    AND ppl2.[Can Be Assigned] = 1
-    ORDER BY ppl2.[Department]`;
+      select x.* from (
+                        SELECT DISTINCT
+                          ppl2.[Department] as 'value',
+                          ppl2.[Department] as 'id'
+                        FROM [${actualModel}].[Work Management].[People] ppl2
+                        WHERE ppl2.[Deleted] IS NULL
+                          AND ppl2.[Department] IS NOT NULL
+                          AND ppl2.[Can Be Assigned] = 1
+                      ) as x
+      ORDER BY x.[value]`;
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
@@ -214,7 +222,7 @@ export class ApiCallsService {
       '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
       '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
       '@priority': priority,
-      '@effortId': effortId ? `${effortId},0` : `0,0`,
+      '@effortId': effortId ? `${effortId},0` : null,
       '@statusCommentary': statusCommentary
     }
     // todo: change [Project Activity Owners] to [Project Owners]
@@ -314,7 +322,7 @@ export class ApiCallsService {
            [Owner],
            [% Done],
            [Priority],
-       --    [Total Effort],
+           [Total Effort],
            [Status Commentary]
            )
                  VALUES (
@@ -327,7 +335,7 @@ export class ApiCallsService {
                    ResolveLink(@userId, 'Cinchy Id'),
                    @progress,
                    @priority,
-                 --  ResolveLink(@effortId, 'Cinchy Id'),
+                   @effortId,
                    @statusCommentary
         ) `;
 
@@ -358,7 +366,7 @@ export class ApiCallsService {
       '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
       '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
       '@priority': priority,
-      '@effortId': effortId,
+      '@effortId': effortId ? `${effortId},0` : null,
       '@statusCommentary': statusCommentary
     }
     console.log('PARAMS', params);

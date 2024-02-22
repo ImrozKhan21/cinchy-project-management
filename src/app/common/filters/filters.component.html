@@ -11,8 +11,20 @@
                    optionLabel="project_name"
                    [filter]="true"
                    [showClear]="true"
+                   appendTo="body"
                    [virtualScroll]="true"
                    [virtualScrollItemSize]="40">
+      <ng-template let-value pTemplate="selectedItems">
+        <ng-container
+          *ngTemplateOutlet="inputTemplate; context: { $implicit: value, placeholder: 'Project', key:'project_name' }"></ng-container>
+      </ng-template>
+
+      <ng-template let-item pTemplate="item">
+        <div class="flex align-items-center gap-2">
+          <p [title]="item.project_name">{{ item.project_name }}</p>
+        </div>
+      </ng-template>
+
     </p-multiSelect>
   </div>
 
@@ -28,8 +40,13 @@
                    optionLabel="value"
                    [filter]="true"
                    [showClear]="true"
+                   appendTo="body"
                    [virtualScroll]="true"
                    [virtualScrollItemSize]="40">
+      <ng-template let-value pTemplate="selectedItems">
+        <ng-container
+          *ngTemplateOutlet="inputTemplate; context: { $implicit: value, placeholder: 'Work Type', key:'value' }"></ng-container>
+      </ng-template>
     </p-multiSelect>
   </div>
 
@@ -41,8 +58,13 @@
                    optionLabel="owner"
                    [filter]="true"
                    [showClear]="true"
+                   appendTo="body"
                    [virtualScroll]="true"
                    [virtualScrollItemSize]="40">
+      <ng-template let-value pTemplate="selectedItems">
+        <ng-container
+          *ngTemplateOutlet="inputTemplate; context: { $implicit: value, placeholder: 'Project Manager', key:'owner' }"></ng-container>
+      </ng-template>
     </p-multiSelect>
   </div>
 
@@ -54,8 +76,13 @@
                    optionLabel="owner"
                    [filter]="true"
                    [showClear]="true"
+                   appendTo="body"
                    [virtualScroll]="true"
                    [virtualScrollItemSize]="40">
+      <ng-template let-value pTemplate="selectedItems">
+        <ng-container
+          *ngTemplateOutlet="inputTemplate; context: { $implicit: value, placeholder: 'Work Owner', key:'owner' }"></ng-container>
+      </ng-template>
     </p-multiSelect>
   </div>
 
@@ -67,8 +94,13 @@
                    optionLabel="value"
                    [filter]="true"
                    [showClear]="true"
+                   appendTo="body"
                    [virtualScroll]="true"
                    [virtualScrollItemSize]="40">
+      <ng-template let-value pTemplate="selectedItems">
+        <ng-container
+          *ngTemplateOutlet="inputTemplate; context: { $implicit: value, placeholder: 'Department', key:'value' }"></ng-container>
+      </ng-template>
     </p-multiSelect>
   </div>
 
@@ -80,8 +112,29 @@
                    optionLabel="value"
                    [filter]="true"
                    [showClear]="true"
+                   appendTo="body"
                    [virtualScroll]="true"
                    [virtualScrollItemSize]="40">
+      <ng-template let-value pTemplate="selectedItems">
+        <ng-container
+          *ngTemplateOutlet="inputTemplate; context: { $implicit: value, placeholder: 'Portfolio', key:'value' }"></ng-container>
+      </ng-template>
+    </p-multiSelect>
+  </div>
+
+  <div *ngIf="!showOnlyProjectFilter" class="card flex justify-content-center form-wrapper">
+    <p-multiSelect [(ngModel)]="selectedPriorityAdvanced"
+                   [options]="priorities"
+                   display="chip"
+                   placeholder="Priority"
+                   optionLabel="value"
+                   [filter]="true"
+                   appendTo="body"
+                   [showClear]="true">
+      <ng-template let-value pTemplate="selectedItems">
+        <ng-container
+          *ngTemplateOutlet="inputTemplate; context: { $implicit: value, placeholder: 'Priority', key:'value' }"></ng-container>
+      </ng-template>
     </p-multiSelect>
   </div>
 
@@ -96,28 +149,29 @@
                    placeholder="Status"
                    optionLabel="name"
                    [filter]="true"
+                   appendTo="body"
                    [showClear]="true">
+      <ng-template let-value pTemplate="selectedItems">
+        <ng-container
+          *ngTemplateOutlet="inputTemplate; context: { $implicit: value, placeholder: 'Status', key:'name' }"></ng-container>
+      </ng-template>
     </p-multiSelect>
   </div>
 
   <button pButton (click)="apply()">Apply</button>
 
-  <span>|</span>
-
-  <input placeholder="Search.." type="search" pInputText [(ngModel)]="searchValue" (ngModelChange)="valueChanged()"/>
-
   <div class="checkbox-wrapper" *ngIf="viewType === 'gantt'">
     <p-checkbox inputId="ny" [(ngModel)]="isProjectsExpanded" [binary]="true"
                 (ngModelChange)="toggleExpansion()"></p-checkbox>
-    <label for="ny" style="font-size: 13px">{{!isProjectsExpanded ? 'Expand' : 'Expand'}}</label>
+    <label for="ny" style="font-size: 13px">{{ !isProjectsExpanded ? 'Expand' : 'Expand' }}</label>
   </div>
 
 </div>
 
-<div class="filters-wrapper">
 
-
-
-</div>
-
-
+<ng-template #inputTemplate let-value let-placeholder="placeholder" let-key="key">
+  <div class="start-item-flex" *ngFor="let option of value">
+    <span class="custom-select-chip" [title]="option[key]">{{ option[key] }} </span>
+  </div>
+  <div *ngIf="!value || value.length === 0">{{ placeholder }}</div>
+</ng-template>

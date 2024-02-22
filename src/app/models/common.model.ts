@@ -36,12 +36,13 @@ export interface IProjectDetails {
   percent_done: number;
   project_color?: string;
   status_commentary?: string;
-  priority?: string;
+  priority: string;
   effort?: string;
   effort_id?: number;
   rgb_project_color?: string;
   project_portfolio?: string;
   project_owner_id?: string;
+  description?: string;
 }
 
 export interface IStatus {
@@ -90,13 +91,13 @@ export const COLORS_MAP: any = {
   'Light Indigo': '#4B0082', // Darker indigo, more towards the actual indigo color
 };
 
-export const PRIORITY_OPTIONS = [
-  {id: '1. Very High', value: '1. Very High'},
-  {id: '2. High', value: '2. High'},
-  {id: '3. Medium', value: '3. Medium'},
-  {id: '4. Low', value: '4. Low'},
-  {id: '5. Very Low', value: '5. Very Low'}
-];
+export const PRIORITY_OPTIONS: { [key: string]: any } = {
+  '1. Very High': {id: '1. Very High', value: '1. Very High', color: 'orangered'},
+  '2. High': {id: '2. High', value: '2. High', color: 'orange'},
+  '3. Medium': {id: '3. Medium', value: '3. Medium', color: '#dee348cf'},
+  '4. Low': {id: '4. Low', value: '4. Low', color: '#00B050'},
+  '5. Very Low': {id: '5. Very Low', value: '5. Very Low', color: '#0070C0'}
+}
 
 
 export const WORK_TABLE_URL = "https://cinchy.net/Tables/140?viewId=0&fil[Title].Op=1&fil[Title].Val={{title}}"

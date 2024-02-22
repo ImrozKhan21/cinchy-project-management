@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {COLORS_MAP, IProjectDetails, IStatus} from "../models/common.model";
+import {COLORS_MAP, IProjectDetails, IStatus, PRIORITY_OPTIONS} from "../models/common.model";
 import {AppStateService} from "./app-state.service";
 import {MessageService} from "primeng/api";
 import {UtilService} from "./util.service";
@@ -77,7 +77,7 @@ export class DataTransformerService {
     const childMappedTasks = projectDetails.map((taskItem, i: number) => {
       return {
         ...taskItem, id: `activity-${taskItem.activity_id}`,
-        color: taskItem.status_color_hex,
+        color: PRIORITY_OPTIONS[taskItem.priority]?.color || 'white',
         rgb_project_color: this.utilService.convertFromHexToRGB(taskItem.project_color, 1),
         $css: taskItem.status_color ? `kanban-task-${taskItem.status_color.replace(/\s+/g, '-').toLowerCase()}` : '',
         type: 'task',

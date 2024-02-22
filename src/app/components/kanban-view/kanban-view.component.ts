@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, OnInit} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, HostListener, OnInit} from '@angular/core';
 import {AppStateService} from "../../services/app-state.service";
 import {UtilService} from "../../services/util.service";
 import {Observable} from "rxjs";
@@ -16,6 +16,12 @@ declare let base_task_set: any;
   styleUrls: ['./kanban-view.component.scss']
 })
 export class KanbanViewComponent implements OnInit, AfterViewInit {
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    const kanban: any = $$("kanban");
+    kanban.config.width = event.target.innerWidth;
+    kanban.resize();
+  }
   kanbanData: any;
   kanbanView: any;
   showSpinner$: Observable<boolean>;
@@ -98,9 +104,11 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
 
     this.kanbanView = webix.ui({
       container: document.getElementById("kanban-parent"),
+      responsive: "true",
       rows: [
         {
           container: document.getElementById("kanban-add-view"),
+          responsive: "true",
           css: "toolbar",
           borderless: true,
           paddingY: 7,
@@ -132,6 +140,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
         {
           view: "kanban",
           id: "kanban",
+          responsive: "true",
           container: document.getElementById("kanban-view"),
           cols: mappedStatuses,
           data: mappedTasks,
@@ -172,21 +181,21 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
               {
                 margin: 10,
                 cols: [
-                  {id: "priority-combo", view: "combo", name: "priority", label: "Priority", options: PRIORITY_OPTIONS},
-                  {id: "estimates-combo", view: "combo", name: "effort_id", label: "Total Effort", options: estimatesForSelection},
-                ]
-              },
-              {id: "percent-done", view: "slider", name: "percent_done", label: "Percent Done"},
-              {
-                margin: 10,
-                cols: [
                   {view: "datepicker", name: "start_date", label: "Start Date"},
                   {view: "datepicker", name: "end_date", label: "End Date"}
                 ]
               },
-              {view: "textarea", height: 140, name: "status_commentary", label: "Status Commentary"}
-
-              /* {view: "textarea", height: 100, name: "qaNotes", label: "QA Notes"}*/
+              {
+                margin: 10,
+                cols: [
+                  {id: "priority-combo", view: "combo", name: "priority", label: "Priority",
+                    options: Object.keys(PRIORITY_OPTIONS).map((key: string) => PRIORITY_OPTIONS[key]) },
+                  {id: "estimates-combo", view: "combo", name: "effort_id", label: "Total Effort", options: estimatesForSelection},
+                  {id: "percent-done", view: "slider", name: "percent_done", label: "Percent Done"},
+                ]
+              },
+              {view: "textarea", height: 70, name: "status_commentary", label: "Status Commentary"},
+              {view: "richtext", height: 150, name: "description", labelPosition: "top", label: "Description"}
             ],
             rules:{
               parent_project: webix.rules.isNotEmpty,

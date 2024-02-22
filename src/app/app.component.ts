@@ -64,13 +64,14 @@ export class AppComponent {
     const workType: any = sessionStorage.getItem('workType');
     const department: any = sessionStorage.getItem('department');
     const portfolio: any = sessionStorage.getItem('portfolio');
+    const priority: any = sessionStorage.getItem('priority');
     this.showOnlyProjectFilter = showOnlyProjectFilter === "true";
     const hideHeader: any = sessionStorage.getItem('hideHeader');
     this.hideHeader = hideHeader === "true";
     const queryParams: any = {
       modelId, viewType, owner, status, project,
       searchValue, projectOwner, isProjectsExpanded, hideHeader, showOnlyProjectFilter, scopedTaskId,
-      workType, department, portfolio
+      workType, department, portfolio, priority
     };
     const cleanedQueryParams: any = Object.fromEntries(
       Object.entries(queryParams).filter(([key, value]) => Boolean(value))
