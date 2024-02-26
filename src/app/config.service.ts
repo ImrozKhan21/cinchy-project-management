@@ -2,8 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
 import {forkJoin} from 'rxjs';
 import {tap} from 'rxjs/operators';
-import {CinchyConfig} from '@cinchy-co/angular-sdk';
-import {IEnv} from "./models/common.model";
+import {ICinchyConfigExtended, IEnv} from "./models/common.model";
 import {WindowRefService} from "./services/window-ref.service";
 import {isPlatformBrowser} from "@angular/common";
 import {environment} from "../environments/environment";
@@ -12,7 +11,7 @@ import {environment} from "../environments/environment";
   providedIn: 'root',
 })
 export class ConfigService {
-  enviornmentConfig: IEnv | undefined;
+  enviornmentConfig: ICinchyConfigExtended | undefined;
   fullScreenHeight: any;
 
   constructor(private http: HttpClient, @Inject('BASE_URL') private baseUrl: string, @Inject(PLATFORM_ID) private platformId: any,
@@ -129,8 +128,8 @@ export class ConfigService {
     return decodeURIComponent(url.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
   }
 
-  get envConfig(): CinchyConfig {
-    return this.enviornmentConfig as CinchyConfig;
+  get envConfig(): ICinchyConfigExtended {
+    return this.enviornmentConfig as ICinchyConfigExtended;
   }
 
   loadConfig() {

@@ -158,7 +158,7 @@
     </p-multiSelect>
   </div>
 
-  <button pButton (click)="apply()">Apply</button>
+  <p-button styleClass="p-button-sm" label="Apply" (click)="apply()"></p-button>
 
   <div class="checkbox-wrapper" *ngIf="viewType === 'gantt'">
     <p-checkbox inputId="ny" [(ngModel)]="isProjectsExpanded" [binary]="true"

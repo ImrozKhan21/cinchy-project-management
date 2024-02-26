@@ -28,7 +28,7 @@ export class UtilService {
   }
 
   updateProjectOrActivity(itemData: any, model: string, viewType?: string, isFromDrag?: boolean) {
-    const {status, status_id, project_id, user_id, owner_id, type, activity_id, effort_id} = itemData;
+    const {status, status_id, project_id, user_id, owner_id, type, activity_id, effort_id, description} = itemData;
     let newStatus = this.appStateService.allStatuses
       .find((statusItem: IStatus) => statusItem.id == status_id) as IStatus;
 
@@ -50,7 +50,8 @@ export class UtilService {
       progress: itemData.percent_done ? itemData.percent_done / 100 : 0,
       statusCommentary: itemData.status_commentary,
       priority: itemData.priority,
-      effortId: newEffortSelected?.id
+      effortId: newEffortSelected?.id,
+      description
     }
 //    console.log('111', itemData, updatedValues)
     if (type === "task" || type === "milestone") {
@@ -107,6 +108,7 @@ export class UtilService {
       startDate: itemData.start_date,
       endDate: itemData.end_date,
       activityText: itemData.text,
+      description: itemData.description,
       statusId: `${newStatus.id}`,
       parentId: `${parentId}`,
       activityTypeId: `${activityTypeSelected?.id}`,
@@ -225,7 +227,7 @@ export class UtilService {
   }
 
   getAbbreviation(name: string) {
-    return `${name.substring(0, 10)}...`;
+    return `${name?.substring(0, 10)}...`;
     /* return name.split(" ") // Split the string into an array of words
        .map(word => word.charAt(0).toUpperCase()) // Map over the array and take the first character of each word in uppercase
        .join(""); // Join the first letters back into a string*/

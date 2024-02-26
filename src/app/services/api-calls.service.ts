@@ -38,7 +38,7 @@ export class ApiCallsService {
     null as 'percent_done'
     FROM [${actualModel}].[Work Management].[Projects] pj
     WHERE pj.[Deleted] IS NULL
-    AND pj.[Start] IS NOT NULL
+    AND pj.[Name] IS NOT NULL
     ORDER BY pj.[Name]`
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
@@ -98,6 +98,7 @@ export class ApiCallsService {
     psc.[Sort Order] as 'sort_order',
     psc.[Colour] as 'status_color',
     psc.[Colour].[Hex Code] as 'status_color_hex',
+    psc.[Default Kanban Behaviour] as 'status_collapsed',
     psc.[Cinchy Id] as 'id'
     FROM [${actualModel}].[Work Management].[Project Status Codes] psc
     WHERE psc.[Deleted] IS NULL
@@ -190,7 +191,8 @@ export class ApiCallsService {
       progress,
       priority,
       effortId,
-      statusCommentary
+      statusCommentary,
+      description
     } = updatedValues;
     if (!statusId || !activityId) {
       return of(null);
@@ -208,7 +210,8 @@ export class ApiCallsService {
           a.[Finish] = @endData,
           a.[Priority] = @priority,
           a.[Total Effort] = @effortId,
-          a.[Status Commentary] = @statusCommentary
+          a.[Status Commentary] = @statusCommentary,
+          a.[Description] = @description
                    FROM [${actualModel}].[Work Management].[Work] a
                    WHERE a.[Deleted] IS NULL
                    AND a.[Cinchy Id] = @activityId
@@ -223,7 +226,8 @@ export class ApiCallsService {
       '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
       '@priority': priority,
       '@effortId': effortId ? `${effortId},0` : null,
-      '@statusCommentary': statusCommentary
+      '@statusCommentary': statusCommentary,
+      '@description': description
     }
     // todo: change [Project Activity Owners] to [Project Owners]
     return this.cinchyService.executeCsql(query, params);
@@ -306,7 +310,8 @@ export class ApiCallsService {
       parentId, startDate, userId, endDate, activityText, statusId, activityTypeId, projectId, progress,
       priority,
       effortId,
-      statusCommentary
+      statusCommentary,
+      description
     } = updatedValues;
     if (!activityText || !parentId) {
       return of(null);
@@ -323,7 +328,8 @@ export class ApiCallsService {
            [% Done],
            [Priority],
            [Total Effort],
-           [Status Commentary]
+           [Status Commentary],
+           [Description]
            )
                  VALUES (
                    @activity,
@@ -336,7 +342,8 @@ export class ApiCallsService {
                    @progress,
                    @priority,
                    @effortId,
-                   @statusCommentary
+                   @statusCommentary,
+                   @description
         ) `;
 
   /*  if(userId) {
@@ -367,7 +374,8 @@ export class ApiCallsService {
       '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
       '@priority': priority,
       '@effortId': effortId ? `${effortId},0` : null,
-      '@statusCommentary': statusCommentary
+      '@statusCommentary': statusCommentary,
+      '@description': description
     }
     console.log('PARAMS', params);
     // todo: change [Project Activity Owners] to [Project Owners]

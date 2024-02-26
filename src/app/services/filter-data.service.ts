@@ -77,7 +77,7 @@ export class FilterDataService {
 
     // work owner or work type as both may need to add all parents
     if (selectedUsers?.length || selectedWorkType?.length || selectedDepartment?.length || selectedPriorities?.length) {
-      let [filteredItemsByWorkType, filteredItemsByWorkOwner, filterItemsByDepartmentType, filterItemsByPriority] = [[], [], [], []]
+      let [filteredItemsByWorkType, filteredItemsByWorkOwner, filterItemsByDepartmentType, filterItemsByPriority]: any = [[], [], [], []]
       if (selectedUsers?.length) {
         const filterByWorkOwnerFn = (task: any) => {
           return selectedUsers.some((ownerFilter: IUser) =>
@@ -85,6 +85,7 @@ export class FilterDataService {
           );
         };
         filteredItemsByWorkOwner = this.findTasksAndAncestors(allTasks, filterByWorkOwnerFn, fromKanban);
+        filteredItemsByWorkOwner = filteredItemsByWorkOwner?.length ? filteredItemsByWorkOwner : [{}];
       }
 
       if (selectedWorkType?.length) {
@@ -94,15 +95,17 @@ export class FilterDataService {
           );
         };
         filteredItemsByWorkType = this.findTasksAndAncestors(allTasks, filterByTaskTypeFn, fromKanban);
+        filteredItemsByWorkType = filteredItemsByWorkType?.length ? filteredItemsByWorkType : [{}];
       }
 
       if (selectedDepartment?.length) {
-        const filterByTaskTypeFn = (task: IProjectDetails) => {
+        const filterByDepartmentTypeFn = (task: IProjectDetails) => {
           return selectedDepartment.some((department: IComboType) =>
             task.owner_department && (task.owner_department === department.value)
           );
         };
-        filterItemsByDepartmentType = this.findTasksAndAncestors(allTasks, filterByTaskTypeFn, fromKanban);
+        filterItemsByDepartmentType = this.findTasksAndAncestors(allTasks, filterByDepartmentTypeFn, fromKanban);
+        filterItemsByDepartmentType = filterItemsByDepartmentType?.length ? filterItemsByDepartmentType : [{}];
       }
 
       if (selectedPriorities?.length) {
@@ -112,7 +115,9 @@ export class FilterDataService {
           );
         };
         filterItemsByPriority = this.findTasksAndAncestors(allTasks, filterByPriorityTypeFn, fromKanban);
+        filterItemsByPriority = filterItemsByPriority?.length ? filterItemsByPriority : [{}];
       }
+
       updatedTasks = this.findCommonObjects(updatedTasks, filteredItemsByWorkType,
         filteredItemsByWorkOwner, filterItemsByDepartmentType, filterItemsByPriority);
     }
@@ -244,7 +249,9 @@ export class FilterDataService {
   async scopeInTask(task?: IProjectDetails, isTaskSliced?: boolean) {
     // lastValueFrom requires observable to finish, that's why have to use take(1)
     const currentFilters = await lastValueFrom(this.appStateService.getGlobalFilter().pipe(take(1)));
-    this.appStateService.applyGlobalFilter({...currentFilters, slicedActivity: {id: task?.id, isTaskSliced}});
+    const filterSelected = {...currentFilters, slicedActivity: {id: task?.id, isTaskSliced}};
+    this.appStateService.setFiltersState(filterSelected);
+    this.appStateService.applyGlobalFilter(filterSelected);
     this.routeWithParams(task?.id, isTaskSliced);
   }
 
@@ -255,7 +262,6 @@ export class FilterDataService {
   findCommonObjects(...arrays: any[]) {
     // Filter out any empty arrays or assume they contain all possible ids
     const nonEmptyArrays = arrays.filter(arr => arr.length > 0);
-
     // If all arrays are empty, return an empty array (or adjust based on requirements)
     if (nonEmptyArrays.length === 0) return [];
 
@@ -274,6 +280,7 @@ export class FilterDataService {
   }
   routeWithParams(scopedTaskId: string, isTaskSliced?: boolean) {
     const currentParams = this.activatedRoute.snapshot.queryParams;
+    !scopedTaskId && sessionStorage.removeItem('scopedTaskId');
     const params = {...currentParams, scopedTaskId: isTaskSliced ? null : scopedTaskId}
     this.router.navigate(
       [],

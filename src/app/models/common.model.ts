@@ -1,3 +1,6 @@
+import {CinchyConfig} from '@cinchy-co/angular-sdk';
+
+
 export interface IEnv {
   "authority": string;
   "cinchyRootUrl": string;
@@ -49,6 +52,7 @@ export interface IStatus {
   name: string;
   status_color: string;
   status_color_hex: string;
+  status_collapsed: string;
   sort_order: number;
   id: number;
 }
@@ -101,3 +105,8 @@ export const PRIORITY_OPTIONS: { [key: string]: any } = {
 
 
 export const WORK_TABLE_URL = "https://cinchy.net/Tables/140?viewId=0&fil[Title].Op=1&fil[Title].Val={{title}}"
+
+export interface ICinchyConfigExtended extends CinchyConfig {
+  "projectFormUrl": string;
+  "workTableUrl": string;
+}

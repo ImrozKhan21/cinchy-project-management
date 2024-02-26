@@ -95,6 +95,19 @@ body {
   }
 }
 
+.p-button.p-button-sm {
+  font-size: 14px;
+  padding: 0.45625rem 0.39375rem;
+
+  &.p-button:enabled:hover {
+    opacity: 0.8;
+  }
+
+  & >*{
+    font-weight: 400;
+  }
+}
+
 .content-wrapper {
   .quick_info_line {
     padding: 3px;

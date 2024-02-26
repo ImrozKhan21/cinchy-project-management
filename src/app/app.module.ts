@@ -22,6 +22,8 @@ import {HeaderComponent} from "./common/header/header.component";
 import {CheckboxModule} from "primeng/checkbox";
 import { BreadcrumbsTreeComponent } from './common/breadcrumbs-tree/breadcrumbs-tree.component';
 import {BreadcrumbModule} from "primeng/breadcrumb";
+import { ClipboardModule } from '@angular/cdk/clipboard';
+
 
 export function appLoadFactory(config: ConfigService) {
   return () => lastValueFrom(config.loadConfig());
@@ -54,6 +56,7 @@ export function getBaseUrl() {
     ToastModule,
     CheckboxModule,
     BreadcrumbModule,
+    ClipboardModule
   ],
   providers: [
     {

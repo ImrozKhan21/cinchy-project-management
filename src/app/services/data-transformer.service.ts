@@ -30,12 +30,17 @@ export class DataTransformerService {
     const projects = projectsToUse.map((taskItem: any, i: number) => {
       return {...taskItem, id: `project-${taskItem.project_id}`, user_id: taskItem.owner_id,  type: 'project'}
     });
+// below is used to fill Project dropdown options
+    const allProjects = this.appStateService.projects.map((taskItem: any, i: number) => {
+      return {...taskItem, id: `project-${taskItem.project_id}`, user_id: taskItem.owner_id,  type: 'project'}
+    });
 
     const rowsMapSorStatus: any = {};
     this.appStateService.allStatuses.forEach(statusItem => {
       const rows: any = projects.map((taskItem: any, i: number) => {
         return [{template: taskItem.text, height: 27},
           {
+            id: `id-${statusItem.name}`,
             view: "kanbanlist",
             height: 200,
             status: {status: statusItem.name, parent_project: taskItem.id},
@@ -49,7 +54,7 @@ export class DataTransformerService {
       return {
         header: status.name,
         css: status.status_color_hex ? `task-${status.status_color_hex.replace(/#+/g, '')}` : '',
-        body: {view: "kanbanlist", status: status.name, type:"cards" }
+        body: { id: `id-${status.name}`, view: "kanbanlist", status: status.name, type:"cards" }
       }
       /* return {
          header: status.name,
@@ -93,7 +98,7 @@ export class DataTransformerService {
     });
     const allMappedTasks = [...childMappedTasks];
     const tagsList = this.transformToTags(allMappedTasks);
-    return {mappedTasks: allMappedTasks, mappedStatuses, userSet, allTasks: allMappedTasks, projects, tagsList};
+    return {mappedTasks: allMappedTasks, mappedStatuses, userSet, allTasks: allMappedTasks, projects, allProjects, tagsList};
   }
 
   transformToKanbanUsers() {

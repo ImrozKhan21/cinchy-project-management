@@ -16,3 +16,9 @@
     align-items: center;
   }
 }
+
+:host {
+  ::ng-deep .p-button.p-button-sm {
+
+  }
+}

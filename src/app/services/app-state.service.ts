@@ -158,6 +158,7 @@ export class AppStateService {
       !this.filtersState.selectedDepartment?.length && sessionStorage.removeItem('department');
       !this.filtersState.selectedPortfolios?.length && sessionStorage.removeItem('portfolio');
       !this.filtersState.selectedPriorities?.length && sessionStorage.removeItem('priority');
+      !this.filtersState.slicedActivity?.id && sessionStorage.removeItem('scopedTaskId');
     }
     this.router.navigate(
       [],

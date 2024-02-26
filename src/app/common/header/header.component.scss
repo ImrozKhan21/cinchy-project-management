@@ -36,9 +36,22 @@
 }
 
 .search-input-wrapper{
+  display: flex;
+  align-items: center;
   padding: 0 30px 0 10px;
+  gap: 20px;
 
   .search-input {
-    padding: 6px 6px 6px 35px;
+    padding: 8px 8px 8px 35px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+}
+
+:host {
+  ::ng-deep .p-button.p-button-sm {
+    font-size: 14px;
+    padding: 0.38625rem 0.39375rem;
+
   }
 }

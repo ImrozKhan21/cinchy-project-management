@@ -1,7 +1,9 @@
 {
+  "version": "1.0.0",
   "authority": "https://cinchy.net/cinchysso",
   "cinchyRootUrl": "https://cinchy.net/Cinchy",
   "clientId": "project-management-local",
   "redirectUri": "https://localhost:4500",
-  "version": "1.0.0"
+  "projectFormUrl": "https://cinchy.net/Cinchy/Apps/Integrated?appId=457&formId=14&rowId={{rowId}}",
+  "workTableUrl": "https://cinchy.net/Tables/140?viewId=0&fil[Title].Op=1&fil[Title].Val={{title}}"
 }
