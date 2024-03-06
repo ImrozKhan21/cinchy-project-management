@@ -26,7 +26,9 @@ export class FilterDataService {
       selectedWorkType,
       selectedDepartment,
       selectedPortfolios,
-      selectedPriorities
+      selectedPriorities,
+      dateRange,
+      selectedDateType
     } = filters;
 
     let updatedTasks = allTasks.slice(); // ON square can be ON, by making this a map object but our data is not that big
@@ -56,7 +58,6 @@ export class FilterDataService {
             });
           });
           const hierarchyTasks = this.getAllHierarchyTask(selectedProjects, updatedTasks, fromKanban);
-          console.log('111 updatedTasks 2', hierarchyTasks, selectedProjects);
 
           slicedTasksForMultipleProjects.push(...hierarchyTasks);
         }
@@ -140,6 +141,17 @@ export class FilterDataService {
     }
 
     if (fromKanban) {
+      // date range currently only in Kanban
+      if (dateRange) {
+        const [fromDate, toDate] = dateRange;
+        const fromDateTime = new Date(fromDate).setHours(0, 0, 0, 0);
+        const toDateTime = new Date(toDate).setHours(0, 0, 0, 0);
+        updatedTasks = updatedTasks?.filter((task: any) => {
+          const taskDate = new Date(task[selectedDateType]).setHours(0, 0, 0, 0);
+          return (taskDate >= fromDateTime && ( !toDate || taskDate <= toDateTime));
+        });
+      }
+
       updatedTasks = updatedTasks.filter((item: any) => {
         return item.type === "task";
       });

@@ -125,7 +125,9 @@ export class AppComponent {
         this.appStateService.departments = departments;
         this.appStateService.portfolios = portfolios;
         this.projectDetails = this.appStateService.activities;
-      });
+      },catchError(error => {
+        return of('Fetch API failed')
+      }));
     }
 
   }

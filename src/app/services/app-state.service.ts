@@ -97,6 +97,15 @@ export class AppStateService {
       activityToUpdate.owner_id = newAssignee.owner_id;
     }
 
+    if (activity.activity_type_id) {
+      const activityTypeSelected = this.activityTypes.find((activityType: IActivityType) => activityType.id == activity.activity_type_id) as IActivityType;
+      if (activityTypeSelected) {
+        activityToUpdate.activity_type = activityTypeSelected.value;
+        activityToUpdate.activity_type_id = activityTypeSelected.id;
+        activityToUpdate.activity_type_icon = activityTypeSelected.icon;
+      }
+    }
+
     // Updating activity so that any filter change get latest details
     this.activities = this.activities.map((activityItem: IProjectDetails) => {
       return activityItem.activity_id === activityToUpdate.activity_id ? activityToUpdate : activityItem;
@@ -104,14 +113,18 @@ export class AppStateService {
     this.setRefreshViewState(true, activityToUpdate);
   }
 
-  updateActivitiesStateOnInsert(activity: any, newStatus: IStatus, activityTypeSelected?: IActivityType) {
+  updateActivitiesStateOnInsert(newId: number,activity: any, newStatus: IStatus, activityTypeSelected?: IActivityType) {
     // this.activities = activities;
+    activity.activity_id = newId;
+ //   activity.id = `activity-${activity.activity_id}`
+    activity.project_id = activity.project_id || activity.parent_id;
+    activity.isExisting = true;
     if (newStatus) {
       activity.status = newStatus.name;
       activity.status_id = newStatus.id;
       activity.status_color = newStatus.status_color;
       activity.status_color_hex = newStatus.status_color_hex;
-      activity.$css = newStatus.status_color ? `kanban-task-${newStatus.status_color.replace(/\s+/g, '-').toLowerCase()}` : '';
+  //    activity.$css = newStatus.status_color ? `kanban-task-${newStatus.status_color.replace(/\s+/g, '-').toLowerCase()}` : '';
     }
 
     if (activityTypeSelected) {
@@ -119,6 +132,8 @@ export class AppStateService {
       activity.activity_type_id = activityTypeSelected.id;
       activity.activity_type_icon = activityTypeSelected.icon;
     }
+
+    activity.color = PRIORITY_OPTIONS[activity.priority]?.color || 'white';
 
     const assigneeIdToUse = activity.user_id ? +activity.user_id : activity.owner_id;
     const newAssignee = this.users.find((user: IUser) => user.owner_id === assigneeIdToUse);
@@ -128,7 +143,6 @@ export class AppStateService {
       activity.owner_id = newAssignee.owner_id;
     }
     this.activities.push(activity);
-    console.log('111 NEW ACTIVITY', activity)
     this.setRefreshViewState(true, activity);
   }
 

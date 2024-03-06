@@ -3,6 +3,8 @@ import {IActivityType, IComboType, IProjectDetails, IStatus, IUser, PRIORITY_OPT
 import {AppStateService} from "../../services/app-state.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {lastValueFrom, ReplaySubject, take} from "rxjs";
+import {DateFilters} from "../../models/general-values.model";
+import {UtilService} from "../../services/util.service";
 
 @Component({
   selector: 'app-filters',
@@ -36,12 +38,22 @@ export class FiltersComponent {
   scopedTaskId: string;
   isProjectsExpanded: boolean;
 
+  dateRange: any;
+  fromDate: any;
+  toDate: any;
+  allDateFilters = DateFilters;
+  selectedPreselectDateRange: string;
+  dateTypes = [
+    { name: 'Start Date', code: 'start_date' },
+    { name: 'End Date', code: 'end_date' }]
+  selectedDateType = this.dateTypes[0];
+
   filteredProjects: IProjectDetails[];
   private destroyed$: ReplaySubject<boolean> = new ReplaySubject(1);
 
 
   constructor(@Inject(PLATFORM_ID) private platformId: any, private activatedRoute: ActivatedRoute,
-              private appStateService: AppStateService, private router: Router,) {
+              private appStateService: AppStateService, private utilService: UtilService,) {
   }
 
   ngOnInit() {
@@ -130,7 +142,9 @@ export class FiltersComponent {
       slicedActivity: currentFilters?.slicedActivity?.id ? currentFilters?.slicedActivity : {
         id: this.scopedTaskId,
         isTaskSliced: false
-      }
+      },
+      dateRange: this.dateRange,
+      selectedDateType: this.selectedDateType.code
     };
   }
 
@@ -142,10 +156,16 @@ export class FiltersComponent {
     this.apply();
   }
 
+  applyRange(days: number, type: string) {
+    this.selectedPreselectDateRange = type;
+    const lastSevenDays = this.utilService.getDateRange(days, type);
+    this.dateRange = [lastSevenDays.start, lastSevenDays.end];
+  }
+
   async apply(dontAddParam?: boolean) {
     const filterSelected = await this.getFiltersSelected();
 
-    console.log('filter APPL U', filterSelected)
+    console.log('filter APPL U', filterSelected, this.dateRange)
 
     this.appStateService.setFiltersState(filterSelected);
     this.appStateService.applyGlobalFilter({

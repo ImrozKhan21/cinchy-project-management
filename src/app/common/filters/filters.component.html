@@ -158,6 +158,23 @@
     </p-multiSelect>
   </div>
 
+  <div class="flex flex-col" *ngIf="viewType !== 'gantt'">
+    <p-calendar class="rangeCalendar" [appendTo]="'body'" [(ngModel)]="dateRange"
+                [placeholder]="'Date Period'" dateFormat="M d yy" selectionMode="range" [numberOfMonths]="2">
+      <ng-template pTemplate="header">
+        <div class="flex gap-5 pl-5 pb-2">
+          <p-dropdown [options]="dateTypes" [(ngModel)]="selectedDateType" optionLabel="name" [showClear]="false" placeholder="Date Type"></p-dropdown>
+          <ng-container *ngFor="let filter of allDateFilters">
+            <p-chip class="cursor-pointer" [ngClass]="{'selected-chip': filter.value === selectedPreselectDateRange}"
+                    [label]="filter.label" (click)="applyRange(filter.daysToPass, filter.value)"></p-chip>
+
+          </ng-container>
+        </div>
+        <hr>
+      </ng-template>
+    </p-calendar>
+  </div>
+
   <p-button styleClass="p-button-sm" label="Apply" (click)="apply()"></p-button>
 
   <div class="checkbox-wrapper" *ngIf="viewType === 'gantt'">

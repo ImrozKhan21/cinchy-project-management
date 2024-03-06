@@ -25,6 +25,7 @@ export class ApiCallsService {
     pj.[Name] as 'project_name',
     pj.[Name] as 'text',
     pj.[Cinchy Id] as 'project_id',
+    pj.[Colour].[Hex Code] as 'project_color',
     pj.[Status].[Name] as 'status',
     pj.[Status].[Cinchy Id] as 'statusId',
     pj.[Status].[Sort Order] as 'status_sort',
@@ -34,6 +35,7 @@ export class ApiCallsService {
     pj.[Start]  as 'start_date',
     pj.[Finish] as 'end_date',
     pj.[Portfolio] as 'portfolio',
+    pj.[URL] as 'project_url',
     pj.[Parent].[Cinchy Id] as 'parent_id',
     null as 'percent_done'
     FROM [${actualModel}].[Work Management].[Projects] pj
@@ -50,6 +52,7 @@ export class ApiCallsService {
     const query = `SELECT
     pa.[Project].[Name] as 'project_name',
     pa.[Project].[Portfolio] as 'project_portfolio',
+    pa.[Project].[URL] as 'project_url',
     pa.[Project].[Project Manager].[Cinchy Id] as 'project_owner_id',
     pa.[Project].[Cinchy Id] as 'project_id',
     pa.[Project].[Colour].[Hex Code] as 'project_color',
@@ -69,6 +72,7 @@ export class ApiCallsService {
     pa.[Name] as 'text',
     pa.[Type] as 'activity_type',
     pa.[Priority] as 'priority',
+    pa.[URL] as 'work_url',
     pa.[Description] as 'description',
     pa.[Total Effort] as 'effort',
     pa.[Total Effort].[Cinchy Id] as 'effort_id',
@@ -192,7 +196,8 @@ export class ApiCallsService {
       priority,
       effortId,
       statusCommentary,
-      description
+      description,
+      activityTypeId
     } = updatedValues;
     if (!statusId || !activityId) {
       return of(null);
@@ -211,7 +216,8 @@ export class ApiCallsService {
           a.[Priority] = @priority,
           a.[Total Effort] = @effortId,
           a.[Status Commentary] = @statusCommentary,
-          a.[Description] = @description
+          a.[Description] = @description,
+          a.[Type] = ResolveLink(@activityTypeId, 'Cinchy Id')
                    FROM [${actualModel}].[Work Management].[Work] a
                    WHERE a.[Deleted] IS NULL
                    AND a.[Cinchy Id] = @activityId
@@ -227,7 +233,55 @@ export class ApiCallsService {
       '@priority': priority,
       '@effortId': effortId ? `${effortId},0` : null,
       '@statusCommentary': statusCommentary,
-      '@description': description
+      '@description': description,
+      '@activityTypeId': activityTypeId
+    }
+    // todo: change [Project Activity Owners] to [Project Owners]
+    return this.cinchyService.executeCsql(query, params);
+  }
+
+  updateDatesForActivity(model: string, updatedValues: any): Observable<any> {
+    const {activityId, startDate, endDate, priority} = updatedValues;
+    if (!activityId) {
+      return of(null);
+    }
+    const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
+    // adding priority because end date is not updating when we just do start and finish update
+    const query = `UPDATE a
+    SET
+      a.[Start] = @startDate,
+      a.[Finish] = @endData,
+      a.[Priority] = @priority
+    FROM [${actualModel}].[Work Management].[Work] a
+    WHERE a.[Deleted] IS NULL
+    AND a.[Cinchy Id] = @activityId
+    `;
+    const params = {
+      '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
+      '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
+      '@activityId': activityId,
+      '@priority': priority
+    }
+    return this.cinchyService.executeCsql(query, params).pipe(
+      map((resp: any) => resp?.queryResult?.toObjectArray()));
+  }
+
+  updateParentForActivity(model: string, updatedValues: any): Observable<any> {
+    const {activityId, parentId} = updatedValues;
+    if (!activityId) {
+      return of(null);
+    }
+    const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
+    const query = `UPDATE a
+    SET
+    a.[Parent] = ResolveLink(@parentId,'Cinchy Id')
+    FROM [${actualModel}].[Work Management].[Work] a
+    WHERE a.[Deleted] IS NULL
+    AND a.[Cinchy Id] = @activityId
+    `;
+    const params = {
+      '@parentId': parentId,
+      '@activityId': activityId
     }
     // todo: change [Project Activity Owners] to [Project Owners]
     return this.cinchyService.executeCsql(query, params);
@@ -344,7 +398,9 @@ export class ApiCallsService {
                    @effortId,
                    @statusCommentary,
                    @description
-        ) `;
+        )
+        SELECT @cinchy_row_id as 'id';
+        `;
 
   /*  if(userId) {
       query = `INSERT INTO [${actualModel}].[Work Management].[Work]

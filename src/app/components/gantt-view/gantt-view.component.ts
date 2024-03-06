@@ -105,8 +105,9 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
           editor: false,  // assign custom editor configuration
           //scaleStart: new Date(),
           on: {
-            onBeforeDrag: this.utilService.beforeDrag,
-            onBeforeDrop: this.utilService.afterDrag
+            // doing arrow fn way to keep context of this and not Gantt library
+            onBeforeDrag: (...args: any) => this.utilService.beforeGanttTimelineDrag(...args),
+            onBeforeDrop: (...args: any) => this.utilService.afterGanttTimelineDrag(...args),
           },
           override: new Map<any, any>([
             [gantt.views.tree, CustomTree],

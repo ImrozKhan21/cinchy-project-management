@@ -7,9 +7,13 @@ declare let categories: any;
 export class GanttBackendService extends gantt.services.Backend {
   tasks() {
     ganttGlobalDataSingleton.projectDetails.mappedTasks.forEach((item: any) => {
-      item.css = item.status_color_hex ? `task-${item.status_color_hex.replace(/#+/g, '')}` : ''
-
-    })
+      console.log('111 item', item);
+      if (item.type === 'project') {
+        item.css = item.project_color ? `task-${item.project_color.replace(/#+/g, '')}` : ''
+      } else {
+        item.css = item.status_color_hex ? `task-${item.status_color_hex.replace(/#+/g, '')}` : ''
+      }
+    });
     return webix.promise.resolve(ganttGlobalDataSingleton.projectDetails.mappedTasks);
   }
 
@@ -43,7 +47,6 @@ export class GanttBackendService extends gantt.services.Backend {
   }
 
   updateTask(taskId: any, taskDetails: any, e: any, i: any) {
-//    console.log('11 IN UPDATE', taskId, taskDetails, e, i)
     ganttGlobalDataSingleton.setViewType('UPDATE');
     if (taskDetails.parent) {
       ganttGlobalDataSingleton.setCurrentTaskDetails(taskDetails);
@@ -62,12 +65,18 @@ export class GanttBackendService extends gantt.services.Backend {
     ganttGlobalDataSingleton.setViewType('UPDATE');
 
     const parentInDrag = dragDetails.parent;
+   // console.log('11 IN UPDATE', taskId, currentItem, parentInDrag, dragDetails)
+
     const updatedItem = parentInDrag ?
       {...currentItem, parent: parentInDrag, parent_id: parseInt(parentInDrag?.split('-')[1])} : currentItem;
     if (updatedItem.parent_id) {
-      ganttGlobalDataSingleton.utilServiceInstance.updateProjectForActivity(updatedItem, ganttGlobalDataSingleton.viewType, 'gantt');
+      if (parentInDrag.includes('activity')) {
+        ganttGlobalDataSingleton.utilServiceInstance.updateParentForActivity(updatedItem, ganttGlobalDataSingleton.viewType, 'gantt');
+      } else {
+        ganttGlobalDataSingleton.utilServiceInstance.updateProjectForActivity(updatedItem, ganttGlobalDataSingleton.viewType, 'gantt');
+      }
     } else {
-    //  ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(updatedItem, ganttGlobalDataSingleton.viewType, 'gantt');
+      //  ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(updatedItem, ganttGlobalDataSingleton.viewType, 'gantt');
     }
     return webix.promise.resolve();
   }

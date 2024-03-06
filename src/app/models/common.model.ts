@@ -46,6 +46,8 @@ export interface IProjectDetails {
   project_portfolio?: string;
   project_owner_id?: string;
   description?: string;
+  work_url?: string;
+  project_url?: string;
 }
 
 export interface IStatus {

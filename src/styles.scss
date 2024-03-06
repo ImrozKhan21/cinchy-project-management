@@ -2,9 +2,21 @@
 @import "primeicons/primeicons.css";
 @import "colors.scss";
 
+//Tailwind
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
   margin: 0;
+}
+
+.nic-editor, .webix_richtext {
+  margin-top: 0 !important;
+}
+
+.webix_richtext_editor {
+  white-space: pre-wrap !important;
 }
 
 
@@ -57,9 +69,27 @@ body {
 
 .filters-wrapper {
 
-  .p-autocomplete-multiple-container, .p-multiselect {
-    min-width: 148px;
-    max-width: 148px;
+  .p-icon {
+    width: 0.6rem;
+    height: 1rem;
+  }
+
+  p-multiselect.p-multiselect-clearable .p-multiselect-label-container, .p-calendar {
+    height: 26px;
+    padding-right: 1.5rem;
+  }
+
+  p-multiselect.p-multiselect-clearable .p-multiselect-clear-icon {
+    right: 1.5rem;
+  }
+
+  .p-multiselect .p-multiselect-trigger {
+    width: 1rem;
+  }
+
+  .p-autocomplete-multiple-container, .p-multiselect, .p-calendar .p-inputtext {
+    min-width: 140px;
+    max-width: 140px;
   }
 
   .p-button {
@@ -67,7 +97,7 @@ body {
     font-size: 14px;
   }
 
-  .p-inputtext {
+  .p-inputtext, .p-calendar .p-inputtext {
     min-width: 130px;
     max-width: 130px;
     font-size: 14px;
@@ -82,9 +112,11 @@ body {
     margin-right: 5px;
   }
 
-  .p-multiselect .p-multiselect-label, .p-inputtext {
+  .p-multiselect .p-multiselect-label, .p-inputtext, .p-calendar .p-inputtext {
     padding: 6px !important;
+    padding-top: 4px !important;
     display: flex;
+    font-size: 12px;
     .custom-select-chip {
       background: rgb(0, 191, 255, 0.1);
       padding: 0 2px;
@@ -92,6 +124,10 @@ body {
       border-radius: 5px;
       color: #1d4ed8;
     }
+  }
+
+  .p-multiselect .p-multiselect-label.p-placeholder, input::placeholder {
+    color: grey;
   }
 }
 
@@ -106,6 +142,26 @@ body {
   & >*{
     font-weight: 400;
   }
+}
+
+.p-dropdown .p-dropdown-label {
+  padding: 6px !important;
+}
+
+.p-chip {
+  color: #495057;
+  border-radius: 16px;
+  padding: 0 0.5rem;
+}
+
+.p-chip {
+  background-color: #fff!important;
+  border: 1px solid #dee2e6;
+}
+
+.selected-chip .p-chip {
+  background-color: #dee2e6!important;
+  border: 1px solid whitesmoke;
 }
 
 .content-wrapper {
@@ -132,28 +188,17 @@ body {
     color: #485466;
   }
 
-}
-
-
-.filters-wrapper {
-  .p-icon {
-    width: 0.6rem;
-    height: 1rem;
+  .gantt-action-column > * {
+    visibility: hidden;
   }
 
-  p-multiselect.p-multiselect-clearable .p-multiselect-label-container {
-    height: 26px;
-    padding-right: 1.5rem;
-  }
+  .webix_gantt_content {
+    overflow: visible;
+    color: #1c1c1c;
 
-  p-multiselect.p-multiselect-clearable .p-multiselect-clear-icon {
-    right: 1.5rem;
-  }
-
-  .p-multiselect .p-multiselect-trigger {
-    width: 1rem;
   }
 }
+
 
 .custom-tag {
   border-radius: 10px;

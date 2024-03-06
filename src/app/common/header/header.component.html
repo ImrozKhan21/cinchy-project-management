@@ -5,21 +5,21 @@
            class="p-2">
 
       <i class="pi pi-check-square"></i>
-      <h1 class="">{{ viewType === 'kanban' ? 'Kanban' : viewType === 'gantt' ? 'Gantt Chart' : '' }}</h1>
+      <h1 class="text-[30px]">{{ viewType === 'kanban' ? 'Kanban' : viewType === 'gantt' ? 'Gantt Chart' : '' }}</h1>
     </div>
 
     <div class="search-input-wrapper">
-      <p-button styleClass="p-button-sm" label="Copy URL" icon="pi pi-copy" class="p-button-text"
-        [cdkCopyToClipboard]="currentUrl$ | async"
-              (cdkCopyToClipboardCopied)="onClipboardCopy($event)"
-      >
-      </p-button>
-
       <span class="p-input-icon-left">
       <i class="pi pi-search"></i>
       <input class="search-input" placeholder="Search.." type="search" pInputText [(ngModel)]="searchValue"
              (ngModelChange)="valueChanged()"/>
       </span>
+
+      <p-button styleClass="p-button-sm" label="Copy URL" icon="pi pi-copy" class="p-button-text"
+                [cdkCopyToClipboard]="currentUrl$ | async"
+                (cdkCopyToClipboardCopied)="onClipboardCopy($event)"
+      >
+      </p-button>
 
     </div>
   </div>

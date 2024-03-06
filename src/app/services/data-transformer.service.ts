@@ -50,7 +50,9 @@ export class DataTransformerService {
       rowsMapSorStatus[statusItem.name] = rows;
     });
 
-    const mappedStatuses = this.appStateService.allStatuses.map((status: IStatus) => {
+    const statusesToTake = this.appStateService.allStatuses.filter((status: IStatus) =>
+      status.status_collapsed !== "Hidden");
+    const mappedStatuses = statusesToTake.map((status: IStatus) => {
       return {
         header: status.name,
         css: status.status_color_hex ? `task-${status.status_color_hex.replace(/#+/g, '')}` : '',
@@ -79,14 +81,16 @@ export class DataTransformerService {
 
     const userSet = this.transformToKanbanUsers();
 
-    const childMappedTasks = projectDetails.map((taskItem, i: number) => {
+    const workItems = projectDetails.map((taskItem, i: number) => {
       return {
-        ...taskItem, id: `activity-${taskItem.activity_id}`,
+        ...taskItem,
+        id: `activity-${taskItem.activity_id}`,
         color: PRIORITY_OPTIONS[taskItem.priority]?.color || 'white',
         rgb_project_color: this.utilService.convertFromHexToRGB(taskItem.project_color, 1),
         $css: taskItem.status_color ? `kanban-task-${taskItem.status_color.replace(/\s+/g, '-').toLowerCase()}` : '',
         type: 'task',
         parent: taskItem.parent_id ? `activity-${taskItem.parent_id}` : `project-${taskItem.project_id}`,
+        parent_activity: taskItem.parent_id,
         parent_project: `project-${taskItem.project_id}`,
         user_id: taskItem.owner_id,
         isExisting: true,
@@ -96,9 +100,10 @@ export class DataTransformerService {
         progress: taskItem.percent_done
       }
     });
-    const allMappedTasks = [...childMappedTasks];
-    const tagsList = this.transformToTags(allMappedTasks);
-    return {mappedTasks: allMappedTasks, mappedStatuses, userSet, allTasks: allMappedTasks, projects, allProjects, tagsList};
+    const mileStoneWorkItems = workItems.filter((item: any) => item.activity_type?.includes('Milestone'));
+    const mappedTasks = [...workItems];
+    const tagsList = this.transformToTags(mappedTasks);
+    return {mappedTasks, mappedStatuses, userSet, allTasks: mappedTasks, projects, allProjects, tagsList, mileStoneWorkItems};
   }
 
   transformToKanbanUsers() {

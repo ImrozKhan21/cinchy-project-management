@@ -9,7 +9,6 @@ import {MessageService} from "primeng/api";
   providedIn: 'root'
 })
 export class UtilService {
-
   constructor(private appStateService: AppStateService, private apiCallsService: ApiCallsService, private messageService: MessageService) {
   }
 
@@ -28,7 +27,19 @@ export class UtilService {
   }
 
   updateProjectOrActivity(itemData: any, model: string, viewType?: string, isFromDrag?: boolean) {
-    const {status, status_id, project_id, user_id, owner_id, type, activity_id, effort_id, description} = itemData;
+    const {
+      status,
+      status_id,
+      project_id,
+      user_id,
+      owner_id,
+      type,
+      activity_id,
+      effort_id,
+      description,
+      activity_type_id,
+      activity_type
+    } = itemData;
     let newStatus = this.appStateService.allStatuses
       .find((statusItem: IStatus) => statusItem.id == status_id) as IStatus;
 
@@ -51,6 +62,7 @@ export class UtilService {
       statusCommentary: itemData.status_commentary,
       priority: itemData.priority,
       effortId: newEffortSelected?.id,
+      activityTypeId: activity_type_id ? parseInt(activity_type_id) : null,
       description
     }
 //    console.log('111', itemData, updatedValues)
@@ -95,12 +107,14 @@ export class UtilService {
   }
 
   insertNewActivity(itemData: any, model: string, viewType?: string) {
- /*   const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => itemData.status ?
-      itemData.status === statusItem.name : statusItem.sort_order === 1) as IStatus;*/
+    /*   const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => itemData.status ?
+         itemData.status === statusItem.name : statusItem.sort_order === 1) as IStatus;*/
     let newStatus = this.appStateService.allStatuses
       .find((statusItem: IStatus) => statusItem.id == itemData.status_id) as IStatus;
     const activityTypeSelected = this.appStateService.activityTypes
       .find((type: IActivityType) => type.value === itemData.activity_type || type.id === Number(itemData.activity_type_id));
+    let newEffortSelected = this.appStateService.estimates
+      .find((effortItem: IComboType) => effortItem.id == itemData.effort_id) as IComboType;
     this.appStateService.setSpinnerState(true);
     const parentId = itemData.parent_id ? itemData.parent_id : Number(itemData.parent.split('-')[1]);
     const projectId = viewType === "kanban" ? parentId : this.getProjectId(itemData, parentId);
@@ -112,15 +126,20 @@ export class UtilService {
       statusId: `${newStatus.id}`,
       parentId: `${parentId}`,
       activityTypeId: `${activityTypeSelected?.id}`,
-      projectId: `${projectId}`
+      projectId: `${projectId}`,
+      progress: itemData.percent_done ? itemData.percent_done / 100 : 0,
+      statusCommentary: itemData.status_commentary,
+      priority: itemData.priority,
+      effortId: newEffortSelected?.id,
     }
     if (itemData.user_id) {
       insertValues.userId = itemData.user_id;
     }
-    this.apiCallsService.insertActivity(model, insertValues).pipe(take(1)).subscribe(() => {
+    this.apiCallsService.insertActivity(model, insertValues).pipe(take(1)).subscribe((response) => {
       this.appStateService.setSpinnerState(false);
       if (viewType !== 'gantt') {
-        this.appStateService.updateActivitiesStateOnInsert(itemData, newStatus, activityTypeSelected);
+        const {id} = response[0];
+        this.appStateService.updateActivitiesStateOnInsert(id, itemData, newStatus, activityTypeSelected);
         this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
       }
     }, error => {
@@ -131,7 +150,7 @@ export class UtilService {
 
   deleteActivity(activityId: any, viewType?: string) {
     const model: string = sessionStorage.getItem('modelId') as string;
-    const activityIdToUse = activityId.split('-')[1];
+    const activityIdToUse = isNaN(activityId) ? activityId.split('-')[1] : activityId;
     this.appStateService.setSpinnerState(true);
     this.apiCallsService.deleteActivity(model, activityIdToUse).pipe(take(1)).subscribe(() => {
       this.appStateService.setSpinnerState(false);
@@ -151,12 +170,22 @@ export class UtilService {
     return parentId;
   }
 
+  // below care called from gantt singleton instance of service
   updateProjectForActivity(itemData: any, queryType?: string, viewType?: string) {
-
     const activityId = parseInt(itemData.id.split('-')[1]);
     const parentId = itemData.parent_id;
     const model: string = sessionStorage.getItem('modelId') as string;
     this.apiCallsService.updateProjectForActivity(model, {parentId, activityId}).pipe(take(1)).subscribe(() => {
+      this.appStateService.setSpinnerState(false);
+      this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+    });
+  }
+
+  updateParentForActivity(itemData: any, queryType?: string, viewType?: string) {
+    const activityId = parseInt(itemData.id.split('-')[1]);
+    const parentId = itemData.parent_id;
+    const model: string = sessionStorage.getItem('modelId') as string;
+    this.apiCallsService.updateParentForActivity(model, {parentId, activityId}).pipe(take(1)).subscribe(() => {
       this.appStateService.setSpinnerState(false);
       this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
     });
@@ -177,11 +206,32 @@ export class UtilService {
 
   }
 
-  beforeDrag(item: any, context: any) {
-    console.log('111 drag gantt');
+  beforeGanttTimelineDrag(...args: any[]) {
+    console.log('111 drag gantt', args);
   }
 
-  afterDrag(item: any, context: any) {
+  afterGanttTimelineDrag(...args: any[]) {
+    const [item, context] = args;
+    const mode = context.mode;
+
+    setTimeout(() => { // using setTimeout as start_date update value is coming a little late
+      const {project_id, type, activity_id, start_date, end_date, priority} = item;
+      const model: string = sessionStorage.getItem('modelId') as string;
+      const updatedValues = {
+        activityId: type === "task" || type === "milestone" ? activity_id : project_id,
+        startDate: start_date,
+        endDate: end_date,
+        priority: priority
+      }
+          if (type === "task" || type === "milestone") {
+            this.apiCallsService.updateDatesForActivity(model, updatedValues).pipe(take(1)).subscribe(() => {
+              this.appStateService.setSpinnerState(false);
+              this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+            }, error => {
+
+            });
+          }
+    }, 300);
   }
 
   onKanbanBeforeDrag(dragContext: any) {
@@ -204,7 +254,9 @@ export class UtilService {
 
   convertFromHexToRGB(hex: any, alpha: number) {
     // Remove the hash at the start if it's there
-    if (!hex) { return 'white'}
+    if (!hex) {
+      return 'white'
+    }
     hex = hex.replace(/^#/, '');
     // Parse the hex string
     let r, g, b;
@@ -231,6 +283,32 @@ export class UtilService {
     /* return name.split(" ") // Split the string into an array of words
        .map(word => word.charAt(0).toUpperCase()) // Map over the array and take the first character of each word in uppercase
        .join(""); // Join the first letters back into a string*/
+  }
+
+  getDateRange(daysToSubtract: number, type?: string) {
+    const endDate = new Date(); // Today's date
+    const startDate = new Date();
+
+    if (daysToSubtract) {
+      startDate.setDate(endDate.getDate() - (daysToSubtract - 1));
+    } else if (type) {
+      switch (type) {
+        case 'MTD':
+          startDate.setDate(1);
+          break;
+        case 'YTD':
+          startDate.setMonth(0, 1);
+          break;
+        case 'QTD':
+          const startMonthOfQuarter = Math.floor(endDate.getMonth() / 3) * 3;
+          startDate.setMonth(startMonthOfQuarter, 1);
+          break;
+      }
+    }
+    return {
+      start: startDate,
+      end: endDate
+    };
   }
 
 }

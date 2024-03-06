@@ -23,6 +23,9 @@ import {CheckboxModule} from "primeng/checkbox";
 import { BreadcrumbsTreeComponent } from './common/breadcrumbs-tree/breadcrumbs-tree.component';
 import {BreadcrumbModule} from "primeng/breadcrumb";
 import { ClipboardModule } from '@angular/cdk/clipboard';
+import {CalendarModule} from "primeng/calendar";
+import {ChipModule} from "primeng/chip";
+import {DropdownModule} from "primeng/dropdown";
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -42,22 +45,25 @@ export function getBaseUrl() {
     HeaderComponent,
     BreadcrumbsTreeComponent
   ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    AppRoutingModule,
-    AutoCompleteModule,
-    CinchyModule.forRoot(),
-    FormsModule,
-    MultiSelectModule,
-    ButtonModule,
-    InputTextModule,
-    ProgressSpinnerModule,
-    ToastModule,
-    CheckboxModule,
-    BreadcrumbModule,
-    ClipboardModule
-  ],
+    imports: [
+        BrowserModule,
+        BrowserAnimationsModule,
+        AppRoutingModule,
+        AutoCompleteModule,
+        CinchyModule.forRoot(),
+        FormsModule,
+        MultiSelectModule,
+        ButtonModule,
+        InputTextModule,
+        ProgressSpinnerModule,
+        ToastModule,
+        CheckboxModule,
+        BreadcrumbModule,
+        ClipboardModule,
+        CalendarModule,
+        ChipModule,
+        DropdownModule
+    ],
   providers: [
     {
       provide: APP_INITIALIZER,

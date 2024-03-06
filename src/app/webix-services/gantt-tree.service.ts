@@ -20,9 +20,14 @@ export class CustomTree extends gantt.views.tree {
     };
 
     ui.columns.forEach((column: any) => {
+      console.log('111 columns', column)
       if (column.id === "text") {
         column.width = 300;
         column.minWidth = 300;
+      }
+
+      if(column.id === "action") {
+        column.header.css = `${column.header.css} gantt-action-column`;
       }
     });
     ui.width = 700;
