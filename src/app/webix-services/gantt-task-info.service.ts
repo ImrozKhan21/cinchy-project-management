@@ -28,6 +28,7 @@ export class CustomInfo extends gantt.views["task/info"] {
   InfoTemplate(obj: any) {
     //remove links data
     //   return customQuickInfoTemplate(obj);
+    console.log('OBJ', obj);
     obj.targets = obj.sources = [];
     delete obj.details;
     const originalContent = super.InfoTemplate(obj);
@@ -38,7 +39,12 @@ export class CustomInfo extends gantt.views["task/info"] {
                     <span style="font-weight: 500; font-size: 20px;">${obj.text}</span>
                 </div>
 
-                <div class="quick_info_line" *ngIf="obj.type_cinch">
+                <div class="quick_info_line">
+                    <span style="font-weight: 500;">Project
+                    </span> ${obj.project_name ? obj.project_name : ''}
+                </div>
+
+                <div class="quick_info_line">
                     <span style="font-weight: 500;">${obj.activity_type ? 'Activity Type:' : 'Type:'}
                     </span> ${obj.activity_type ? obj.activity_type : obj.type}
                 </div>
@@ -52,16 +58,30 @@ export class CustomInfo extends gantt.views["task/info"] {
                 </div>
 
                  <div class="quick_info_line">
-                    <span style="font-weight: 500;">Days:</span> ${obj.duration ? obj.duration : ''}
+                    <span style="font-weight: 500;">Status:</span> ${obj.status ? obj.status : ''}
                 </div>
 
-                  <div class="quick_info_line">
-                    <span style="font-weight: 500;">Progress:</span> ${obj.progress}
+                 <div class="quick_info_line">
+                    <span style="font-weight: 500;">Priority:</span> ${obj.priority ? obj.priority : ''}
+                </div>
+
+                 <div class="quick_info_line">
+                    <span style="font-weight: 500;">Total Effort:</span> ${obj.effort ? obj.effort : ''}
                 </div>
 
                 <div class="quick_info_line">
-                    <span style="font-weight: 500;">Status:</span> ${obj.status ? obj.status : ''}
+                    <span style="font-weight: 500;">Progress:</span> ${obj.progress}
                 </div>
+
+                 <div class="quick_info_line">
+                    <span style="font-weight: 500;">Status Commentary:</span> ${obj.status_commentary ? obj.status_commentary : ''}
+                </div>
+
+                 <div class="quick_info_line">
+                    <span style="font-weight: 500;">Description:</span> ${obj.description ? obj.description : ''}
+                </div>
+
+
             `;
 
     // Concatenate the original content with custom content and return

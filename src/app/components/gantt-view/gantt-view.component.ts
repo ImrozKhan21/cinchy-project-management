@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Inject, OnInit, PLATFORM_ID} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, HostListener, Inject, OnInit, PLATFORM_ID} from '@angular/core';
 import {GanttBackendService} from "../../webix-services/gantt-backend.service";
 import {AppStateService} from "../../services/app-state.service";
 import ganttGlobalDataSingleton from "../../ganttGlobalDataSingleton";
@@ -21,6 +21,13 @@ declare let gantt: any;
   styleUrls: ['./gantt-view.component.scss']
 })
 export class GanttViewComponent implements OnInit, AfterViewInit {
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    const gantt: any = $$("gantt");
+    gantt.config.width = event.target.innerWidth;
+    gantt.resize();
+  }
+
   ganttData: any;
   ganttView: any;
   currentViewType: string;
@@ -38,6 +45,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
     ganttGlobalDataSingleton.setFilterDataServiceInstance(this.filterDataService);
     this.ganttData = this.dataTransformerService.transformToGanttData(this.appStateService.activities, this.appStateService.projects);
     ganttGlobalDataSingleton.setProjectDetails(this.ganttData);
+    ganttGlobalDataSingleton.setEstimateOptions(this.appStateService.estimates);
   }
 
   ngAfterViewInit(): void {
@@ -98,6 +106,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
           view: "gantt",
           id: "gantt",
           resources: true,
+          links: false,
           display: this.currentViewType === 'resources' ? 'resources' : "tasks",
           resourcesDiagram: false,
           scales: [ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.monthScale],

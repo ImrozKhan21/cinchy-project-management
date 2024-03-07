@@ -7,7 +7,6 @@ declare let categories: any;
 export class GanttBackendService extends gantt.services.Backend {
   tasks() {
     ganttGlobalDataSingleton.projectDetails.mappedTasks.forEach((item: any) => {
-      console.log('111 item', item);
       if (item.type === 'project') {
         item.css = item.project_color ? `task-${item.project_color.replace(/#+/g, '')}` : ''
       } else {

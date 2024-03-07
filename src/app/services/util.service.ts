@@ -213,9 +213,12 @@ export class UtilService {
   afterGanttTimelineDrag(...args: any[]) {
     const [item, context] = args;
     const mode = context.mode;
+    // below are old as new values are updated after this event has been called that's why setTimeout is used for actual new values
+    const old_start_date = item.start_date;
+    const old_end_date = item.end_date;
 
     setTimeout(() => { // using setTimeout as start_date update value is coming a little late
-      const {project_id, type, activity_id, start_date, end_date, priority} = item;
+      const {project_id, type, activity_id, start_date, end_date, priority, text} = item;
       const model: string = sessionStorage.getItem('modelId') as string;
       const updatedValues = {
         activityId: type === "task" || type === "milestone" ? activity_id : project_id,
@@ -225,8 +228,11 @@ export class UtilService {
       }
           if (type === "task" || type === "milestone") {
             this.apiCallsService.updateDatesForActivity(model, updatedValues).pipe(take(1)).subscribe(() => {
+              const sd = start_date ? start_date.toLocaleString() : start_date;
+              const ed = end_date ? end_date.toLocaleString() : end_date;
               this.appStateService.setSpinnerState(false);
-              this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
+              this.messageService.add({severity: 'success', summary: 'Success', life: 8000,
+                detail: `${text} has been updated.  Start Date: ${sd}, End Date: ${ed}`});
             }, error => {
 
             });

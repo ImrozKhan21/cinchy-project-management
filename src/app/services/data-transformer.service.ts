@@ -196,7 +196,7 @@ export class DataTransformerService {
       "id": "1"
     }
     return mappedTasks.flatMap((task: any) => {
-      const resource = mappedResources.find((res: any) => res.name === task.owner);
+      const resource = mappedResources.find((res: any) => res.id === task.owner_id);
       if (resource) {
         return {
           task: task.id,

@@ -1,4 +1,5 @@
 import ganttGlobalDataSingleton from "../ganttGlobalDataSingleton";
+import {PRIORITY_OPTIONS} from "../models/common.model";
 
 declare let webix: any;
 declare let gantt: any;
@@ -8,13 +9,13 @@ export class CustomForm extends gantt.views["task/form"] {
   config() {
     ganttGlobalDataSingleton.setGanttFormInstance(this); // so that we can refresh form from outside if we change task while form being open
     const ui = super.config();
-    const toolbar = ui.body.rows.find((row:any) => row.view === "toolbar");
+    const toolbar = ui.body.rows.find((row: any) => row.view === "toolbar");
     if (toolbar) {
-      const doneButton = toolbar.elements.find((el:any) => el.value === "Done");
+      const doneButton = toolbar.elements.find((el: any) => el.value === "Done");
       if (doneButton) {
         // Add a click handler to the "Done" button
         doneButton.click = () => {
-          console.log("Done button clicked",ganttGlobalDataSingleton.currentTaskDetails, ganttGlobalDataSingleton.currentProjectDetails, ganttGlobalDataSingleton.viewType);
+          console.log("Done button clicked", ganttGlobalDataSingleton.currentTaskDetails, ganttGlobalDataSingleton.currentProjectDetails, ganttGlobalDataSingleton.viewType);
           const taskDetails = ganttGlobalDataSingleton.currentTaskDetails;
           const projectDetails = ganttGlobalDataSingleton.currentProjectDetails;
           ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(taskDetails, ganttGlobalDataSingleton.viewType, 'gantt');
@@ -24,6 +25,7 @@ export class CustomForm extends gantt.views["task/form"] {
       }
     }
     const form = ui.body.rows[1];
+
     // options for "css" richselect
     const paletteOptions: any = [{$empty: true, value: ""}];
     for (let i = 0; i < 7; i++) {
@@ -31,6 +33,17 @@ export class CustomForm extends gantt.views["task/form"] {
       paletteOptions.push({id, value: id});
     }
     // "css" richselect definition ("Style")
+
+    const currentFormValuesForCustomFields = ganttGlobalDataSingleton.getCurrentTaskDetailsForFormValues();
+    if (!currentFormValuesForCustomFields) {
+      // means when closing the form and all, since we now refresh form on selection of gantt row
+      ganttGlobalDataSingleton.setGanttFormInstance(null);
+    }
+    this.addingFormFields(form, currentFormValuesForCustomFields);
+    return ui;
+  }
+
+  addingFormFields(form: any, currentFormValuesForCustomFields: any) {
     const newFormElements: any = [];
     form.elements.forEach((item: any, index: number) => {
       if (item.name === "text" || item.name === "type") {
@@ -40,41 +53,45 @@ export class CustomForm extends gantt.views["task/form"] {
           readonly: ganttGlobalDataSingleton.viewType === 'UPDATE'
         };
         newFormElements.push(newItem);
-      } else if(item.name === "duration") {
+      } else if (item.multi) {
+        /*
+                const newItem = {
+                  ...item,
+                  view: "combo",
+                  label: "Assignee",
+                  name: "resourceId",  // or whatever the key in the task data is
+                  value: "John Doe",
+                  options: {
+                    // Assuming a static list, but you could also connect to a dynamic data source
+                    data: [
+                      { id: 1, value: "John Doe" },
+                      { id: 2, value: "Jane Smith" },
+                      // ... other users or resources
+                    ]
+                  }
+                }
+        */
+        newFormElements.push(item);
+      } else if (item.name === "details") {
         const newItem = {
           ...item,
-          label: "Days"
+          name: "description",
+          label: "Description",
+          height: 120,
         };
         newFormElements.push(newItem);
-      } else if(item.multi) {
-/*
+      } else if (item.name === "duration") {
         const newItem = {
           ...item,
-          view: "combo",
-          label: "Assignee",
-          name: "resourceId",  // or whatever the key in the task data is
-          value: "John Doe",
-          options: {
-            // Assuming a static list, but you could also connect to a dynamic data source
-            data: [
-              { id: 1, value: "John Doe" },
-              { id: 2, value: "Jane Smith" },
-              // ... other users or resources
-            ]
-          }
-        }
-*/
-        newFormElements.push(item);
-      }
-      else {
+          disabled: true,
+          readonly: true,
+          visible: false
+        };
+        newFormElements.push(newItem);
+      } else {
         newFormElements.push(item);
       }
     });
-    const currentFormValuesForCustomFields = ganttGlobalDataSingleton.getCurrentTaskDetailsForFormValues();
-    if(!currentFormValuesForCustomFields) {
-      // means when closing the form and all, since we now refresh form on selection of gantt row
-      ganttGlobalDataSingleton.setGanttFormInstance(null);
-    }
     const allActivityTypes = [...ganttGlobalDataSingleton.projectDetails.activityTypes];
     const activityTypes = {
       options: allActivityTypes.map((statusItem: any) => ({id: statusItem.value, value: statusItem.value})),
@@ -93,6 +110,31 @@ export class CustomForm extends gantt.views["task/form"] {
       name: "status"
     };
 
+    const priority = {
+      view: "richselect",
+      label: "Priority",
+      name: "priority",
+      options: Object.keys(PRIORITY_OPTIONS).map((key: string) => PRIORITY_OPTIONS[key]),
+      value: currentFormValuesForCustomFields?.priority
+    }
+
+    const statusCommentary = {
+      view: "textarea",
+      label: "Status Commentary",
+      name: "status_commentary",
+      height: 80,
+      value: currentFormValuesForCustomFields?.status_commentary
+    }
+
+    const totalEffort = {
+      view: "richselect",
+      label: "Total Effort",
+      name: "effort_id",
+      options: ganttGlobalDataSingleton.getEstimateOptions(),
+      value: currentFormValuesForCustomFields?.effort_id
+    };
+
+
     // insert "css" richselect below "type"
     form.elements = [...newFormElements];
     console.log('111 fom', form.elements);
@@ -100,7 +142,10 @@ export class CustomForm extends gantt.views["task/form"] {
     form.elements.splice(index + 1, 0, activityTypes);
     const indexOfActivityType = form.elements.findIndex((obj: any) => obj.name == "activity_type");
     form.elements.splice(indexOfActivityType + 1, 0, status);
-
-    return ui;
+    const indexOfStatus = form.elements.findIndex((obj: any) => obj.name == "status");
+    form.elements.splice(indexOfStatus + 1, 0, priority);
+    const indexOfDuration = form.elements.findIndex((obj: any) => obj.name == "duration");
+    form.elements.splice(indexOfDuration + 1, 0, totalEffort);
+    form.elements.push(statusCommentary);
   }
 }

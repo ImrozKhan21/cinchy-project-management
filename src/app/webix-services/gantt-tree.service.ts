@@ -10,6 +10,7 @@ export class CustomTree extends gantt.views.tree {
    */
   config() {
     const ui = super.config();
+    let alreadyResized = false;
 
     // double click handler
     ui.on.onItemDblClick = (id: any, e: any) => {
@@ -19,8 +20,19 @@ export class CustomTree extends gantt.views.tree {
       this.onSliceButtonClick(task, isTaskSliced)
     };
 
+    ui.on.onViewResize = () => {
+      if (alreadyResized) {return;}
+
+      const newMinWidth = '200px';
+      // Select elements by class and apply new min-width
+      const elements = document.querySelectorAll('.webix_gantt_tree, .webix_hs_center, .webix_ss_center');
+      elements.forEach(function(element: any) {
+        element.style.minWidth = newMinWidth;
+      });
+      alreadyResized = true;
+    }
+
     ui.columns.forEach((column: any) => {
-      console.log('111 columns', column)
       if (column.id === "text") {
         column.width = 300;
         column.minWidth = 300;

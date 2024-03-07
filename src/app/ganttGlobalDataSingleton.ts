@@ -59,6 +59,7 @@ class GanttGlobalDataSingleton {
   private currentTaskDetailsForFormValues: any;
   private currentSlicedTaskDetails: any;
   private ganttFormInstance: any;
+  private estimateOptions: any;
 
 
   setProjectDetails(details: IDetails) {
@@ -67,6 +68,14 @@ class GanttGlobalDataSingleton {
 
   getActivities(): IDetails {
     return this.projectDetails;
+  }
+
+  setEstimateOptions(details: any) {
+    this.estimateOptions = details;
+  }
+
+  getEstimateOptions() {
+    return this.estimateOptions;
   }
 
   setUtilServiceInstance(instance: any) {
