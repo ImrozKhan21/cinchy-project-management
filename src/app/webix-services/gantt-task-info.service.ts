@@ -28,7 +28,6 @@ export class CustomInfo extends gantt.views["task/info"] {
   InfoTemplate(obj: any) {
     //remove links data
     //   return customQuickInfoTemplate(obj);
-    console.log('OBJ', obj);
     obj.targets = obj.sources = [];
     delete obj.details;
     const originalContent = super.InfoTemplate(obj);

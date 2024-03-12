@@ -8,6 +8,8 @@ class GanttGlobalDataSingleton {
   public currentTaskDetails: any;
   public currentProjectDetails: any;
 
+  private currentTaskOwner: any;
+
   public quarterStart(date: any): any {
     date = webix.Date.copy(date);
     date.setMonth(Math.floor(date.getMonth() / 3) * 3);
@@ -100,6 +102,14 @@ class GanttGlobalDataSingleton {
 
   setCurrentTaskDetailsForFormValues(taskDetails: any) {
     this.currentTaskDetailsForFormValues = taskDetails;
+  }
+
+  setCurrentTaskOwner(currentTaskOwner: any) {
+    this.currentTaskOwner = currentTaskOwner;
+  }
+
+  getCurrentTaskOwner() {
+    return this.currentTaskOwner;
   }
 
   getCurrentTaskDetailsForFormValues() {

@@ -35,8 +35,10 @@ export class GanttBackendService extends gantt.services.Backend {
 
   addTask(taskDetails: any) {
     ganttGlobalDataSingleton.setViewType('INSERT');
+    console.log('111 add task', ganttGlobalDataSingleton.currentTaskDetails, taskDetails)
+    const currentTaskDetails = {...ganttGlobalDataSingleton.currentTaskDetails, ...taskDetails};
     if (taskDetails.parent) {
-      ganttGlobalDataSingleton.setCurrentTaskDetails(taskDetails);
+      ganttGlobalDataSingleton.setCurrentTaskDetails(currentTaskDetails);
     } else {
       ganttGlobalDataSingleton.setCurrentProjectDetails(taskDetails);
     }
@@ -80,7 +82,8 @@ export class GanttBackendService extends gantt.services.Backend {
     return webix.promise.resolve();
   }
 
-  removeTask() {
+  removeTask(id: any, taskDetails: any, e: any, i: any) {
+    ganttGlobalDataSingleton.utilServiceInstance.deleteActivity(id);
     return webix.promise.resolve();
   }
 
@@ -98,11 +101,21 @@ export class GanttBackendService extends gantt.services.Backend {
 
   addAssignment(obj: any, e: any) {
     const currentItem = ganttGlobalDataSingleton.projectDetails.mappedTasks.find((item: any) => item.id === obj.task);
-    if (currentItem?.parent) {
-      ganttGlobalDataSingleton.setCurrentTaskDetails({...currentItem, owner_id: obj.resource});
+    if (!currentItem) { // INSERT
+      if (ganttGlobalDataSingleton.currentTaskDetails?.parent) {
+        ganttGlobalDataSingleton.setCurrentTaskDetails({
+          ...ganttGlobalDataSingleton.currentTaskDetails,
+          owner_id: obj.resource
+        });
+      }
     } else {
-      ganttGlobalDataSingleton.setCurrentProjectDetails({...currentItem, owner_id: obj.resource});
+      if (currentItem?.parent) { // UPDATE
+        ganttGlobalDataSingleton.setCurrentTaskDetails({...currentItem, owner_id: obj.resource});
+      } else {
+        ganttGlobalDataSingleton.setCurrentProjectDetails({...currentItem, owner_id: obj.resource});
+      }
     }
+    ganttGlobalDataSingleton.setCurrentTaskOwner(obj.resource);
     if (!currentItem?.owner) {
       return Promise.resolve({id: obj.id});
     } else {
@@ -125,6 +138,7 @@ export class GanttBackendService extends gantt.services.Backend {
   }
 
   removeAssignment(id: any) {
+  //  ganttGlobalDataSingleton.utilServiceInstance.deleteActivity(id);
     return Promise.resolve({});
   }
 

@@ -133,7 +133,7 @@ export class FilterDataService {
       });
     }
 
-    if (slicedActivity && slicedActivity.id) {
+    if (slicedActivity && slicedActivity.id && !fromKanban) {
       const {id, isTaskSliced} = slicedActivity;
       if (!isTaskSliced) {
         updatedTasks = this.getSlicedTasksAndProjectOnly(updatedTasks, id);
@@ -151,13 +151,12 @@ export class FilterDataService {
           return (taskDate >= fromDateTime && ( !toDate || taskDate <= toDateTime));
         });
       }
-
-      updatedTasks = updatedTasks.filter((item: any) => {
+      updatedTasks = updatedTasks?.filter((item: any) => {
         return item.type === "task";
       });
     }
     // actualList = this.augmentFilteredList(updatedTasks, allTasks);
-    return updatedTasks.map((item: any) => {
+    return updatedTasks?.map((item: any) => {
       return {...item, open: isProjectsExpanded};
     });
   }

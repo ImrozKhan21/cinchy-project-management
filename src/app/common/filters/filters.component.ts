@@ -35,14 +35,14 @@ export class FiltersComponent {
   activityTypes: IActivityType[];
   selectedProjectsAdvanced: IProjectDetails[];
   selectedWorkType: IActivityType[];
-  scopedTaskId: string;
+  scopedTaskId: string | undefined;
   isProjectsExpanded: boolean;
 
   dateRange: any;
   fromDate: any;
   toDate: any;
   allDateFilters = DateFilters;
-  selectedPreselectDateRange: string;
+  selectedPreselectDateRange: string | undefined;
   dateTypes = [
     { name: 'Start Date', code: 'start_date' },
     { name: 'End Date', code: 'end_date' }]
@@ -162,10 +162,26 @@ export class FiltersComponent {
     this.dateRange = [lastSevenDays.start, lastSevenDays.end];
   }
 
+  clearFilters() {
+    this.dateRange = undefined;
+    this.fromDate = undefined;
+    this.toDate = undefined;
+    this.selectedUserAdvanced = [];
+    this.selectedProjectUserAdvanced = [];
+    this.selectedDepartmentAdvanced = [];
+    this.selectedPortfoliosAdvanced = [];
+    this.selectedStatusesAdvanced = [];
+    this.selectedProjectsAdvanced = [];
+    this.selectedWorkType = [];
+    this.selectedPriorityAdvanced = [];
+    this.scopedTaskId = undefined;
+    this.isProjectsExpanded = false;
+    this.selectedPreselectDateRange = undefined;
+    this.apply();
+  }
+
   async apply(dontAddParam?: boolean) {
     const filterSelected = await this.getFiltersSelected();
-
-    console.log('filter APPL U', filterSelected, this.dateRange)
 
     this.appStateService.setFiltersState(filterSelected);
     this.appStateService.applyGlobalFilter({

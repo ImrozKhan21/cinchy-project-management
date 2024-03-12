@@ -9,17 +9,22 @@ export class CustomForm extends gantt.views["task/form"] {
   config() {
     ganttGlobalDataSingleton.setGanttFormInstance(this); // so that we can refresh form from outside if we change task while form being open
     const ui = super.config();
+  //  ui.width = 800; // TODO: it does not work
+
     const toolbar = ui.body.rows.find((row: any) => row.view === "toolbar");
     if (toolbar) {
       const doneButton = toolbar.elements.find((el: any) => el.value === "Done");
       if (doneButton) {
         // Add a click handler to the "Done" button
         doneButton.click = () => {
-          console.log("Done button clicked", ganttGlobalDataSingleton.currentTaskDetails, ganttGlobalDataSingleton.currentProjectDetails, ganttGlobalDataSingleton.viewType);
-          const taskDetails = ganttGlobalDataSingleton.currentTaskDetails;
+          const currentTaskOwnerId = ganttGlobalDataSingleton.getCurrentTaskOwner();
+          console.log("Done button clicked", ganttGlobalDataSingleton.viewType);
+          const taskDetails = {...ganttGlobalDataSingleton.currentTaskDetails, owner_id: currentTaskOwnerId};
           const projectDetails = ganttGlobalDataSingleton.currentProjectDetails;
+          console.log('111 TASK DETAISL', taskDetails);
+          console.log('111 projectDetails DETAISL', projectDetails);
           ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(taskDetails, ganttGlobalDataSingleton.viewType, 'gantt');
-          ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(projectDetails, ganttGlobalDataSingleton.viewType, 'gantt');
+       //   ganttGlobalDataSingleton.utilServiceInstance.updateActivityWithNewValues(projectDetails, ganttGlobalDataSingleton.viewType, 'gantt');
           // Additional logic for handling the click event
         };
       }
@@ -77,6 +82,10 @@ export class CustomForm extends gantt.views["task/form"] {
           ...item,
           name: "description",
           label: "Description",
+          view: "richtext",
+          labelPosition: "left",
+          labelAlign: "left",
+          value: currentFormValuesForCustomFields?.description || '',
           height: 120,
         };
         newFormElements.push(newItem);
@@ -137,7 +146,6 @@ export class CustomForm extends gantt.views["task/form"] {
 
     // insert "css" richselect below "type"
     form.elements = [...newFormElements];
-    console.log('111 fom', form.elements);
     const index = form.elements.findIndex((obj: any) => obj.name == "type");
     form.elements.splice(index + 1, 0, activityTypes);
     const indexOfActivityType = form.elements.findIndex((obj: any) => obj.name == "activity_type");
@@ -146,6 +154,7 @@ export class CustomForm extends gantt.views["task/form"] {
     form.elements.splice(indexOfStatus + 1, 0, priority);
     const indexOfDuration = form.elements.findIndex((obj: any) => obj.name == "duration");
     form.elements.splice(indexOfDuration + 1, 0, totalEffort);
-    form.elements.push(statusCommentary);
+    const indexOfDescription = form.elements.findIndex((obj: any) => obj.name == "progress");
+    form.elements.splice(indexOfDescription + 1, 0, statusCommentary);
   }
 }

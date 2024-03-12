@@ -383,7 +383,8 @@ export class ApiCallsService {
            [Priority],
            [Total Effort],
            [Status Commentary],
-           [Description]
+           [Description],
+           [Parent]
            )
                  VALUES (
                    @activity,
@@ -397,27 +398,12 @@ export class ApiCallsService {
                    @priority,
                    @effortId,
                    @statusCommentary,
-                   @description
+                   @description,
+                   ResolveLink(@parentId, 'Cinchy Id')
         )
         SELECT @cinchy_row_id as 'id';
         `;
 
-  /*  if(userId) {
-      query = `INSERT INTO [${actualModel}].[Work Management].[Work]
-           ([Name],
-           [Status],
-           [Owner],
-           [Type],
-           [Project]
-           )
-        VALUES (
-        @activity,
-        ResolveLink(@statusId,'Cinchy Id'),
-        ResolveLink(@userId,'Cinchy Id'),
-        ResolveLink(@activityTypeId,'Cinchy Id'),
-        ResolveLink(@projectId,'Cinchy Id')
-        ) `;
-    }*/
     const params = {
       '@activity': activityText,
       '@parentId': parentId,

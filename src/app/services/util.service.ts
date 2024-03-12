@@ -89,33 +89,23 @@ export class UtilService {
 
   }
 
-  insertNewProject(itemData: any, model: string, viewType?: string) {
-    const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.sort_order === 1) as IStatus;
-    this.appStateService.setSpinnerState(true);
-    const insertValues = {
-      startDate: itemData.start_date,
-      endDate: itemData.end_date,
-      activityText: itemData.text,
-      statusId: newStatus.id,
-    }
-    this.apiCallsService.insertProject(model, insertValues).pipe(take(1)).subscribe(() => {
-      this.appStateService.setSpinnerState(false);
-      if (viewType !== 'gantt') {
-        this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
-      }
-    });
-  }
-
   insertNewActivity(itemData: any, model: string, viewType?: string) {
     /*   const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => itemData.status ?
          itemData.status === statusItem.name : statusItem.sort_order === 1) as IStatus;*/
     let newStatus = this.appStateService.allStatuses
       .find((statusItem: IStatus) => statusItem.id == itemData.status_id) as IStatus;
+
+    // as from gantt, only status is updated
+    if (viewType === "gantt") {
+      newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.name == itemData.status) as IStatus;
+    }
+
     const activityTypeSelected = this.appStateService.activityTypes
       .find((type: IActivityType) => type.value === itemData.activity_type || type.id === Number(itemData.activity_type_id));
     let newEffortSelected = this.appStateService.estimates
       .find((effortItem: IComboType) => effortItem.id == itemData.effort_id) as IComboType;
     this.appStateService.setSpinnerState(true);
+
     const parentId = itemData.parent_id ? itemData.parent_id : Number(itemData.parent.split('-')[1]);
     const projectId = viewType === "kanban" ? parentId : this.getProjectId(itemData, parentId);
     const insertValues: any = {
@@ -132,8 +122,8 @@ export class UtilService {
       priority: itemData.priority,
       effortId: newEffortSelected?.id,
     }
-    if (itemData.user_id) {
-      insertValues.userId = itemData.user_id;
+    if (itemData.user_id || itemData.owner_id) {
+      insertValues.userId = itemData.user_id || `${itemData.owner_id}`;
     }
     this.apiCallsService.insertActivity(model, insertValues).pipe(take(1)).subscribe((response) => {
       this.appStateService.setSpinnerState(false);
@@ -155,10 +145,28 @@ export class UtilService {
     this.apiCallsService.deleteActivity(model, activityIdToUse).pipe(take(1)).subscribe(() => {
       this.appStateService.setSpinnerState(false);
       if (viewType !== 'gantt') {
+        this.messageService.add({severity: 'success', summary: 'Deleted', detail: 'Task deleted successfully'});
+      }
+    });
+  }
+
+  insertNewProject(itemData: any, model: string, viewType?: string) {
+    const newStatus = this.appStateService.allStatuses.find((statusItem: IStatus) => statusItem.sort_order === 1) as IStatus;
+    this.appStateService.setSpinnerState(true);
+    const insertValues = {
+      startDate: itemData.start_date,
+      endDate: itemData.end_date,
+      activityText: itemData.text,
+      statusId: newStatus.id,
+    }
+    this.apiCallsService.insertProject(model, insertValues).pipe(take(1)).subscribe(() => {
+      this.appStateService.setSpinnerState(false);
+      if (viewType !== 'gantt') {
         this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
       }
     });
   }
+
 
   getProjectId(itemData: any, parentId: number) {
     const parent = itemData.parent;
