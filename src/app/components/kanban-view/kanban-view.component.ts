@@ -168,6 +168,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
           projects: projectsForSelection,
           mileStoneWorkItems: mileStonesForSelection,
           editor: {
+            width: 600, // Set your desired width
             elements: [
               {
                 margin: 10,
@@ -176,24 +177,24 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
                     id: "project-combo",
                     view: "combo",
                     name: "parent_project",
-                    label: "Project",
+                    label: "Project*",
                     options: projectsForSelection,
                     disabled: true
                   },
-/*
-                  {id: "parent-combo", view: "combo", name: "parent_activity", label: "Milestone", options: mileStonesForSelection}
-*/
+                  /*
+                                    {id: "parent-combo", view: "combo", name: "parent_activity", label: "Milestone", options: mileStonesForSelection}
+                  */
                 ]
               },
               {
                 margin: 10,
                 cols: [
-                  {view: "text", name: "text", label: "Task"},
+                  {view: "text", name: "text", label: "Task*"},
                   {
                     id: "activity-type-combo",
                     view: "combo",
                     name: "activity_type_id",
-                    label: "Type",
+                    label: "Type*",
                     options: typesForSelection
                   }
                 ]
@@ -201,8 +202,14 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
               {
                 margin: 10,
                 cols: [
-                  {id: "user-combo", view: "combo", name: "user_id", label: "Assign to", options: userSet},
-                  {id: "status-combo", view: "combo", name: "status_id", label: "Status", options: statusesForSelection}
+                  {id: "user-combo", view: "combo", name: "user_id", label: "Assign to*", options: userSet},
+                  {
+                    id: "status-combo",
+                    view: "combo",
+                    name: "status_id",
+                    label: "Status*",
+                    options: statusesForSelection
+                  }
                 ]
               },
               {
@@ -230,13 +237,15 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
                 ]
               },
               {view: "textarea", height: 70, name: "status_commentary", label: "Status Commentary"},
-              {label:"Description", view:"label", height: 30 },
+              {label: "Description", view: "label", height: 30},
               {view: "richtext", height: 150, name: "description", labelPosition: "top", label: ""}
             ],
             rules: {
               parent_project: webix.rules.isNotEmpty,
               text: webix.rules.isNotEmpty,
-              activity_type_id: webix.rules.isNotEmpty
+              activity_type_id: webix.rules.isNotEmpty,
+              status_id: webix.rules.isNotEmpty,
+              user_id: webix.rules.isNotEmpty
             }
           },
           cardActions: [
@@ -277,6 +286,12 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
             onBeforeAdd: (obj: any, list: any, e: any) => {
               this.utilService.updateActivityWithNewValues({...list, type: 'task'}, 'INSERT', 'kanban');
             },
+            onBeforeEditorShow: () => {
+              const kanbanView: any = $$("kanban");
+              const editor: any = kanbanView.getEditor();
+              editor.define("width", 900); // Define the new width
+              editor.resize(); // Apply the new size
+            },
             onAfterEditorShow: () => {
               const kanbanView: any = $$("kanban");
               const editorForm: any = kanbanView.getEditor();
@@ -288,7 +303,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
             onBeforeEditorAction: (action: any, editor: any, obj: any) => {
               return !(action === "save" && !editor.getForm().validate());
             },
-              onBeforeDelete: (id: any) => {
+            onBeforeDelete: (id: any) => {
               const activityToDelete = mappedTasks.find((task: any) => task.id === id) || this.itemsAfterInsert?.find((task: any) => task.id === id);
               this.utilService.deleteActivity(activityToDelete.activity_id, 'kanban')
             },
