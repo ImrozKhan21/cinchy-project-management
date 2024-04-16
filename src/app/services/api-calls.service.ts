@@ -81,6 +81,8 @@ export class ApiCallsService {
     pa.[Type].[Icon URL] as 'activity_type_icon',
     pa.[Type].[Milestone] as 'milestone',
     pa.[Parent].[Cinchy Id] as 'parent_id',
+    pa.[Parent].[Name] as 'parent_name',
+    pa.[Parent].[Type].[Icon URL] as 'parent_type_icon',
     pa.[Dependencies].[Cinchy Id] as 'dependency_ids'
     FROM [${actualModel}].[Work Management].[Work] pa
     WHERE pa.[Deleted] IS NULL
@@ -95,7 +97,7 @@ export class ApiCallsService {
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
 
-  getAllStatuses(model: string): Observable<IStatus[]> {
+   getAllStatuses(model: string): Observable<IStatus[]> {
     const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
     const query = `SELECT
     psc.[Name] as 'name',
@@ -197,16 +199,17 @@ export class ApiCallsService {
       effortId,
       statusCommentary,
       description,
-      activityTypeId
+      activityTypeId,
+      parentActivityId
     } = updatedValues;
     if (!statusId || !activityId) {
       return of(null);
     }
     const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
     const query = `UPDATE a
-      SET a.[Status] = ResolveLink(@statusId, 'Cinchy Id'),
+      SET a.[Status] = @statusId,
           a.[Owner]  = CASE
-                         WHEN ISNUMERIC(@userId) = 1 THEN ResolveLink(@userId, 'Cinchy Id')
+                         WHEN ISNUMERIC(@userId) = 1 THEN @userIdResolve
                          ELSE a.[Owner]
             END,
           a.[Name]   = @activityText,
@@ -217,14 +220,16 @@ export class ApiCallsService {
           a.[Total Effort] = @effortId,
           a.[Status Commentary] = @statusCommentary,
           a.[Description] = @description,
-          a.[Type] = ResolveLink(@activityTypeId, 'Cinchy Id')
+          a.[Type] = @activityTypeId,
+          a.[Parent] = @parentActivityId
                    FROM [${actualModel}].[Work Management].[Work] a
                    WHERE a.[Deleted] IS NULL
                    AND a.[Cinchy Id] = @activityId
     `;
     const params = {
-      '@statusId': statusId,
+      '@statusId': statusId ? `${statusId},0` : null,
       '@userId': userId ? userId : null,
+      '@userIdResolve': userId ? `${userId},0` : null,
       '@activityText': activityText,
       '@activityId': activityId,
       '@progress': progress ? progress : 0,
@@ -234,14 +239,15 @@ export class ApiCallsService {
       '@effortId': effortId ? `${effortId},0` : null,
       '@statusCommentary': statusCommentary,
       '@description': description,
-      '@activityTypeId': activityTypeId
+      '@activityTypeId': activityTypeId ? `${activityTypeId},0` : null,
+      '@parentActivityId': parentActivityId ? `${parentActivityId},0` : null
     }
     // todo: change [Project Activity Owners] to [Project Owners]
     return this.cinchyService.executeCsql(query, params);
   }
 
   updateDatesForActivity(model: string, updatedValues: any): Observable<any> {
-    const {activityId, startDate, endDate, priority} = updatedValues;
+    const {activityId, startDate, endDate, priority, progress} = updatedValues;
     if (!activityId) {
       return of(null);
     }
@@ -251,7 +257,8 @@ export class ApiCallsService {
     SET
       a.[Start] = @startDate,
       a.[Finish] = @endData,
-      a.[Priority] = @priority
+      a.[Priority] = @priority,
+      a.[% Done] = @progress
     FROM [${actualModel}].[Work Management].[Work] a
     WHERE a.[Deleted] IS NULL
     AND a.[Cinchy Id] = @activityId
@@ -260,7 +267,8 @@ export class ApiCallsService {
       '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
       '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
       '@activityId': activityId,
-      '@priority': priority
+      '@priority': priority,
+      '@progress': progress ? progress : 0,
     }
     return this.cinchyService.executeCsql(query, params).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
@@ -274,13 +282,13 @@ export class ApiCallsService {
     const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
     const query = `UPDATE a
     SET
-    a.[Parent] = ResolveLink(@parentId,'Cinchy Id')
+    a.[Parent] = @parentId
     FROM [${actualModel}].[Work Management].[Work] a
     WHERE a.[Deleted] IS NULL
     AND a.[Cinchy Id] = @activityId
     `;
     const params = {
-      '@parentId': parentId,
+      '@parentId': parentId ? `${parentId},0` : null,
       '@activityId': activityId
     }
     // todo: change [Project Activity Owners] to [Project Owners]
@@ -295,13 +303,13 @@ export class ApiCallsService {
     const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
     const query = `UPDATE a
     SET
-    a.[Project] = ResolveLink(@parentId,'Cinchy Id')
+    a.[Project] = @parentId
     FROM [${actualModel}].[Work Management].[Work] a
     WHERE a.[Deleted] IS NULL
     AND a.[Cinchy Id] = @activityId
     `;
     const params = {
-      '@parentId': parentId,
+      '@parentId': parentId ? `${parentId},0` : null,
       '@activityId': activityId
     }
     // todo: change [Project Activity Owners] to [Project Owners]
@@ -316,7 +324,7 @@ export class ApiCallsService {
     const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
     const query = `UPDATE a
     SET
-    a.[Status] = ResolveLink(@statusId,'Cinchy Id'),
+    a.[Status] = @statusId,
     a.[Start] = @startDate,
     a.[Finish] = @endDate
     FROM [${actualModel}].[Work Management].[Projects] a
@@ -324,7 +332,7 @@ export class ApiCallsService {
     AND a.[Cinchy Id] = @projectId
     `;
     const params = {
-      '@statusId': statusId,
+      '@statusId': statusId ? `${statusId},0` : null,
       '@userId': userId,
       '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
       '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),

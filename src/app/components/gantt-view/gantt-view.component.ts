@@ -106,7 +106,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
           view: "gantt",
           id: "gantt",
           resources: true,
-          links: false,
+          links: true,
           display: this.currentViewType === 'resources' ? 'resources' : "tasks",
           resourcesDiagram: false,
           scales: [ganttGlobalDataSingleton.yearScale, ganttGlobalDataSingleton.monthScale],

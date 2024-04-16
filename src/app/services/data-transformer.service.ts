@@ -176,7 +176,7 @@ export class DataTransformerService {
         id: `activity-${taskItem.activity_id}`,
         dependencies: taskItem.dependency_ids ? `activity-${taskItem.dependency_ids}` : null,
         type: taskItem.milestone ? 'milestone' : 'task',
-        progress: taskItem.progress ? taskItem.progress * 100 : 0,
+        progress: taskItem.percent_done,
         parent: taskItem.parent_id ? `activity-${taskItem.parent_id}` : `project-${taskItem.project_id}`,
         isExisting: true
       };

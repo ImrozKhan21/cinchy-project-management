@@ -40,6 +40,7 @@ export class ConfigService {
       let department = this.getQueryStringValue('department', parentUri);
       let portfolio = this.getQueryStringValue('portfolio', parentUri);
       let priority = this.getQueryStringValue('priority', parentUri);
+      let activityId = this.getQueryStringValue('activityId', parentUri);
 
       modelId && sessionStorage.setItem('modelId', modelId);
       viewType && sessionStorage.setItem('viewType', viewType);
@@ -56,6 +57,7 @@ export class ConfigService {
       department && sessionStorage.setItem('department', department);
       portfolio && sessionStorage.setItem('portfolio', portfolio);
       priority && sessionStorage.setItem('priority', priority);
+      activityId && sessionStorage.setItem('activityId', activityId);
 
       if (!sessionStorage.getItem('modelId') || modelId) {
         modelId && modelId != "null" ? sessionStorage.setItem('modelId', modelId) : sessionStorage.setItem('modelId', '');
@@ -120,6 +122,10 @@ export class ConfigService {
 
       if (!sessionStorage.getItem('priority') || priority ) {
         priority && priority != "null" ? sessionStorage.setItem('priority', priority) : sessionStorage.setItem('priority', '');
+      }
+
+      if (!sessionStorage.getItem('activityId') || activityId ) {
+        activityId && activityId != "null" ? sessionStorage.setItem('activityId', activityId) : sessionStorage.setItem('activityId', '');
       }
     }
   }

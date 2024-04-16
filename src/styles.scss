@@ -200,6 +200,28 @@ body {
   }
 }
 
+.webix_gantt_link_left, .webix_gantt_link_right {
+  display: none;
+}
+
+/* customizing all folders and files in a tree */
+/*
+.webix_tree_folder, .webix_tree_folder_open{
+  background-image: url("https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500") !important;
+  background-position: 0px 4px !important
+}
+.webix_tree_file{
+  background-image: url(//docs.webix.com/samples/17_datatree/03_styles/icons/file.png);
+  background-position: 0px 4px !important;
+}
+
+.webix_tree .webix_tree_folder:before,
+.webix_tree .webix_tree_folder_open:before,
+.webix_tree .webix_tree_file:before, webix_tree_folder_open:before{
+  content:"" !important;
+}
+*/
+
 
 .custom-tag {
   border-radius: 10px;
@@ -207,6 +229,8 @@ body {
   padding: 0 10px;
   color: black;
   font-size: 10px;
+  min-height: 20px;
+  margin-bottom: 5px;
 }
 
 .center-item-flex {

@@ -67,11 +67,12 @@ export class AppComponent {
     const priority: any = sessionStorage.getItem('priority');
     this.showOnlyProjectFilter = showOnlyProjectFilter === "true";
     const hideHeader: any = sessionStorage.getItem('hideHeader');
+    const activityId: any = sessionStorage.getItem('activityId');
     this.hideHeader = hideHeader === "true";
     const queryParams: any = {
       modelId, viewType, owner, status, project,
       searchValue, projectOwner, isProjectsExpanded, hideHeader, showOnlyProjectFilter, scopedTaskId,
-      workType, department, portfolio, priority
+      workType, department, portfolio, priority, activityId
     };
     const cleanedQueryParams: any = Object.fromEntries(
       Object.entries(queryParams).filter(([key, value]) => Boolean(value))

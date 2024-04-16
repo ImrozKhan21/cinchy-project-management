@@ -1,16 +1,25 @@
 import {Injectable} from '@angular/core';
-import {IComboType, IProjectDetails, IStatus, IUser} from "../models/common.model";
+import {IComboType, IProjectDetails, IStatus, IUser, PRIORITY_OPTIONS} from "../models/common.model";
 import {AppStateService} from "./app-state.service";
 import {ActivatedRoute, Router} from "@angular/router";
-import {lastValueFrom, take} from "rxjs";
+import {lastValueFrom, Subject, take} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
 })
 export class FilterDataService {
+  filtersCleared$ = new Subject<boolean>();
 
   constructor(private appStateService: AppStateService, private activatedRoute: ActivatedRoute, private router: Router) {
 
+  }
+
+  setClearFilters() {
+    this.filtersCleared$.next(true);
+  }
+
+  getClearedFilters() {
+    return this.filtersCleared$.asObservable();
   }
 
   getUpdatedTasks(allTasks: any, filterValues: any, fromKanban?: boolean) {
@@ -28,17 +37,23 @@ export class FilterDataService {
       selectedPortfolios,
       selectedPriorities,
       dateRange,
-      selectedDateType
+      selectedDateType,
+      activityId
     } = filters;
 
     let updatedTasks = allTasks.slice(); // ON square can be ON, by making this a map object but our data is not that big
 
-    if (selectedStatuses?.length) {
+    if (activityId && fromKanban) {
+      return updatedTasks?.filter((item: any) => {
+        return item.id == activityId || item.activity_id == activityId;
+      });
+    }
+
+    if (selectedStatuses?.length && fromKanban) {
       updatedTasks = updatedTasks?.filter((task: any) => {
         return selectedStatuses.find((status: IStatus) => status.name === task.status);
       });
     }
-
     // because below all need to add either all children or parents back
     if (selectedProjects?.length || selectedProjectUsers?.length || selectedPortfolios?.length) {
       if (fromKanban && selectedProjects?.length) {
@@ -48,9 +63,10 @@ export class FilterDataService {
       } else {
         const slicedTasksForMultipleProjects: any = [];
         if (selectedProjects?.length) {
-          const hierarchyTasks = this.getAllHierarchyTask(selectedProjects, updatedTasks, fromKanban);
+          const hierarchyTasks = this.getAllHierarchyTask(selectedProjects, updatedTasks, fromKanban, allTasks);
           slicedTasksForMultipleProjects.push(...hierarchyTasks);
         }
+
         if (selectedPortfolios?.length) {
           const selectedProjects = updatedTasks?.filter((task: any) => {
             return selectedPortfolios.find((portfolio: IComboType) => {
@@ -65,7 +81,7 @@ export class FilterDataService {
         if (selectedProjectUsers?.length) {
           const selectedProjects = updatedTasks?.filter((task: any) => {
             return (selectedProjectUsers.find((ownerFilter: IUser) => (((ownerFilter.owner_id === task.owner_id
-                || ownerFilter.owner === task.owner) && task.type === 'project'))))
+              || ownerFilter.owner === task.owner) && task.type === 'project'))))
           });
           const hierarchyTasks = this.getAllHierarchyTask(selectedProjects, updatedTasks, fromKanban);
           slicedTasksForMultipleProjects.push(...hierarchyTasks);
@@ -77,8 +93,16 @@ export class FilterDataService {
     }
 
     // work owner or work type as both may need to add all parents
-    if (selectedUsers?.length || selectedWorkType?.length || selectedDepartment?.length || selectedPriorities?.length) {
+    if (selectedStatuses?.length || selectedUsers?.length || selectedWorkType?.length || selectedDepartment?.length || selectedPriorities?.length) {
       let [filteredItemsByWorkType, filteredItemsByWorkOwner, filterItemsByDepartmentType, filterItemsByPriority]: any = [[], [], [], []]
+      if (selectedStatuses?.length && !fromKanban) {
+        const filterByStatusOwnerFn = (task: any) => {
+          return selectedStatuses.some((status: any) => status.name === task.status);
+        };
+        filteredItemsByWorkOwner = this.findTasksAndAncestors(allTasks, filterByStatusOwnerFn, fromKanban);
+        filteredItemsByWorkOwner = filteredItemsByWorkOwner?.length ? filteredItemsByWorkOwner : [{}];
+      }
+
       if (selectedUsers?.length) {
         const filterByWorkOwnerFn = (task: any) => {
           return selectedUsers.some((ownerFilter: IUser) =>
@@ -148,11 +172,14 @@ export class FilterDataService {
         const toDateTime = new Date(toDate).setHours(0, 0, 0, 0);
         updatedTasks = updatedTasks?.filter((task: any) => {
           const taskDate = new Date(task[selectedDateType]).setHours(0, 0, 0, 0);
-          return (taskDate >= fromDateTime && ( !toDate || taskDate <= toDateTime));
+          return (taskDate >= fromDateTime && (!toDate || taskDate <= toDateTime));
         });
       }
       updatedTasks = updatedTasks?.filter((item: any) => {
         return item.type === "task";
+      });
+      updatedTasks?.sort((a: IProjectDetails, b: IProjectDetails) => {
+        return PRIORITY_OPTIONS[a.priority]?.order - PRIORITY_OPTIONS[b.priority]?.order;
       });
     }
     // actualList = this.augmentFilteredList(updatedTasks, allTasks);
@@ -161,7 +188,7 @@ export class FilterDataService {
     });
   }
 
-  getAllHierarchyTask(selectedProjects: any, updatedTasks: any, fromKanban?: boolean) {
+  getAllHierarchyTask(selectedProjects: any, updatedTasks: any, fromKanban?: boolean, allTasks?: any) {
     const needOnlyChildren = fromKanban;
     const hierarchyTasks: any = [];
     selectedProjects.forEach((task: any) => {
@@ -238,10 +265,8 @@ export class FilterDataService {
     let result: any[] = [];
     let resultWithParents: any[] = needAllTask ? result : [];
 
-
     let initialTask: any = taskMap.get(taskId);
     if (!initialTask) return;
-
     if (!needAllTask) {
       result.push(structuredClone({...initialTask, parent: 0})) // Add the current task
     }
@@ -289,6 +314,7 @@ export class FilterDataService {
 
     return common;
   }
+
   routeWithParams(scopedTaskId: string, isTaskSliced?: boolean) {
     const currentParams = this.activatedRoute.snapshot.queryParams;
     !scopedTaskId && sessionStorage.removeItem('scopedTaskId');

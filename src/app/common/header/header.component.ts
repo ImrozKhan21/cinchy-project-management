@@ -1,11 +1,12 @@
 import {ChangeDetectorRef, Component, Inject, Input, OnDestroy, OnInit, PLATFORM_ID} from '@angular/core';
-import {Observable, ReplaySubject, take} from "rxjs";
+import {Observable, ReplaySubject, take, takeUntil} from "rxjs";
 import {ApiCallsService} from "../../services/api-calls.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {AppStateService} from "../../services/app-state.service";
 import {WindowRefService} from "../../services/window-ref.service";
 import {map} from "rxjs/operators";
 import {MessageService} from "primeng/api";
+import {FilterDataService} from "../../services/filter-data.service";
 
 @Component({
   selector: 'app-header',
@@ -21,12 +22,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private destroyed$: ReplaySubject<boolean> = new ReplaySubject(1);
 
 
-  constructor(private apiCallsService: ApiCallsService, private changeDetectorRef: ChangeDetectorRef,
+  constructor(private apiCallsService: ApiCallsService, private filterDataService: FilterDataService,
               @Inject(PLATFORM_ID) private platformId: any, private activatedRoute: ActivatedRoute,
               private appStateService: AppStateService, private messageService: MessageService, private windowRefService: WindowRefService) {
   }
 
   ngOnInit(): void {
+    this.filterDataService.getClearedFilters().pipe(takeUntil(this.destroyed$)).subscribe(() => {
+      this.searchValue = '';
+    });
     this.currentUrl$ = this.activatedRoute.queryParams.pipe(map((params: any) => window.location.href));
     this.activatedRoute.queryParams.pipe(take(1)).subscribe(params => {
       let {searchValue} = params;

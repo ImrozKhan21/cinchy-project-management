@@ -48,6 +48,8 @@ export interface IProjectDetails {
   description?: string;
   work_url?: string;
   project_url?: string;
+  parent_name?: string
+  parent_type_icon?: string
 }
 
 export interface IStatus {
@@ -98,11 +100,11 @@ export const COLORS_MAP: any = {
 };
 
 export const PRIORITY_OPTIONS: { [key: string]: any } = {
-  '1. Very High': {id: '1. Very High', value: '1. Very High', color: 'orangered'},
-  '2. High': {id: '2. High', value: '2. High', color: 'orange'},
-  '3. Medium': {id: '3. Medium', value: '3. Medium', color: '#dee348cf'},
-  '4. Low': {id: '4. Low', value: '4. Low', color: '#00B050'},
-  '5. Very Low': {id: '5. Very Low', value: '5. Very Low', color: '#0070C0'}
+  '1. Very High': {id: '1. Very High', value: '1. Very High', color: 'orangered', order: 1},
+  '2. High': {id: '2. High', value: '2. High', color: 'orange', order: 2},
+  '3. Medium': {id: '3. Medium', value: '3. Medium', color: '#dee348cf', order: 3},
+  '4. Low': {id: '4. Low', value: '4. Low', color: '#00B050', order: 4},
+  '5. Very Low': {id: '5. Very Low', value: '5. Very Low', color: '#0070C0', order: 5},
 }
 
 

@@ -2,10 +2,12 @@ import {AfterViewInit, Component, ElementRef, HostListener, OnInit} from '@angul
 import {AppStateService} from "../../services/app-state.service";
 import {UtilService} from "../../services/util.service";
 import {Observable} from "rxjs";
-import {IProjectDetails, IStatus, PRIORITY_OPTIONS} from "../../models/common.model";
+import {IProjectDetails, IStatus} from "../../models/common.model";
 import {DataTransformerService} from "../../services/data-transformer.service";
 import {FilterDataService} from "../../services/filter-data.service";
-import {ConfigService} from "../../config.service";
+import {KanbanEditorService} from "../../services/kanban-editor.service";
+import { Clipboard } from '@angular/cdk/clipboard';
+import {MessageService} from "primeng/api";
 
 declare let webix: any;
 declare let kanban: any;
@@ -31,10 +33,12 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   dontMakeCallToUpdate: boolean = false;
   isDragged: boolean = false;
   itemsAfterInsert: any = [];
-
+  inProgress: boolean;
+  selectedProjects: IProjectDetails[];
   constructor(private element: ElementRef, private appStateService: AppStateService,
               private utilService: UtilService, private dataTransformerService: DataTransformerService,
-              private filterDataService: FilterDataService, private configService: ConfigService) {
+              private filterDataService: FilterDataService, private kanbanEditorService: KanbanEditorService,
+              private clipboard: Clipboard, private messageService: MessageService) {
   }
 
   ngOnInit() {
@@ -48,6 +52,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
         this.itemsAfterInsert = $$("kanban").serialize();
         kanban.updateItem(activity.id, activity);
         this.dontMakeCallToUpdate = false;
+    //    this.initKanban();
       }
     });
   }
@@ -59,11 +64,12 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   }
 
   setDetailsAndRender(filterValues: any) {
-    const selectedProjects = filterValues?.selectedProjects;
-    this.kanbanData = this.dataTransformerService.transformToKanbanData(this.appStateService.activities, selectedProjects);
+    this.selectedProjects = filterValues?.selectedProjects;
+    this.kanbanData = this.dataTransformerService.transformToKanbanData(this.appStateService.activities, this.selectedProjects);
     const {allTasks, projects} = this.kanbanData;
     this.filterValues = filterValues;
     let updatedTasks = this.filterDataService.getUpdatedTasks(allTasks.concat(projects), filterValues, true);
+    console.log('111 this.selectedProjects', this.selectedProjects, updatedTasks)
     this.kanbanData = {...this.kanbanData, mappedTasks: updatedTasks};
     this.kanbanView?.destructor();
     this.initKanban();
@@ -77,17 +83,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
         return `${defaultHtml}`;
       },
       templateFooter: (obj: any, common: any, kanban: any) => {
-        const defaultTags = common.templateTags(obj, common, kanban);
-        const defaultIconsString = common.templateIcons(obj, common, kanban);
-        // TODO: find a better way to do below replacing of icon
-        const updateIcons = defaultIconsString.replace('webix_kanban_icon kbi-cogs', 'wxi-dots');
-        const imageIcon = obj.activity_type_icon ? `<img height="20px" style="margin-right: 5px; height: 20px;" src=${obj.activity_type_icon}  alt="icon"/>` : '';
-        const defaultHtml =
-          `<span style="background-color: ${obj.rgb_project_color}" class="custom-tag" title="${obj.project_name}">
-            ${obj.project_name?.substring(0, 16)}...</span>` + updateIcons;
-        return `<span class="center-item-flex" title="${obj.activity_type}">
-                    ${imageIcon}
-                </span> ${defaultHtml}`;
+        return this.kanbanEditorService.getTemplateFooter(obj, common, kanban);
       }
     });
   }
@@ -100,18 +96,6 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
       value: project.project_name
     }));
 
-    const mileStonesForSelection = mileStoneWorkItems.map((workItem: any) => ({
-      id: workItem.activity_id,
-      value: workItem.text
-    }));
-
-    const statusesForSelection = this.appStateService.allStatuses.map((status: IStatus) => ({
-      id: status.id,
-      value: status.name
-    }));
-
-    const typesForSelection = this.appStateService.activityTypes;
-    const estimatesForSelection = this.appStateService.estimates;
     webix.CustomScroll.init();
 
     // Custom footer in cards (tags and icons)
@@ -166,94 +150,14 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
           users: userSet,
           tags: tagsList,
           projects: projectsForSelection,
-          mileStoneWorkItems: mileStonesForSelection,
-          editor: {
-            width: 600, // Set your desired width
-            elements: [
-              {
-                margin: 10,
-                cols: [
-                  {
-                    id: "project-combo",
-                    view: "combo",
-                    name: "parent_project",
-                    label: "Project*",
-                    options: projectsForSelection,
-                    disabled: true
-                  },
-                  /*
-                                    {id: "parent-combo", view: "combo", name: "parent_activity", label: "Milestone", options: mileStonesForSelection}
-                  */
-                ]
-              },
-              {
-                margin: 10,
-                cols: [
-                  {view: "text", name: "text", label: "Task*"},
-                  {
-                    id: "activity-type-combo",
-                    view: "combo",
-                    name: "activity_type_id",
-                    label: "Type*",
-                    options: typesForSelection
-                  }
-                ]
-              },
-              {
-                margin: 10,
-                cols: [
-                  {id: "user-combo", view: "combo", name: "user_id", label: "Assign to*", options: userSet},
-                  {
-                    id: "status-combo",
-                    view: "combo",
-                    name: "status_id",
-                    label: "Status*",
-                    options: statusesForSelection
-                  }
-                ]
-              },
-              {
-                margin: 10,
-                cols: [
-                  {view: "datepicker", name: "start_date", label: "Start Date"},
-                  {view: "datepicker", name: "end_date", label: "End Date"}
-                ]
-              },
-              {
-                margin: 10,
-                cols: [
-                  {
-                    id: "priority-combo", view: "combo", name: "priority", label: "Priority",
-                    options: Object.keys(PRIORITY_OPTIONS).map((key: string) => PRIORITY_OPTIONS[key])
-                  },
-                  {
-                    id: "estimates-combo",
-                    view: "combo",
-                    name: "effort_id",
-                    label: "Total Effort",
-                    options: estimatesForSelection
-                  },
-                  {id: "percent-done", view: "slider", name: "percent_done", label: "Percent Done"},
-                ]
-              },
-              {view: "textarea", height: 70, name: "status_commentary", label: "Status Commentary"},
-              {label: "Description", view: "label", height: 30},
-              {view: "richtext", height: 150, name: "description", labelPosition: "top", label: ""}
-            ],
-            rules: {
-              parent_project: webix.rules.isNotEmpty,
-              text: webix.rules.isNotEmpty,
-              activity_type_id: webix.rules.isNotEmpty,
-              status_id: webix.rules.isNotEmpty,
-              user_id: webix.rules.isNotEmpty
-            }
-          },
+          editor: this.kanbanEditorService.getKanbanEditor(this.kanbanData, projectsForSelection, this.selectedProjects, webix),
           cardActions: [
             //default
             "edit",
             // custom,
             'View Record',
-            'View Project'
+            'View Project',
+            'Copy Item URL'
           ],
           on: {
             onBeforeCardAction: (action: any, id: any) => {
@@ -265,6 +169,13 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
 
               if (action === "View Project") {
                 window.open(itemData.project_url, '_blank');
+              }
+
+              if (action === "Copy Item URL") {
+                const urlToShare = `${window.location.href}&activityId=${itemData.activity_id}`
+                this.clipboard.copy(urlToShare);
+                this.messageService.add({severity: 'success', summary: '', detail: 'Item URL copied'});
+                // window.open(itemData.project_url, '_blank');
               }
             },
             onListItemClick: (id: any, ev: any) => {
@@ -284,7 +195,12 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
               }
             },
             onBeforeAdd: (obj: any, list: any, e: any) => {
-              this.utilService.updateActivityWithNewValues({...list, type: 'task'}, 'INSERT', 'kanban');
+              const itemToUpdate = {...list};
+              if(!itemToUpdate.parent_id) {
+                itemToUpdate.parent_id = itemToUpdate.parent_project ? parseInt(itemToUpdate.parent_project.split('-')[1]) : null;
+                itemToUpdate.description = list.description && list.description !== "undefined" ? list.description : '';
+              }
+              this.utilService.updateActivityWithNewValues({...itemToUpdate, type: 'task'}, 'INSERT', 'kanban');
             },
             onBeforeEditorShow: () => {
               const kanbanView: any = $$("kanban");
@@ -300,8 +216,32 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
               // Check if the editor is for a new card
               !formValues.parent ? projectField.enable() : projectField.disable();
             },
-            onBeforeEditorAction: (action: any, editor: any, obj: any) => {
-              return !(action === "save" && !editor.getForm().validate());
+            onBeforeEditorAction: (action: any, editor: any, itemData: any) => {
+              if (this.inProgress || action === "remove") return true;
+              const isValid = editor.getForm().validate();
+              if (!isValid) {return false;}
+              const values = editor.getValues({hidden:false});
+              const saveBtn = editor.queryView({ label: "Save" });
+              const defHandler = saveBtn.config.click;
+              this.inProgress = true;
+              const operation = itemData.activity_id ? "update" : "insert";
+              const callToMake = operation === "update" ? this.utilService.updateActivityWithNewValues(itemData, 'UPDATE', 'kanban', this.isDragged)
+              : this.utilService.pingCallToCheckSession();
+              callToMake.then(() => {
+                // prevent duplicate calls to the server
+                if(operation === "update") { // as for update we have already made the call
+                  webix.dp(this).ignore(() => {
+                    // call the default save logic on success
+                    defHandler.call(editor);
+                  });
+                } else {
+                  defHandler.call(editor);
+                }
+                this.inProgress = false;
+              }).catch(error => {
+                this.inProgress = false;
+              });
+              return false;
             },
             onBeforeDelete: (id: any) => {
               const activityToDelete = mappedTasks.find((task: any) => task.id === id) || this.itemsAfterInsert?.find((task: any) => task.id === id);

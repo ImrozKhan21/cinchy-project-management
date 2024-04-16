@@ -5,6 +5,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {lastValueFrom, ReplaySubject, take} from "rxjs";
 import {DateFilters} from "../../models/general-values.model";
 import {UtilService} from "../../services/util.service";
+import {FilterDataService} from "../../services/filter-data.service";
 
 @Component({
   selector: 'app-filters',
@@ -47,13 +48,15 @@ export class FiltersComponent {
     { name: 'Start Date', code: 'start_date' },
     { name: 'End Date', code: 'end_date' }]
   selectedDateType = this.dateTypes[0];
+  activityId: string | undefined;
 
   filteredProjects: IProjectDetails[];
   private destroyed$: ReplaySubject<boolean> = new ReplaySubject(1);
 
 
   constructor(@Inject(PLATFORM_ID) private platformId: any, private activatedRoute: ActivatedRoute,
-              private appStateService: AppStateService, private utilService: UtilService,) {
+              private appStateService: AppStateService, private utilService: UtilService,
+              private filterDataService: FilterDataService) {
   }
 
   ngOnInit() {
@@ -74,8 +77,13 @@ export class FiltersComponent {
         workType,
         department,
         portfolio,
-        priority
+        priority,
+        activityId
       } = params;
+      if(activityId) {
+        this.activityId = activityId;
+      }
+
       if (status) {
         const allStatusesInParams: string[] = (decodeURIComponent(status)).split(',');
         this.selectedStatusesAdvanced = this.statuses.filter((statusItem: IStatus) => allStatusesInParams.includes(statusItem.name));
@@ -125,11 +133,11 @@ export class FiltersComponent {
     });
   }
 
-  async getFiltersSelected() {
+  async getFiltersSelected(clearSearch?: boolean) {
     const currentFilters = await lastValueFrom(this.appStateService.getGlobalFilter().pipe(take(1)));
     const currentSearchParamInState = this.appStateService.getFiltersState().searchValue;
     return {
-      searchValue: currentSearchParamInState,
+      searchValue: clearSearch ? '' : currentSearchParamInState,
       selectedProjectUsers: this.selectedProjectUserAdvanced,
       selectedUsers: this.selectedUserAdvanced,
       selectedStatuses: this.selectedStatusesAdvanced,
@@ -144,7 +152,8 @@ export class FiltersComponent {
         isTaskSliced: false
       },
       dateRange: this.dateRange,
-      selectedDateType: this.selectedDateType.code
+      selectedDateType: this.selectedDateType.code,
+      activityId: this.activityId
     };
   }
 
@@ -176,12 +185,14 @@ export class FiltersComponent {
     this.selectedPriorityAdvanced = [];
     this.scopedTaskId = undefined;
     this.isProjectsExpanded = false;
+    this.activityId = undefined;
     this.selectedPreselectDateRange = undefined;
-    this.apply();
+    this.filterDataService.setClearFilters();
+    this.apply(undefined, true);
   }
 
-  async apply(dontAddParam?: boolean) {
-    const filterSelected = await this.getFiltersSelected();
+  async apply(dontAddParam?: boolean, clearSearch?: boolean) {
+    const filterSelected = await this.getFiltersSelected(clearSearch);
 
     this.appStateService.setFiltersState(filterSelected);
     this.appStateService.applyGlobalFilter({

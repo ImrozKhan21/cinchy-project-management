@@ -176,7 +176,7 @@
   </div>
 
   <p-button styleClass="p-button-sm" label="Apply" (click)="apply()"></p-button>
-  <p-button styleClass="p-button-link" label="Clear" (click)="clearFilters()"></p-button>
+  <p-button styleClass="p-button-sm p-button-secondary" label="Clear" (click)="clearFilters()"></p-button>
 
   <div class="checkbox-wrapper" *ngIf="viewType === 'gantt'">
     <p-checkbox inputId="ny" [(ngModel)]="isProjectsExpanded" [binary]="true"
