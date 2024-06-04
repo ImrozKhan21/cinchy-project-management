@@ -76,9 +76,20 @@ export class AppStateService {
     }
   }
 
+  mergeObjectsWithout$Keys(obj1: any, obj2: any) {
+    let filteredObj2: any = {};
+    for (let key in obj2) {
+      if (!key.startsWith('$')) {
+        filteredObj2[key] = obj2[key];
+      }
+    }
+    return { ...obj1, ...filteredObj2 };
+  }
+
   updateActivitiesStateOnUpdateForKanban(activity: any, newStatus: IStatus) {
     const kanban: any = $$("kanban");
-    const activityToUpdate: any = kanban.getItem(activity.id);
+    let activityToUpdate: any = kanban.getItem(activity.id);
+      activityToUpdate = this.mergeObjectsWithout$Keys(activityToUpdate, activity);
     // Update status
     if (newStatus && activityToUpdate) {
       activityToUpdate.status = newStatus.name;

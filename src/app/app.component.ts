@@ -49,7 +49,7 @@ export class AppComponent {
   }
 
   async setDetails() {
-    await lastValueFrom(this.apiCallsService.getEnvDetails());
+   // await lastValueFrom(this.apiCallsService.getEnvDetails());
     this.isLoggedIn = true;
     const modelId: any = sessionStorage.getItem('modelId');
     const viewType: any = sessionStorage.getItem('viewType');

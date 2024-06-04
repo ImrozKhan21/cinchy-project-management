@@ -59,7 +59,8 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
     let updatedTasks = this.filterDataService.getUpdatedTasks(allTasks, filterValues);
     ganttGlobalDataSingleton.setProjectDetails({
       ...ganttGlobalDataSingleton.projectDetails, mappedTasks: updatedTasks,
-      allStatuses: this.appStateService.allStatuses, activityTypes: this.appStateService.activityTypes
+      allStatuses: this.appStateService.allStatuses, activityTypes: this.appStateService.activityTypes,
+      allUsers: this.appStateService.users
     });
     this.ganttView?.destructor();
     this.initGantt();
@@ -138,6 +139,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
       }
       let currentFormValues = ganttGlobalDataSingleton.projectDetails.mappedTasks.find((task: IProjectDetails) => task.id === id);
       ganttGlobalDataSingleton.setCurrentTaskDetailsForFormValues(currentFormValues);
+      ganttGlobalDataSingleton.setCurrentTaskDetails(currentFormValues);
       if (formInstance) {
         formInstance.refresh()
       }

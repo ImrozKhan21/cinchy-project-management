@@ -35,9 +35,8 @@ export class GanttBackendService extends gantt.services.Backend {
 
   addTask(taskDetails: any) {
     ganttGlobalDataSingleton.setViewType('INSERT');
-    console.log('111 add task', ganttGlobalDataSingleton.currentTaskDetails, taskDetails)
     const currentTaskDetails = {...ganttGlobalDataSingleton.currentTaskDetails, ...taskDetails};
-    if (taskDetails.parent) {
+    if (taskDetails.parent && (taskDetails.type ==='task' || taskDetails.type === 'milestone')) {
       ganttGlobalDataSingleton.setCurrentTaskDetails(currentTaskDetails);
     } else {
       ganttGlobalDataSingleton.setCurrentProjectDetails(taskDetails);
@@ -49,7 +48,7 @@ export class GanttBackendService extends gantt.services.Backend {
 
   updateTask(taskId: any, taskDetails: any, e: any, i: any) {
     ganttGlobalDataSingleton.setViewType('UPDATE');
-    if (taskDetails.parent) {
+    if (taskDetails.parent && (taskDetails.type ==='task' || taskDetails.type === 'milestone')) {
       ganttGlobalDataSingleton.setCurrentTaskDetails(taskDetails);
     } else {
       ganttGlobalDataSingleton.setCurrentProjectDetails(taskDetails);

@@ -35,6 +35,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   itemsAfterInsert: any = [];
   inProgress: boolean;
   selectedProjects: IProjectDetails[];
+  formKeys: string[];
   constructor(private element: ElementRef, private appStateService: AppStateService,
               private utilService: UtilService, private dataTransformerService: DataTransformerService,
               private filterDataService: FilterDataService, private kanbanEditorService: KanbanEditorService,
@@ -69,7 +70,6 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
     const {allTasks, projects} = this.kanbanData;
     this.filterValues = filterValues;
     let updatedTasks = this.filterDataService.getUpdatedTasks(allTasks.concat(projects), filterValues, true);
-    console.log('111 this.selectedProjects', this.selectedProjects, updatedTasks)
     this.kanbanData = {...this.kanbanData, mappedTasks: updatedTasks};
     this.kanbanView?.destructor();
     this.initKanban();
@@ -120,7 +120,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
                 kanbanView.showEditor();
                 const editorForm: any = kanbanView.getEditor();
                 const formValues = editorForm.getValues();
-                const projectField = $$('project-combo');
+                const projectField = $$('parent_project');
                 const selectedProject = this.filterValues?.selectedProjects;
                 if (selectedProject?.length === 1) {
                   const updatedFormValues = {
@@ -185,7 +185,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
               const editorForm: any = kanbanView.getEditor();
               const formValues = kanbanView.getItem(id);
               kanbanView.showEditor();
-              const projectField = $$('project-combo');
+              const projectField = $$('parent_project');
               !formValues.parent ? projectField.enable() : projectField.disable();
               editorForm.setValues(formValues);
             },
@@ -205,15 +205,38 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
             onBeforeEditorShow: () => {
               const kanbanView: any = $$("kanban");
               const editor: any = kanbanView.getEditor();
+              const formValues = editorForm.getValues();
+              this.formKeys = this.formKeys ? this.formKeys : Object.keys(formValues);
               editor.define("width", 900); // Define the new width
               editor.resize(); // Apply the new size
             },
-            onAfterEditorShow: () => {
+            onAfterEditorShow: (task: any, i: any) => {
               const kanbanView: any = $$("kanban");
               const editorForm: any = kanbanView.getEditor();
               const formValues = editorForm.getValues();
-              const projectField = $$('project-combo');
+
+              const projectField = $$('parent_project');
               // Check if the editor is for a new card
+              this.formKeys?.forEach((key: string) => {
+                const canEditKey = `can_edit-${key}`;
+                if (formValues[key] && formValues[canEditKey] === 0) {
+                  $$(key).disable();
+                }
+              });
+              /*activity_type_id: ""
+description: "Work items should be added based on the level they are added"
+effort_id: ""
+end_date: null
+parent_activity: ""
+parent_project: ""
+percent_done: 0
+priority: ""r
+start_date: null
+status_commentary: ""
+status_id: ""
+text: ""
+user_id: ""
+*/
               !formValues.parent ? projectField.enable() : projectField.disable();
             },
             onBeforeEditorAction: (action: any, editor: any, itemData: any) => {

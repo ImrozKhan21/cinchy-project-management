@@ -9,7 +9,7 @@ import {UtilService} from "./util.service";
 })
 export class DataTransformerService {
 
-  constructor(private appStateService: AppStateService, private utilService: UtilService) {
+  constructor(private appStateService: AppStateService, private utilService: UtilService, private messageService: MessageService) {
   }
 
   transformToKanbanData(projectDetails: IProjectDetails[], selectedProjects?: IProjectDetails[]) {
@@ -119,13 +119,19 @@ export class DataTransformerService {
       {id: 9, value: "CC", image: "../common/imgs/9.jpg"}
     ];
 
-    return this.appStateService.users.map((user, index) => {
-      return {
-        image: user.owner_photo,
-        id: user.owner_id,
-        value: user.owner
-      }
-    });
+    try {
+      return this.appStateService.users.map((user, index) => {
+        return {
+          image: user.owner_photo,
+          id: user.owner_id,
+          value: user.owner
+        }
+      });
+    } catch (e) {
+      this.messageService.add({severity: 'error', summary: 'Error', detail: 'Error in fetching work owners'});
+      return [];
+    }
+
   }
 
   transformToTags(workItems: any) {
@@ -167,7 +173,6 @@ export class DataTransformerService {
         open: true
       };
     });
-
     const childMappedTasks = projectDetails.map((taskItem, i: number) => {
       return {
         ...taskItem,

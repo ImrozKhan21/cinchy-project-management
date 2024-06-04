@@ -33,7 +33,7 @@ export class KanbanEditorService {
           margin: 10,
           cols: [
             {
-              id: "project-combo",
+              id: "parent_project",
               view: "combo",
               name: "parent_project",
               label: "Project*",
@@ -41,7 +41,7 @@ export class KanbanEditorService {
               disabled: true
             },
             {
-              id: "parent-combo",
+              id: "parent_activity",
               view: "combo",
               name: "parent_activity",
               label: "Parent",
@@ -52,9 +52,9 @@ export class KanbanEditorService {
         {
           margin: 10,
           cols: [
-            {view: "text", name: "text", label: "Task*"},
+            { id: "text", view: "text", name: "text", label: "Task*"},
             {
-              id: "activity-type-combo",
+              id: "activity_type_id",
               view: "combo",
               name: "activity_type_id",
               label: "Type*",
@@ -65,9 +65,9 @@ export class KanbanEditorService {
         {
           margin: 10,
           cols: [
-            {id: "user-combo", view: "combo", name: "user_id", label: "Assignee*", options: userSet},
+            {id: "user_id", view: "combo", name: "user_id", label: "Assignee*", options: userSet},
             {
-              id: "status-combo",
+              id: "status_id",
               view: "combo",
               name: "status_id",
               label: "Status*",
@@ -78,8 +78,8 @@ export class KanbanEditorService {
         {
           margin: 10,
           cols: [
-            {view: "datepicker", name: "start_date", label: "Start Date"},
-            {view: "datepicker", name: "end_date", label: "End Date"}
+            { id: "start_date", view: "datepicker", name: "start_date", label: "Start Date"},
+            { id: "end_date", view: "datepicker", name: "end_date", label: "End Date"}
           ]
         },
         {

@@ -11,6 +11,10 @@ body {
   margin: 0;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .nic-editor, .webix_richtext {
   margin-top: 0 !important;
 }

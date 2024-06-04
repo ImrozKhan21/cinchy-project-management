@@ -25,12 +25,12 @@ export class ApiCallsService {
     pj.[Name] as 'project_name',
     pj.[Name] as 'text',
     pj.[Cinchy Id] as 'project_id',
-    pj.[Colour].[Hex Code] as 'project_color',
+    pj.[Colour].[Hex Value] as 'project_color',
     pj.[Status].[Name] as 'status',
-    pj.[Status].[Cinchy Id] as 'statusId',
-    pj.[Status].[Sort Order] as 'status_sort',
+    pj.[Status].[Cinchy Id] as 'status_id',
+    pj.[Status].[Sequence] as 'status_sort',
     pj.[Project Manager].[Name] as 'owner',
-    pj.[Project Manager].[Photo] as 'owner_photo',
+    pj.[Project Manager].[Photo URL] as 'owner_photo',
     pj.[Project Manager].[Cinchy Id] as 'owner_id',
     pj.[Start]  as 'start_date',
     pj.[Finish] as 'end_date',
@@ -51,43 +51,70 @@ export class ApiCallsService {
     //[Project Management Skin Model V1.0.0]
     const query = `SELECT
     pa.[Project].[Name] as 'project_name',
+    Editable(pa.[Project].[Name]) as 'can_edit-project_name',
     pa.[Project].[Portfolio] as 'project_portfolio',
+    Editable(pa.[Project].[Portfolio]) as 'can_edit-project_portfolio',
     pa.[Project].[URL] as 'project_url',
+    Editable(pa.[Project].[URL]) as 'can_edit-project_url',
     pa.[Project].[Project Manager].[Cinchy Id] as 'project_owner_id',
+    Editable(pa.[Project].[Project Manager].[Cinchy Id]) as 'can_edit-project_owner_id',
     pa.[Project].[Cinchy Id] as 'project_id',
-    pa.[Project].[Colour].[Hex Code] as 'project_color',
+    Editable(pa.[Project].[Cinchy Id]) as 'can_edit-project_id',
+    pa.[Project].[Colour].[Hex Value] as 'project_color',
+    Editable(pa.[Project].[Colour].[Hex Value]) as 'can_edit-project_color',
     pa.[Cinchy Id] as 'activity_id',
+    Editable(pa.[Cinchy Id]) as 'can_edit-activity_id',
     pa.[Status].[Name] as 'status',
-    pa.[Status].[Colour] as 'status_color',
-    pa.[Status].[Colour].[Hex Code] as 'status_color_hex',
+    Editable(pa.[Status].[Name]) as 'can_edit-status',
+    pa.[Status].[Display Colour] as 'status_color',
+    pa.[Status].[Display Colour].[Hex Value] as 'status_color_hex',
     pa.[Status].[Cinchy Id] as 'status_id',
-    pa.[Status].[Sort Order] as 'status_sort',
+    Editable(pa.[Status].[Cinchy Id]) as 'can_edit-status_id',
+    pa.[Status].[Sequence] as 'status_sort',
     pa.[Owner].[Name] as 'owner',
-    pa.[Owner].[Photo] as 'owner_photo',
+    Editable(pa.[Owner].[Name]) as 'can_edit-owner',
+    pa.[Owner].[Photo URL] as 'owner_photo',
     pa.[Owner].[Cinchy Id] as 'owner_id',
+    Editable(pa.[Owner].[Cinchy Id]) as 'can_edit-owner_id',
     pa.[Owner].[Department] as 'owner_department',
+    Editable(pa.[Owner].[Department]) as 'can_edit-owner_department',
     pa.[Start] as 'start_date',
+    Editable(pa.[Start]) as 'can_edit-start_date',
     pa.[Finish] as 'end_date',
+    Editable(pa.[Finish]) as 'can_edit-end_date',
     pa.[% Done] * 100 as 'percent_done',
+    Editable(pa.[% Done]) as 'can_edit-percent_done',
     pa.[Name] as 'text',
+    Editable(pa.[Name]) as 'can_edit-text',
     pa.[Type] as 'activity_type',
+    Editable(pa.[Type]) as 'can_edit-activity_type',
     pa.[Priority] as 'priority',
+    Editable(pa.[Priority]) as 'can_edit-priority',
     pa.[URL] as 'work_url',
+    Editable(pa.[URL]) as 'can_edit-work_url',
     pa.[Description] as 'description',
+    Editable(pa.[Description]) as 'can_edit-description',
     pa.[Total Effort] as 'effort',
+    Editable(pa.[Total Effort]) as 'can_edit-effort',
     pa.[Total Effort].[Cinchy Id] as 'effort_id',
+    Editable(pa.[Total Effort].[Cinchy Id]) as 'can_edit-effort_id',
     pa.[Status Commentary] as 'status_commentary',
+    Editable(pa.[Status Commentary]) as 'can_edit-status_commentary',
     pa.[Type].[Cinchy Id] as 'activity_type_id',
+    Editable(pa.[Type].[Cinchy Id]) as 'can_edit-activity_type_id',
     pa.[Type].[Icon URL] as 'activity_type_icon',
     pa.[Type].[Milestone] as 'milestone',
+    Editable(pa.[Type].[Milestone]) as 'can_edit-milestone',
     pa.[Parent].[Cinchy Id] as 'parent_id',
+    Editable(pa.[Parent].[Cinchy Id]) as 'can_edit-parent_id',
     pa.[Parent].[Name] as 'parent_name',
+    Editable(pa.[Parent].[Name]) as 'can_edit-parent_name',
     pa.[Parent].[Type].[Icon URL] as 'parent_type_icon',
-    pa.[Dependencies].[Cinchy Id] as 'dependency_ids'
-    FROM [${actualModel}].[Work Management].[Work] pa
-    WHERE pa.[Deleted] IS NULL
-    AND pa.[Name] IS NOT NULL
-    ORDER BY
+    pa.[Upstream Dependencies].[Cinchy Id] as 'dependency_ids'
+                   FROM [${actualModel}].[Work Management].[Work] pa
+                   WHERE pa.[Deleted] IS NULL
+                     AND pa.[Name] IS NOT NULL
+                   ORDER BY
                      CASE
                      WHEN pa.[Priority] IS NULL THEN 1
                      ELSE 0
@@ -101,14 +128,14 @@ export class ApiCallsService {
     const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
     const query = `SELECT
     psc.[Name] as 'name',
-    psc.[Sort Order] as 'sort_order',
-    psc.[Colour] as 'status_color',
-    psc.[Colour].[Hex Code] as 'status_color_hex',
+    psc.[Sequence] as 'sort_order',
+    psc.[Display Colour] as 'status_color',
+    psc.[Display Colour].[Hex Value] as 'status_color_hex',
     psc.[Default Kanban Behaviour] as 'status_collapsed',
     psc.[Cinchy Id] as 'id'
     FROM [${actualModel}].[Work Management].[Project Status Codes] psc
     WHERE psc.[Deleted] IS NULL
-    ORDER BY psc.[Sort Order]`;
+    ORDER BY psc.[Sequence]`;
     return this.cinchyService.executeCsql(query, {}).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
@@ -119,7 +146,7 @@ export class ApiCallsService {
       SELECT
       ppl2.[Cinchy Id] as 'owner_id',
       ppl2.[Label] as 'owner',
-      ppl2.[Photo] as 'owner_photo'
+      ppl2.[Photo URL] as 'owner_photo'
       FROM [${actualModel}].[Work Management].[People] ppl2
     WHERE ppl2.[Deleted] IS NULL
     AND ppl2.[Can Be Assigned] = 1

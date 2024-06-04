@@ -21,12 +21,14 @@ export class CustomTree extends gantt.views.tree {
     };
 
     ui.on.onViewResize = () => {
-      if (alreadyResized) {return;}
+      if (alreadyResized) {
+        return;
+      }
 
       const newMinWidth = '200px';
       // Select elements by class and apply new min-width
       const elements = document.querySelectorAll('.webix_gantt_tree, .webix_hs_center, .webix_ss_center');
-      elements.forEach(function(element: any) {
+      elements.forEach(function (element: any) {
         element.style.minWidth = newMinWidth;
       });
       alreadyResized = true;
@@ -36,9 +38,19 @@ export class CustomTree extends gantt.views.tree {
       if (column.id === "text") {
         column.width = 300;
         column.minWidth = 300;
+        column.template = (obj: any, common: any) => {
+          let icon = obj.$count ? "folder" : "file";
+          let space = "<span style='display:inline-block; width:" + ((obj.$level - 1) * 20) + "px;'></span>";
+          const imageIcon = obj.activity_type_icon ?
+            `<img height="20px" style="margin-right: 5px; margin-top: 5px; height: 20px;" src=${obj.activity_type_icon}  alt="icon"/>`
+            : `<span class='webix_icon wxi-${icon}'></span>`;
+          return `${space}${common.icon(obj, common)}
+                    <span class='webix_icon'>${imageIcon}</span>
+                    <span>${obj.text}</span>`;
+        };
       }
 
-      if(column.id === "action") {
+      if (column.id === "action") {
         column.header.css = `${column.header.css} gantt-action-column`;
       }
     });

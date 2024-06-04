@@ -88,6 +88,7 @@ export interface IDetails {
   links: any;
   effortEstimate?: any;
   activityTypes: IActivityType[];
+  allUsers: IUser[];
 }
 
 export const COLORS_MAP: any = {

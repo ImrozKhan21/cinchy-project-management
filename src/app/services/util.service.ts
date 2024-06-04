@@ -79,8 +79,8 @@ export class UtilService {
           this.appStateService.setSpinnerState(false);
           if (viewType !== 'gantt') {
             this.appStateService.updateActivitiesStateOnUpdateForKanban(itemData, newStatus);
-            this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
           }
+          this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
           resolve('success');
         }, error => {
           this.messageService.add({severity: 'error', summary: 'Error', detail: 'Error in updating work item'});
@@ -90,9 +90,7 @@ export class UtilService {
       } else if (type === "project") {
         this.apiCallsService.updateProject(model, updatedValues).pipe(take(1)).subscribe(() => {
           this.appStateService.setSpinnerState(false);
-          if (viewType !== 'gantt') {
-            this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
-          }
+          this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});
           resolve('success');
         }, error => {
           this.messageService.add({severity: 'error', summary: 'Error', detail: 'Error in updating project'});

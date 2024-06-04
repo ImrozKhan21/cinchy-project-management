@@ -126,9 +126,10 @@ export class FilterDataService {
       if (selectedDepartment?.length) {
         const filterByDepartmentTypeFn = (task: IProjectDetails) => {
           return selectedDepartment.some((department: IComboType) =>
-            task.owner_department && (task.owner_department === department.value)
+            task.owner_department && (department.value.includes(task.owner_department))
           );
         };
+
         filterItemsByDepartmentType = this.findTasksAndAncestors(allTasks, filterByDepartmentTypeFn, fromKanban);
         filterItemsByDepartmentType = filterItemsByDepartmentType?.length ? filterItemsByDepartmentType : [{}];
       }
@@ -228,7 +229,6 @@ export class FilterDataService {
     if (!fromKanban) {
       relevantIds.forEach(markAncestors);
     }
-
     // Step 3: Collect all relevant tasks and their ancestors into the final list
     return items.filter((item: any) => relevantIds.has(item.id));
   }
