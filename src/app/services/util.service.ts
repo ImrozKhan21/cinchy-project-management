@@ -77,7 +77,7 @@ export class UtilService {
         this.appStateService.setSpinnerState(true);
         this.apiCallsService.updateActivity(model, updatedValues).pipe(take(1)).subscribe(() => {
           this.appStateService.setSpinnerState(false);
-          if (viewType !== 'gantt') {
+          if (viewType !== 'gantt') { // todo: check if we need to do it for GANTT too
             this.appStateService.updateActivitiesStateOnUpdateForKanban(itemData, newStatus);
           }
           this.messageService.add({severity: 'success', summary: 'Success', detail: 'Task updated'});

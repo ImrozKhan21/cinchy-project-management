@@ -180,6 +180,8 @@ export class DataTransformerService {
         end_date: taskItem.end_date ? new Date(taskItem.end_date) : taskItem.start_date ? new Date(taskItem.start_date) : new Date(),
         id: `activity-${taskItem.activity_id}`,
         dependencies: taskItem.dependency_ids ? `activity-${taskItem.dependency_ids}` : null,
+        parent_activity: taskItem.parent_id,
+        parent_project: `project-${taskItem.project_id}`,
         type: taskItem.milestone ? 'milestone' : 'task',
         progress: taskItem.percent_done,
         parent: taskItem.parent_id ? `activity-${taskItem.parent_id}` : `project-${taskItem.project_id}`,

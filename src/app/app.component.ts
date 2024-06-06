@@ -77,12 +77,10 @@ export class AppComponent {
     const cleanedQueryParams: any = Object.fromEntries(
       Object.entries(queryParams).filter(([key, value]) => Boolean(value))
     );
-    this.router.navigate([`/`], {queryParams: cleanedQueryParams});
-    this.getViewDetailsAndSetStates();
-
+    this.getViewDetailsAndSetStates(cleanedQueryParams);
   }
 
-  getViewDetailsAndSetStates() {
+  getViewDetailsAndSetStates(cleanedQueryParams: any) {
  /*   this.apiCallsService.getTableEntitlements().subscribe((response: any) => {
       console.log('entitlements', response);
     })*/
@@ -126,6 +124,8 @@ export class AppComponent {
         this.appStateService.departments = departments;
         this.appStateService.portfolios = portfolios;
         this.projectDetails = this.appStateService.activities;
+        this.router.navigate([], {queryParams: cleanedQueryParams});
+
       },catchError(error => {
         return of('Fetch API failed')
       }));

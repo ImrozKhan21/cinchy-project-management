@@ -94,13 +94,14 @@ export class FilterDataService {
 
     // work owner or work type as both may need to add all parents
     if (selectedStatuses?.length || selectedUsers?.length || selectedWorkType?.length || selectedDepartment?.length || selectedPriorities?.length) {
-      let [filteredItemsByWorkType, filteredItemsByWorkOwner, filterItemsByDepartmentType, filterItemsByPriority]: any = [[], [], [], []]
+      let [filteredItemsByStatus, filteredItemsByWorkType, filteredItemsByWorkOwner, filterItemsByDepartmentType, filterItemsByPriority]: any
+        = [[], [], [], [], []]
       if (selectedStatuses?.length && !fromKanban) {
-        const filterByStatusOwnerFn = (task: any) => {
+        const filterByStatusFn = (task: any) => {
           return selectedStatuses.some((status: any) => status.name === task.status);
         };
-        filteredItemsByWorkOwner = this.findTasksAndAncestors(allTasks, filterByStatusOwnerFn, fromKanban);
-        filteredItemsByWorkOwner = filteredItemsByWorkOwner?.length ? filteredItemsByWorkOwner : [{}];
+        filteredItemsByStatus = this.findTasksAndAncestors(allTasks, filterByStatusFn, fromKanban);
+        filteredItemsByStatus = filteredItemsByStatus?.length ? filteredItemsByStatus : [{}];
       }
 
       if (selectedUsers?.length) {
@@ -144,7 +145,7 @@ export class FilterDataService {
         filterItemsByPriority = filterItemsByPriority?.length ? filterItemsByPriority : [{}];
       }
 
-      updatedTasks = this.findCommonObjects(updatedTasks, filteredItemsByWorkType,
+      updatedTasks = this.findCommonObjects(updatedTasks, filteredItemsByStatus, filteredItemsByWorkType,
         filteredItemsByWorkOwner, filterItemsByDepartmentType, filterItemsByPriority);
     }
 
@@ -319,6 +320,8 @@ export class FilterDataService {
     const currentParams = this.activatedRoute.snapshot.queryParams;
     !scopedTaskId && sessionStorage.removeItem('scopedTaskId');
     const params = {...currentParams, scopedTaskId: isTaskSliced ? null : scopedTaskId}
+    console.log('STATS', params);
+
     this.router.navigate(
       [],
       {

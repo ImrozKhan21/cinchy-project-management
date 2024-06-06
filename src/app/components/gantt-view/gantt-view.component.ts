@@ -144,7 +144,15 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
         formInstance.refresh()
       }
     });
+  }
 
+
+  scrollToToday() {
+    const today = new Date();
+    const gantt1 = $$("gantt");/*
+    if (gantt1) {
+      gantt1.scrollTo(today);
+    }*/
   }
 
   static getScales(minScale: any) {

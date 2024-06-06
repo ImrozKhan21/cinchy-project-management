@@ -124,7 +124,7 @@ export class ApiCallsService {
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
 
-   getAllStatuses(model: string): Observable<IStatus[]> {
+  getAllStatuses(model: string): Observable<IStatus[]> {
     const actualModel = model ? model : 'Cinchy Work Management V1.0.0';
     const query = `SELECT
     psc.[Name] as 'name',
@@ -456,7 +456,7 @@ export class ApiCallsService {
     }
     console.log('PARAMS', params);
     // todo: change [Project Activity Owners] to [Project Owners]
-   // return of(null);
+    // return of(null);
     return this.cinchyService.executeCsql(query, params).pipe(
       map((resp: any) => resp?.queryResult?.toObjectArray()));
   }
