@@ -86,22 +86,22 @@ export class KanbanEditorService {
           margin: 10,
           cols: [
             {
-              id: "priority-combo", view: "combo", name: "priority", label: "Priority",
+              id: "priority", view: "combo", name: "priority", label: "Priority",
               options: Object.keys(PRIORITY_OPTIONS).map((key: string) => PRIORITY_OPTIONS[key])
             },
             {
-              id: "estimates-combo",
+              id: "effort_id",
               view: "combo",
               name: "effort_id",
               label: "Total Effort",
               options: estimatesForSelection
             },
-            {id: "percent-done", view: "slider", name: "percent_done", label: "Percent Done"},
+            {id: "percent_done", view: "slider", name: "percent_done", label: "Percent Done"},
           ]
         },
-        {view: "textarea", height: 70, name: "status_commentary", label: "Status Commentary"},
-        {label: "Description", view: "label", height: 30},
-        {view: "richtext", height: 150, name: "description", labelPosition: "top", label: ""}
+        { id: "status_commentary", view: "textarea",autoheight: true, minHeight: 70, maxHeight: 200, name: "status_commentary", label: "Status Commentary"},
+        { label: "Description", view: "label", height: 30},
+        { id: "description", view: "richtext", height: 150, name: "description", labelPosition: "top", label: ""}
       ],
       rules: {
         parent_project: webix.rules.isNotEmpty,

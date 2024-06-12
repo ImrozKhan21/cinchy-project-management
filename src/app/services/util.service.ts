@@ -316,11 +316,11 @@ export class UtilService {
     return true
   }
 
-  onKanbanBeforeDragIn(dragContext: any, e: any, list: any) {
+  onKanbanBeforeDragIn(dragContext: any, e: any, kanbanView: any, list: any) {
     return true;
   }
 
-  onKanbanAfterDrop(kanbanView: any, dragContext: any, e: any, list: any) {
+  onKanbanAfterDrop(dragContext: any, e: any, kanbanView: any, list: any) {
     // Get the ID of the dropped item
     const itemId = dragContext.source;
     // Get the actual data of the dropped item

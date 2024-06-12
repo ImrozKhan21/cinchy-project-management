@@ -6,7 +6,7 @@ import {IProjectDetails, IStatus} from "../../models/common.model";
 import {DataTransformerService} from "../../services/data-transformer.service";
 import {FilterDataService} from "../../services/filter-data.service";
 import {KanbanEditorService} from "../../services/kanban-editor.service";
-import { Clipboard } from '@angular/cdk/clipboard';
+import {Clipboard} from '@angular/cdk/clipboard';
 import {MessageService} from "primeng/api";
 
 declare let webix: any;
@@ -36,6 +36,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
   inProgress: boolean;
   selectedProjects: IProjectDetails[];
   formKeys: string[];
+
   constructor(private element: ElementRef, private appStateService: AppStateService,
               private utilService: UtilService, private dataTransformerService: DataTransformerService,
               private filterDataService: FilterDataService, private kanbanEditorService: KanbanEditorService,
@@ -53,7 +54,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
         this.itemsAfterInsert = $$("kanban").serialize();
         kanban.updateItem(activity.id, activity);
         this.dontMakeCallToUpdate = false;
-    //    this.initKanban();
+        //    this.initKanban();
       }
     });
   }
@@ -196,7 +197,7 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
             },
             onBeforeAdd: (obj: any, list: any, e: any) => {
               const itemToUpdate = {...list};
-              if(!itemToUpdate.parent_id) {
+              if (!itemToUpdate.parent_id) {
                 itemToUpdate.parent_id = itemToUpdate.parent_project ? parseInt(itemToUpdate.parent_project.split('-')[1]) : null;
                 itemToUpdate.description = list.description && list.description !== "undefined" ? list.description : '';
               }
@@ -214,45 +215,34 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
               const kanbanView: any = $$("kanban");
               const editorForm: any = kanbanView.getEditor();
               const formValues = editorForm.getValues();
-
               const projectField = $$('parent_project');
               // Check if the editor is for a new card
               this.formKeys?.forEach((key: string) => {
                 const canEditKey = `can_edit-${key}`;
-                if (formValues[key] && formValues[canEditKey] === 0) {
-                  $$(key).disable();
+                if (formValues[canEditKey] === 0) {
+                  $$(key)?.disable();
+                } else {
+                  $$(key)?.enable();
                 }
               });
-              /*activity_type_id: ""
-description: "Work items should be added based on the level they are added"
-effort_id: ""
-end_date: null
-parent_activity: ""
-parent_project: ""
-percent_done: 0
-priority: ""r
-start_date: null
-status_commentary: ""
-status_id: ""
-text: ""
-user_id: ""
-*/
               !formValues.parent ? projectField.enable() : projectField.disable();
             },
             onBeforeEditorAction: (action: any, editor: any, itemData: any) => {
               if (this.inProgress || action === "remove") return true;
               const isValid = editor.getForm().validate();
-              if (!isValid) {return false;}
-              const values = editor.getValues({hidden:false});
-              const saveBtn = editor.queryView({ label: "Save" });
+              if (!isValid) {
+                return false;
+              }
+              const values = editor.getValues({hidden: false});
+              const saveBtn = editor.queryView({label: "Save"});
               const defHandler = saveBtn.config.click;
               this.inProgress = true;
               const operation = itemData.activity_id ? "update" : "insert";
               const callToMake = operation === "update" ? this.utilService.updateActivityWithNewValues(itemData, 'UPDATE', 'kanban', this.isDragged)
-              : this.utilService.pingCallToCheckSession();
+                : this.utilService.pingCallToCheckSession();
               callToMake.then(() => {
                 // prevent duplicate calls to the server
-                if(operation === "update") { // as for update we have already made the call
+                if (operation === "update") { // as for update we have already made the call
                   webix.dp(this).ignore(() => {
                     // call the default save logic on success
                     defHandler.call(editor);
@@ -273,8 +263,12 @@ user_id: ""
             onListAfterDrop: (kanbanView: any, dragContext: any, e: any, list: any) => {
               this.isDragged = false;
             },
-            onListBeforeDrag: () => {
+            onListBeforeDrag: (dragContext: any, e: any, kanbanView: any, list: any) => {
               this.isDragged = true;
+              const itemId = dragContext.start;
+              // Get the actual data of the dropped item
+              const itemData = kanbanView.getItem(itemId);
+              return itemData['can_edit-status_id'] === 1;
             },
             onListBeforeDragIn: this.utilService.onKanbanBeforeDragIn,
           },

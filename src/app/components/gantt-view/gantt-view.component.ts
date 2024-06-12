@@ -11,6 +11,7 @@ import {IProjectDetails} from "../../models/common.model";
 import {CustomTree} from "../../webix-services/gantt-tree.service";
 import {DataTransformerService} from "../../services/data-transformer.service";
 import {FilterDataService} from "../../services/filter-data.service";
+import {CustomBar} from "../../webix-services/gantt-bar.service";
 
 declare let webix: any;
 declare let gantt: any;
@@ -100,7 +101,16 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
           id: "toolbar",
           container: document.getElementById('gantt-scales'),
           paddingX: 10,
-          elements: [zoom, {}],
+          elements: [zoom,{
+            view: "button",
+            value: "Scroll to Today's date",
+            width: 200,
+            click: () => {
+              const format = webix.Date.dateToStr("%d.%m.%Y");
+              // @ts-ignore
+              $$("gantt").$app.callEvent("chart:scroll", [format(new Date())]);
+            }
+          },],
         },
         {
           container: document.getElementById('gantt-chart'),
@@ -123,6 +133,7 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
             [gantt.views.tree, CustomTree],
             [gantt.views["task/form"], CustomForm],
             [gantt.views["task/info"], CustomInfo],
+            [gantt.views["chart/bars"], CustomBar],
             [gantt.services.Backend, GanttBackendService]
           ])
         }
@@ -144,15 +155,6 @@ export class GanttViewComponent implements OnInit, AfterViewInit {
         formInstance.refresh()
       }
     });
-  }
-
-
-  scrollToToday() {
-    const today = new Date();
-    const gantt1 = $$("gantt");/*
-    if (gantt1) {
-      gantt1.scrollTo(today);
-    }*/
   }
 
   static getScales(minScale: any) {

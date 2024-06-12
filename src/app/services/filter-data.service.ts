@@ -184,6 +184,7 @@ export class FilterDataService {
         return PRIORITY_OPTIONS[a.priority]?.order - PRIORITY_OPTIONS[b.priority]?.order;
       });
     }
+ //   console.log('UPDATE', updatedTasks);
     // actualList = this.augmentFilteredList(updatedTasks, allTasks);
     return updatedTasks?.map((item: any) => {
       return {...item, open: isProjectsExpanded};
