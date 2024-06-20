@@ -13,11 +13,11 @@ export class KanbanEditorService {
   getKanbanEditor(kanbanData: any, projectsForSelection: any, selectedProjects: any, webix: any) {
     const {allTasks, userSet} = kanbanData;
     const projectsMap = new Map(selectedProjects?.map((project: any) => [project.project_id, project]));
-    const parentItemsForSelection = allTasks.filter((task: any) => projectsMap.has(task.project_id))
+    const parentItemsForSelection = (allTasks.filter((task: any) => projectsMap.has(task.project_id))
       .map((task: any) => ({
         id: task.activity_id,
-        value: task.text
-      }));
+        value: `${task.activity_type}: ${task.text}`
+      })))?.sort((a: any,b: any) => a.value.localeCompare(b.value));
 
     const statusesForSelection = this.appStateService.allStatuses.map((status: IStatus) => ({
       id: status.id,
@@ -29,6 +29,14 @@ export class KanbanEditorService {
     return {
       width: 1200, // Set your desired width
       elements: [
+        {
+          view: "template",
+          id: "formTitle",
+          template: `<div style='font-weight: 200;'></div>`,
+          borderless: true,
+          height: 22,
+          css:"created-by-wrapper",
+        },
         {
           margin: 10,
           cols: [
@@ -45,14 +53,19 @@ export class KanbanEditorService {
               view: "combo",
               name: "parent_activity",
               label: "Parent",
-              options: parentItemsForSelection
+              options: {
+                data: parentItemsForSelection,
+                filter: function (item: any, value: any) {
+                  return item.value?.toLowerCase().includes(value.toLowerCase());
+                }
+              },
             }
           ]
         },
         {
           margin: 10,
           cols: [
-            { id: "text", view: "text", name: "text", label: "Task*"},
+            {id: "text", view: "text", name: "text", label: "Name*"},
             {
               id: "activity_type_id",
               view: "combo",
@@ -78,8 +91,8 @@ export class KanbanEditorService {
         {
           margin: 10,
           cols: [
-            { id: "start_date", view: "datepicker", name: "start_date", label: "Start Date"},
-            { id: "end_date", view: "datepicker", name: "end_date", label: "End Date"}
+            {id: "start_date", view: "datepicker", name: "start_date", label: "Start Date"},
+            {id: "end_date", view: "datepicker", name: "end_date", label: "End Date"}
           ]
         },
         {
@@ -99,9 +112,17 @@ export class KanbanEditorService {
             {id: "percent_done", view: "slider", name: "percent_done", label: "Percent Done"},
           ]
         },
-        { id: "status_commentary", view: "textarea",autoheight: true, minHeight: 70, maxHeight: 200, name: "status_commentary", label: "Status Commentary"},
-        { label: "Description", view: "label", height: 30},
-        { id: "description", view: "richtext", height: 150, name: "description", labelPosition: "top", label: ""}
+        {
+          id: "status_commentary",
+          view: "textarea",
+          autoheight: true,
+          minHeight: 80,
+          maxHeight: 200,
+          name: "status_commentary",
+          label: "Status Commentary"
+        },
+        {label: "Description", view: "label", height: 30},
+        {id: "description", view: "richtext", height: 150, name: "description", labelPosition: "top", label: ""}
       ],
       rules: {
         parent_project: webix.rules.isNotEmpty,

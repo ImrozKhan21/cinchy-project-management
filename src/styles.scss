@@ -208,6 +208,10 @@ body {
   display: none;
 }
 
+.hidden-header {
+  display: none !important;
+}
+
 /* customizing all folders and files in a tree */
 /*
 .webix_tree_folder, .webix_tree_folder_open{
@@ -249,6 +253,10 @@ body {
   justify-content: start;
 }
 
+.created-by-wrapper {
+  text-align: right !important;
+  margin-top: -8px !important;
+}
 
 
 

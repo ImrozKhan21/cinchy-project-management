@@ -357,7 +357,7 @@ export class ApiCallsService {
         */
     const params = {
       '{0}': actualModel,
-      '@parentId': parentId ? `${parentId},0` : null,
+      '@parentId': parentId ? `${parentId},0` : undefined,
       '@activityId': activityId
     }
     return this.cinchyService.executeQuery('Project Management', 'Update Work Project', params);
@@ -380,7 +380,7 @@ export class ApiCallsService {
      `;*/
     const params = {
       '{0}': actualModel,
-      '@statusId': statusId ? `${statusId},0` : null,
+      '@statusId': statusId ? `${statusId},0` : undefined,
       '@userId': userId,
       '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
       '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
@@ -461,7 +461,7 @@ export class ApiCallsService {
       '@startDate': typeof startDate === "string" ? startDate : startDate?.toLocaleDateString(),
       '@endData': typeof endDate === "string" ? endDate : endDate?.toLocaleDateString(),
       '@priority': priority,
-      '@effortId': effortId ? `${effortId},0` : null,
+      '@effortId': effortId ? `${effortId},0` : undefined,
       '@statusCommentary': statusCommentary,
       '@description': description
     }

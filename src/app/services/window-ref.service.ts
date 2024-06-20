@@ -21,9 +21,10 @@ export class WindowRefService {
     return !isPlatformBrowser(this.platformId);
   }
 
-  openUrl(url: string) {
+  openUrl(url: string, openSameTab = false) {
+    const target = openSameTab ? '_self' : '_blank';
     if (isPlatformBrowser(this.platformId) && url) {
-      this.nativeWindow.open(url, '_blank');
+      this.nativeWindow.open(url, target);
     }
   }
 

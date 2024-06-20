@@ -68,6 +68,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.windowRefService.openUrl(url);
   }
 
+  toggleView() {
+    let currentUrl = this.windowRefService.nativeWindow.location.href;
+    const newViewType = this.viewType === 'kanban' ? 'gantt' : 'kanban';
+    currentUrl = currentUrl.replace(`viewType=${this.viewType}`, `viewType=${newViewType}`);
+    this.windowRefService.openUrl(currentUrl, true);
+  }
+
   onClipboardCopy(e: any) {
     this.messageService.add({severity: 'info', summary: '', detail: 'Copied'});
 

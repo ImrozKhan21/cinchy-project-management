@@ -116,12 +116,13 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
           cols: [
             {view: "label", label: "Board"},
             {
-              view: "button", type: "form", label: "Add new activity", width: 150, click: () => {
+              view: "button", type: "form", label: "Add New Work", width: 150, click: () => {
                 const kanbanView = $$("kanban") as any;
                 kanbanView.showEditor();
                 const editorForm: any = kanbanView.getEditor();
                 const formValues = editorForm.getValues();
-                const projectField = $$('parent_project');
+                const formTitleElement: any = $$('formTitle');
+                formTitleElement.setHTML('');
                 const selectedProject = this.filterValues?.selectedProjects;
                 if (selectedProject?.length === 1) {
                   const updatedFormValues = {
@@ -185,6 +186,9 @@ export class KanbanViewComponent implements OnInit, AfterViewInit {
               const kanbanView: any = $$("kanban");
               const editorForm: any = kanbanView.getEditor();
               const formValues = kanbanView.getItem(id);
+              const formTitle = formValues.text ? `Created By ${formValues.createdBy}` : ``;
+              const formTitleElement: any = $$('formTitle');
+              formTitleElement.setHTML(formTitle);
               kanbanView.showEditor();
               const projectField = $$('parent_project');
               !formValues.parent ? projectField.enable() : projectField.disable();
