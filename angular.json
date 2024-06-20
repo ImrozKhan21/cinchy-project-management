@@ -33,17 +33,17 @@
               "src/styles.scss",
               "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
               "node_modules/primeng/resources/primeng.min.css",
-              "src/codebase-gantt/webix/webix.css",
-              "src/codebase-gantt/gantt.css",
-              "src/codebase-kanban/kanban.css"
+              "./node_modules/@xbs/webix-pro/webix.css",
+              "./node_modules/@xbs/kanban/kanban.css",
+              "./node_modules/@xbs/gantt/codebase/gantt.css"
             ],
             "scripts": [
               "./node_modules/iframe-resizer/js/iframeResizer.js",
               "./node_modules/iframe-resizer/js/iframeResizer.contentWindow.js",
-              "src/codebase-gantt/webix/webix.js",
               "src/common/data.js",
-              "src/codebase-gantt/gantt.js",
-              "src/codebase-kanban/kanban.js"
+              "./node_modules/@xbs/webix-pro/webix.js",
+              "./node_modules/@xbs/kanban/kanban.js",
+              "./node_modules/@xbs/gantt/codebase/gantt.js"
             ]
           },
           "configurations": {
@@ -114,17 +114,17 @@
               "src/styles.scss",
               "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
               "node_modules/primeng/resources/primeng.min.css",
-              "src/codebase-gantt/webix/webix.css",
-              "src/codebase-gantt/gantt.css",
-              "src/codebase-kanban/kanban.css"
+              "./node_modules/@xbs/webix-pro/webix.css",
+              "./node_modules/@xbs/kanban/kanban.css",
+              "./node_modules/@xbs/gantt/codebase/gantt.css"
             ],
             "scripts": [
               "./node_modules/iframe-resizer/js/iframeResizer.js",
               "./node_modules/iframe-resizer/js/iframeResizer.contentWindow.js",
-              "src/codebase-gantt/webix/webix.js",
               "src/common/data.js",
-              "src/codebase-gantt/gantt.js",
-              "src/codebase-kanban/kanban.js"
+              "./node_modules/@xbs/webix-pro/webix.js",
+              "./node_modules/@xbs/kanban/kanban.js",
+              "./node_modules/@xbs/gantt/codebase/gantt.js"
             ]
           }
         }
